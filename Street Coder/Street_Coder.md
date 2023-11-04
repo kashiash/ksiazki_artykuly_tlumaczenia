@@ -11,10 +11,11 @@ https://www.manning.com/books/street-coder
 ## 1 Na ulicy
 
 Ten rozdział obejmuje
-Rzeczywistość ulic
-Kim jest programista uliczny?
-Problemy współczesnego rozwoju oprogramowania
-Jak rozwiązać swoje problemy za pomocą wiedzy ulicznej
+
+- Rzeczywistość ulic
+- Kim jest programista uliczny?
+- Problemy współczesnego rozwoju oprogramowania
+- Jak rozwiązać swoje problemy za pomocą wiedzy ulicznej
 
 
 
@@ -260,10 +261,10 @@ Brak jasności co do tego, nad czym pracujesz, sprawia, że programowanie staje 
 
 Rozdział ten obejmuje:
 
-1. **Dlaczego teoria informatyki jest istotna dla twojego przetrwania**
-2. **Jak wykorzystać typy danych na swoją korzyść**
-3. **Zrozumienie cech algorytmów**
-4. **Struktury danych i ich dziwaczne cechy, o których twoi rodzice zapomnieli ci powiedzieć**
+- **Dlaczego teoria informatyki jest istotna dla twojego przetrwania**
+- **Jak wykorzystać typy danych na swoją korzyść**
+- **Zrozumienie cech algorytmów**
+- **Struktury danych i ich dziwaczne cechy, o których twoi rodzice zapomnieli ci powiedzieć**
 
 Wbrew powszechnie przyjętemu przekonaniu, programiści są ludźmi. Mają te same błędy poznawcze co inni ludzie w praktyce tworzenia oprogramowania. Szeroko przeceniają korzyści płynące z pomijania typów danych, niezwracania uwagi na poprawne struktury danych czy zakładania, że algorytmy są ważne jedynie dla autorów bibliotek.
 
