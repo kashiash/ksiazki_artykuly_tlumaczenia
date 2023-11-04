@@ -1505,3 +1505,61 @@ Ja mówię: zacznij od nowa, przepisz to. Wyrzuć wszystko, co już zrobiłeś, 
 
 ![CH03_F06_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_3-6.png)
 
+Trudno przecenić zyski związane z prędkością, gdy robisz coś po raz drugi. W przeciwieństwie do przedstawianych w filmach hakerów, większość czasu spędzasz patrząc na ekran: nie piszesz rzeczy, ale myślisz o rzeczach, zastanawiasz się nad właściwym sposobem ich zrobienia. Programowanie to nie tyle tworzenie rzeczy, co poruszanie się po labiryncie skomplikowanego drzewa decyzyjnego. Kiedy zaczynasz od nowa, znasz już możliwe potknięcia, znasz pułapki, których należy unikać, oraz pewne projekty, do których doszedłeś w poprzedniej próbie.
+
+Jeśli czujesz się zablokowany, próbując coś nowego, napisz to od nowa. Ja bym powiedział, że nawet nie zapisuj poprzedniej wersji swojej pracy, ale może chcesz to zrobić, jeśli nie jesteś pewien, czy zdołasz szybko to zrobić ponownie. No dobrze, zapisz kopię gdzieś, ale zapewniam cię, że większość czasu nie będziesz nawet musiał patrzeć na swoją poprzednią pracę. Jest już w twojej głowie, prowadząc cię znacznie szybciej, i bez wpadania w ten sam spiralny stan desperacji.
+
+Co ważniejsze, kiedy zaczynasz od nowa, znasz wcześniej błędny kierunek w procesie niż wcześniej. Twoje radar pułapek zostanie zainstalowany już tym razem. Zdobędziesz wrodzony zmysł dla tego, jak rozwijać daną funkcję w odpowiedni sposób. Programowanie w ten sposób przypomina grę w gry konsolowe takie jak Marvel's Spider-Man czy The Last of Us. Nieustannie umierasz i zaczynasz tę sekwencję od nowa. Umierasz, odradzasz się. Z każdym powtórzeniem stajesz się lepszy, im więcej powtarzasz, tym lepiej stajesz się w programowaniu. Pisanie od nowa poprawia twoje umiejętności rozwijania tej konkretnej funkcji, tak, ale także ulepsza twoje ogólne umiejętności programowania dla wszystkich przyszłych kodów, które będziesz pisać.
+
+Nie wahaj się porzucić swojej pracy i zacznij pisać od nowa. Nie daj się zwieść błędowi kosztów utopionych.
+
+### 3.3 Naprawiaj, nawet jeśli nie jest zepsute
+
+Istnieją sposoby na radzenie sobie z sztywnością kodu, a jednym z nich jest regularne wprowadzanie zmian, aby nie stał się on zbyt sztywny—o ile chodzi o tę analogię. Dobry kod powinien być łatwy do zmiany i nie powinien wymagać zmiany w tysiącach miejsc, aby wprowadzić potrzebną zmianę. Pewne zmiany można przeprowadzić w kodzie, które nie są konieczne, ale mogą pomóc w dłuższej perspektywie. Możesz uczynić z tego regularny nawyk, dbając o to, aby utrzymywać aktualność swoich zależności, sprawiając, że Twoja aplikacja pozostaje płynna, oraz identyfikować najbardziej sztywne części, które są trudne do zmiany. Możesz również poprawiać kod jako swoistą aktywność ogrodniczą, regularnie dbając o drobne problemy w kodzie.
+
+#### 3.3.1 Wyścig w kierunku przyszłości
+Niezwykle prawdopodobne jest, że będziesz używać jednego lub więcej pakietów z ekosystemu pakietów, które pozostawisz takimi, jakie są, ponieważ nadal działają dla Ciebie. Problem w tym, że gdy będziesz musiał użyć innego pakietu, który wymaga nowszej wersji Twojego pakietu, proces aktualizacji może być znacznie bardziej bolesny niż stopniowe aktualizowanie pakietów i pozostawanie na bieżąco. Taki konflikt możesz zobaczyć na rysunku 3.7.
+
+
+
+![CH03_F07_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_3-7.png)
+
+Większość czasu, twórcy pakietów myślą tylko o scenariuszach aktualizacji między dwiema głównymi wersjami, a nie o wielu pośrednich wersjach. Na przykład popularna biblioteka Elasticsearch do wyszukiwania wymaga, aby aktualizacje wersji głównej były wykonywane pojedynczo; nie obsługuje bezpośredniej aktualizacji z jednej wersji na drugą.
+
+.NET obsługuje przekierowania powiązań (binding redirects), aby uniknąć problemu wielu wersji tego samego pakietu, w pewnym stopniu. Przekierowanie powiązań to dyrektywa w konfiguracji aplikacji, która powoduje, że .NET przekierowuje wywołania do starszej wersji zestawu do jego nowszej wersji, lub odwrotnie. Oczywiście działa to tylko wtedy, gdy obie wersje pakietów są ze sobą kompatybilne. Zazwyczaj nie musisz samodzielnie zajmować się przekierowaniami powiązań, ponieważ Visual Studio może to zrobić za Ciebie, jeśli już zaznaczyłeś opcję Automatycznie generuj przekierowania powiązań w oknie właściwości projektu.
+
+Okresowe aktualizowanie swoich pakietów będzie miało dwa ważne korzyści. Po pierwsze, rozłożysz wysiłek związany z aktualizacją do bieżącej wersji na okres utrzymania. Każdy krok będzie mniej bolesny. Po drugie, co ważniejsze, każda drobna aktualizacja może psuć Twój kod lub projekt w mały lub subtelny sposób, który będziesz musiał naprawić, aby przejść do przyszłości. Może to brzmieć niepożądanie, ale zmusi Cię do poprawy kodu i projektu stopniowo, pod warunkiem, że masz już testy na swoim miejscu.
+
+Możesz mieć aplikację internetową, która używa Elasticsearch do operacji wyszukiwania i Newtonsoft.Json do analizy i generowania JSON. Są to jedne z najbardziej powszechnie używanych bibliotek. Problem pojawia się, gdy musisz zaktualizować pakiet Newtonsoft.Json, aby używać nowej funkcji, ale Elasticsearch używa starej wersji. Ale aby zaktualizować Elasticsearch, musisz także zmienić kod obsługujący Elasticsearch. Co zrobić?
+
+Większość pakietów obsługuje tylko pojedyncze aktualizacje wersji. Elasticsearch, na przykład, oczekuje od Ciebie, że przeprowadzisz aktualizację z wersji 5 do 6, i ma wytyczne, jak to zrobić. Nie ma wytycznych dotyczących aktualizacji z wersji 5 do 7. Musisz stosować każdy poszczególny krok aktualizacji oddzielnie. Niektóre aktualizacje wymagają również znaczących zmian w kodzie. Elasticsearch 7 prawie sprawia, że musisz napisać kod od nowa.
+
+Możesz pozostać w starszych wersjach, gdzie Twój kod pozostaje bez zmian, ale nie tylko wsparcie dla starszych wersji kończy się w pewnym momencie, ale także dokumentacja i przykłady kodu nie zostają na zawsze. Stack Overflow zapełnia się odpowiedziami dotyczącymi nowszych wersji, ponieważ ludzie używają najnowszej wersji, gdy zaczynają nowy projekt. Twoja sieć wsparcia dla starszej wersji zanika z czasem. To sprawia, że aktualizacja staje się trudniejsza z każdym kolejnym rokiem, co popycha Cię w dół spiralę desperacji.
+
+Moje rozwiązanie tego problemu polega na dołączeniu do wyścigu ku przyszłości. Trzymaj biblioteki aktualne. Stań się nawykiem regularnie aktualizować biblioteki. To spowoduje okresowe problemy w twoim kodzie, a dzięki temu dowiesz się, który fragment kodu jest bardziej kruchy, i będziesz mógł zwiększyć pokrycie testami.
+
+Kluczowym pomysłem jest to, że aktualizacje mogą powodować awarie w twoim kodzie, ale pozwalając im na mikropauzy, zapobiegniesz ogromnym przeszkodom, które stają się naprawdę trudne do pokonania. Inwestujesz nie tylko w fikcyjne przyszłe korzyści, ale także w elastyczność zależności twojej aplikacji, pozwalając jej się psuć i naprawiać tak, aby nie łamała się tak łatwo przy kolejnej zmianie, niezależnie od aktualizacji pakietów. Im mniej oporny jest twój kod na zmiany, tym lepiej pod względem projektowania i łatwości utrzymania.
+
+
+
+#### 3.3.2 Czystość bliska kodowaniu
+
+To, co najbardziej polubiłem w komputerach, to ich determinizm. To, co napisałeś, zawsze będzie działo się tak samo, gwarantowane. Kod, który działa, zawsze będzie działał. W tym znajdowałem pocieszenie. Ale jak naiwny byłem. W mojej karierze widziałem wiele przypadków błędów, które można było zaobserwować tylko okazjonalnie, w zależności od prędkości procesora lub pory dnia. Pierwszą prawdą uliczną jest: "Wszystko się zmienia". Twój kod się zmieni. Wymagania się zmienią. Dokumentacja się zmieni. Środowisko się zmieni. Niemożliwe jest utrzymanie stabilnego kodu, nie ruszając go.
+
+Skoro już to przekuliśmy, możemy się zrelaksować i powiedzieć, że nic nie szkodzi ruszyć kod. Nie powinniśmy bać się zmian, ponieważ i tak się zdarzą. Oznacza to, że nie powinieneś wahać się nad poprawą działającego kodu. Poprawki mogą być niewielkie: dodanie niezbędnych komentarzy, usunięcie zbędnych, lepsze nazewnictwo rzeczy. Utrzymuj kod przy życiu. Im więcej zmian wprowadzisz w kodzie, tym mniej oporny stanie się on na przyszłe zmiany. To dlatego, że zmiany spowodują awarie, a awarie pozwolą ci zidentyfikować słabe punkty i uczynić je bardziej zarządzalnymi. Powinieneś zrozumieć, jak i gdzie twój kod może ulec awarii. Ostatecznie zyskasz wrodzoną zdolność oceny, jaki rodzaj zmiany będzie najmniej ryzykowny.
+
+Można nazwać ten rodzaj aktywności poprawiającej kod "ogrodnictwem". Niekoniecznie dodajesz funkcji ani nie naprawiasz błędów, ale kod powinien być lekko ulepszony po zakończeniu pracy nad nim. Taka zmiana może pozwolić następnemu programiście, który odwiedzi kod, lepiej go zrozumieć lub poprawić pokrycie testowe kodu, jakby ktoś zostawił prezenty na noc lub jakby bonsai w biurze tajemniczo ożyło.
+
+Dlaczego więc miałbyś trudzić się przy zadaniu, które nigdy nie będzie docenione przez nikogo w twojej karierze? Idealnie byłoby, gdyby było to doceniane i wynagradzane, ale nie zawsze jest to możliwe. Nawet możesz spotkać się z krytyką ze strony swoich kolegów, ponieważ może im się nie podobać zmiana, którą wprowadziłeś. Nawet możesz zakłócić ich pracę, nie łamiąc kodu. Możesz przekształcić go w gorszy projekt niż pierwotnie zamierzał to zrobić oryginalny programista, podczas gdy próbujesz go ulepszyć.
+
+Tak, i to jest oczekiwane. Jedynym sposobem na dojrzałość w kwestii radzenia sobie z kodem jest jego wielokrotne zmienianie. Upewnij się, że twoje zmiany są łatwo odwracalne, więc w przypadku zaniepokojenia kogoś, możesz cofnąć swoje zmiany. Nauczysz się również, jak komunikować się z kolegami na temat zmian, które mogą ich dotyczyć. Dobra komunikacja to najważniejsza umiejętność, którą możesz rozwijać w programowaniu.
+
+Największą korzyścią z drobnych poprawek kodu jest to, że szybko wkraczasz w tryb programowania. Duże zadania są najcięższymi mentalnymi ciężarami. Zazwyczaj nie wiesz, od czego zacząć i jak się zająć tak dużą zmianą. Pesymizm typu "O, to będzie takie trudne, że będę musiał to tylko znosić" sprawia, że odkładasz rozpoczęcie projektu. Im bardziej to odkładasz, tym bardziej będziesz obawiać się kodowania.
+
+Drobne ulepszenia kodu są sztuczką, aby szybko wkręcić swoje umysłowe koła, dzięki czemu możesz się wystarczająco rozgrzać, aby poradzić sobie z większym problemem. Ponieważ już kodujesz, twoje myśli przeciwstawiają się przełączaniu się na inne tryby mniej niż w przypadku próby przejścia od przeglądania mediów społecznościowych do kodowania. Odpowiednie części twojego mózgu zostały już uruchomione i są gotowe na większy projekt.
+
+Jeśli nie możesz znaleźć nic do poprawy, możesz skorzystać z analizatorów kodu. To świetne narzędzia do znajdowania drobnych problemów w kodzie. Upewnij się, że dostosowujesz opcje używanego przez ciebie analizatora kodu, aby unikać jak największych kontrowersji. Porozmawiaj z kolegami, co o tym myślą. Jeśli uważają, że nie chce im się naprawiać problemów, obiecaj im, że naprawisz pierwszą partię sam i wykorzystaj to jako okazję do rozgrzewki. W przeciwnym razie możesz użyć alternatywy w wierszu poleceń lub własnych funkcji analizy kodu w programie Visual Studio do uruchamiania analizy kodu, nie łamiąc wytycznych zespołu dotyczących kodowania.
+
+Nawet nie musisz stosować wprowadzonych zmian, ponieważ służą one tylko do rozgrzewki przed kodowaniem. Na przykład możesz być niepewny, czy możesz zastosować określoną poprawkę, może wydawać się ryzykowna, ale zrobiłeś już tak wiele. Ale jak już się nauczyłeś, po prostu to odrzuć. Zawsze możesz zacząć od nowa i zrobić to jeszcze raz. Nie martw się zbytnio o odrzucanie swojej pracy. Jeśli jesteś bardzo zainteresowany, zrób kopię zapasową, ale naprawdę bym się tym nie martwił.
+
+Jeśli wiesz, że twoja drużyna będzie zadowolona z wprowadzonych zmian, opublikuj je. Satysfakcja z poprawy, choćby najmniejszej, może cię zmotywować do wprowadzenia większych zmian.
