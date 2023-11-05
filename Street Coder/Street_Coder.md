@@ -6,7 +6,7 @@ tłumaczenie czatem GuPeTe
 
 https://www.manning.com/books/street-coder
 
-
+Wskazane czytanie na jasnym tle. Jesli masz czarne tlko nie bedziesz widzial polowy obrazków !
 
 ## 1 Na ulicy
 
@@ -2419,3 +2419,95 @@ Są przypadki, w których musisz pisać komentarze, czy są one użyteczne czy n
 2. Aplikacja czatowa o nazwie Yo, w której można było wysyłać tylko tekst zawierający "Yo", została kiedyś wyceniona na 10 milionów dolarów. Firma została zamknięta w 2016 roku: https://en.wikipedia.org/wiki/Yo_(app).
 
 3. To doskonała wariacja na słynne słowa Phila Karltona stworzona przez Leona Bambricka (https://twitter.com/secretGeek/status/7269997868). Phil Karlton oryginalnie wypowiedział te słowa bez części dotyczącej "błędów o jeden": [brak linku].
+
+## Smaczne testowanie
+
+### Dlaczego nienawidzimy testowania i jak możemy je pokochać
+
+Testowanie często jest postrzegane przez programistów jako nudna czynność, której nikt nie lubi wykonywać i która rzadko przynosi korzyści. W porównaniu z kodowaniem, testowanie uważane jest za drugorzędne, nie jako prawdziwa praca. Testerzy często są obarczani przekonaniem, że mają to zbyt łatwe.
+
+Powodem niechęci do testowania jest to, że programiści widzą je jako działanie odłączone od tworzenia oprogramowania. Z perspektywy programisty, budowanie oprogramowania to przede wszystkim pisanie kodu, podczas gdy z punktu widzenia menadżera chodzi o ustalenie właściwej ścieżki dla zespołu. Podobnie, dla testerów chodzi o jakość produktu. Testowanie jest uważane za zewnętrzną działalność, ponieważ postrzegamy je jako coś, co nie jest częścią procesu tworzenia oprogramowania, i chcemy być zaangażowani w to jak najmniej.
+
+Testowanie może być integralną częścią pracy programisty i może pomóc mu na wielu płaszczyznach. Może dawać pewność, której żadne inne zrozumienie kodu nie jest w stanie zapewnić. Może oszczędzać czas, a przy tym nie trzeba się za to nienawidzić. Zobaczmy, jak to możliwe.
+
+# 4.1 Typy testów
+
+Testowanie oprogramowania polega na zwiększaniu pewności co do zachowania oprogramowania. To jest ważne: testy nigdy nie gwarantują określonego zachowania, ale zdecydowanie zwiększają prawdopodobieństwo jego wystąpienia, często o kilka rzędów wielkości. Istnieje wiele sposobów kategoryzacji typów testowania, ale najważniejszą różnicą jest sposób ich przeprowadzenia lub implementacji, ponieważ to ma największy wpływ na naszą ekonomię czasu.
+
+#### 4.1.1 Testowanie ręczne
+
+Testowanie może być czynnością manualną i zazwyczaj takie jest dla programistów, którzy testują swój kod, uruchamiając go i sprawdzając jego zachowanie. Testy manualne mają także swoje typy, takie jak testowanie end-to-end, co oznacza przetestowanie każdego obsługiwanego scenariusza oprogramowania od początku do końca. Testowanie end-to-end ma ogromną wartość, ale zajmuje dużo czasu.
+
+Recenzje kodu można traktować jako rodzaj testowania, choć słabego. Można zrozumieć, co kod robi i jak będzie działał w pewnym stopniu. Można w miarę dokładnie zobaczyć, jak spełnia wymagania, ale nie można tego stwierdzić na pewno. Testy, w zależności od ich typów, mogą zapewnić różne poziomy pewności co do działania kodu. W tym sensie recenzja kodu może być uważana za rodzaj testu.
+
+**Czym jest recenzja kodu?**
+
+Głównym celem recenzji kodu jest sprawdzenie kodu przed jego dodaniem do repozytorium i znalezienie potencjalnych błędów. Można to zrobić podczas spotkania w grupie lub za pomocą strony internetowej, takiej jak GitHub. Niestety, na przestrzeni lat, recenzje kodu stały się wieloma różnymi rzeczami, od rytuału inicjacji, który całkowicie niszczy samoocenę programisty, po stos cytowanych z artykułów architektów oprogramowania, które przeczytali.
+
+Najważniejszą częścią recenzji kodu jest to, że jest to ostatni moment, kiedy można krytykować kod, nie musząc go naprawiać samemu. Po tym, jak kawałek kodu przechodzi recenzję, staje się kodem wszystkich, ponieważ wszyscy go zaakceptowali. Zawsze można powiedzieć: "Mogłeś powiedzieć to na recenzji kodu, Marku", kiedy ktoś podniesie kwestię słabego kodu sortującego o złożoności O(N^2), a potem znów założyć słuchawki na uszy. Oczywiście, żartuję - powinieneś poczuć się zawstydzony za napisanie takiego kodu sortującego, zwłaszcza po przeczytaniu tej książki, ale nadal obwiniasz Marka! Powinieneś znać się lepiej. Przyjaźnij się ze swoimi kolegami. Będziesz ich potrzebował.
+
+Idealnie recenzje kodu nie powinny dotyczyć stylu kodu czy jego formatowania, ponieważ narzędzia automatyzujące, zwane linterami lub narzędziami analizy kodu, mogą sprawdzać te kwestie. Głównie powinno chodzić o błędy i zadłużenie techniczne, które kod może wprowadzić dla innych programistów. Recenzja kodu to asynchroniczne programowanie w parach; to sposób na utrzymanie wszystkich na tym samym poziomie i zaangażowanie ich wspólnego umysłu w identyfikowanie potencjalnych problemów w sposób efektywny kosztowo.
+
+#### 4.1.2 Testy automatyczne
+
+Jesteś programistą; masz zdolność do pisania kodu. Oznacza to, że możesz sprawić, że komputer będzie działać dla Ciebie, a to obejmuje także testowanie. Możesz napisać kod, który testuje Twój kod, więc nie musisz tego robić sam. Programiści zazwyczaj skupiają się tylko na tworzeniu narzędzi dla oprogramowania, które rozwijają, a nie na samym procesie tworzenia, ale to jest równie ważne.
+
+Automatyczne testy mogą różnić się pod względem ich zakresu i, co ważniejsze, pod względem tego, jak bardzo zwiększają Twoją pewność co do zachowania oprogramowania. Najmniejsze rodzaje automatycznych testów to testy jednostkowe. Są one także najłatwiejsze do napisania, ponieważ testują tylko pojedynczą jednostkę kodu: publiczną funkcję. Musi być ona publiczna, ponieważ testowanie ma na celu badanie zewnętrznie widocznych interfejsów, a nie wewnętrznych szczegółów klasy. Definicja jednostki czasami może się różnić w literaturze, czy to będzie klasa, moduł czy inny logiczny układ tych elementów, ale uważam funkcje za wygodne jednostki docelowe.
+
+Problem z testami jednostkowymi polega na tym, że choć pozwalają sprawdzić, czy jednostki działają poprawnie, nie są w stanie zagwarantować, że działają poprawnie razem. W związku z tym musisz również sprawdzić, czy ze sobą współpracują. Te testy nazywane są testami integracyjnymi. Automatyczne testy interfejsu użytkownika (UI) są zazwyczaj także testami integracyjnymi, jeśli wykonują kod produkcyjny w celu zbudowania właściwego interfejsu użytkownika.
+
+#### 4.1.3 Ryzykowne podejście: Testowanie na produkcji
+
+Kiedyś kupiłem jednemu z naszych programistów plakat znanego mema. Mówił: „Nie zawsze testuję kod, ale gdy już to robię, robię to na produkcji”. Powiesiłem go na ścianie bezpośrednio za jego monitorem, aby zawsze pamiętał, żeby tego nie robić.
+
+**DEFINICJA**
+
+W żargonie informatycznym termin „produkcja” oznacza środowisko produkcyjne, do którego mają dostęp rzeczywisi użytkownicy, gdzie każda zmiana wpływa na rzeczywiste dane. Wielu programistów myli to z ich własnym komputerem. Jest na to dedykowane środowisko, a nazywa się to środowiskiem developerskim. Termin „developerskie” jako środowisko oznacza kod uruchamiany lokalnie na Twoim komputerze, który nie wpływa na żadne dane, które mogą zaszkodzić produkcji. W celu ochrony przed wprowadzeniem zmian, które mogą zaszkodzić produkcji, czasami istnieje zdalne środowisko podobne do produkcji. Nazywane jest to czasami środowiskiem przedprodukcji (staging), i nie wpływa na rzeczywiste dane widoczne dla użytkowników Twojej witryny.
+
+Testowanie na produkcji, zwane także testowaniem kodu na żywo, uważane jest za złą praktykę; nic dziwnego, że istnieją takie plakaty. Powód tego jest taki, że gdy znajdziesz błąd, może być już za późno, stracisz użytkowników lub klientów. Co więcej, kiedy zepsujesz produkcję, istnieje szansa, że przerwiesz pracę całego zespołu programistycznego. Łatwo to zauważyć po zawiedzionych spojrzeniach i uniesionych brwiach, szczególnie jeśli pracujesz w otwartym biurze, a także po wiadomościach tekstowych typu „WTF!!!!???”, wzroście liczby powiadomień w Slacku jak w wskaźniku prędkości KITT1 lub po dymie wydobywającym się z uszu Twojego szefa.
+
+Jak wiele złych praktyk, testowanie na produkcji nie zawsze jest złe. Jeśli wprowadzany przez Ciebie scenariusz nie jest często używanym, krytycznym ścieżką kodu, możesz ujść z tego na sucho. Dlatego Facebook miał dewizę „Poruszaj się szybko i psuj rzeczy”, ponieważ pozwalał programistom ocenić wpływ zmiany na biznes. Później porzucili tę dewizę po wyborach prezydenckich w USA w 2016 roku, ale wciąż ma to jakieś uzasadnienie. Jeśli to niewielkie zakłócenie w rzadko używanej funkcji, można z tym żyć i jak najszybciej to naprawić.
+
+Nawet nie testowanie kodu może być ok, jeśli uważasz, że zepsucie scenariusza nie jest czymś, dla czego użytkownicy zrezygnowaliby z korzystania z aplikacji. Udało mi się prowadzić jedną z najbardziej popularnych witryn w Turcji przez kilka lat, zupełnie bez automatycznych testów, z wieloma błędami i dużą liczbą przerw w działaniu, oczywiście, bo przecież: brak automatycznych testów!
+
+#### 4.1.4 Wybieranie odpowiedniej metodologii testowania
+
+Musisz być świadomy pewnych czynników dotyczących danego scenariusza, który próbujesz zaimplementować lub zmienić, aby zdecydować, jak chcesz go przetestować. Są to głównie ryzyko i koszt. Jest to podobne do tego, co obliczaliśmy w naszych umysłach, gdy nasi rodzice nakładali na nas obowiązek:
+
+**Koszt**
+- Ile czasu musisz poświęcić na zaimplementowanie/uruchomienie określonego testu?
+- Ile razy będziesz musiał go powtórzyć?
+- Jeśli zmieni się testowany kod, kto będzie wiedział, że trzeba go przetestować?
+- Jak trudno utrzymać niezawodność testu?
+
+**Ryzyko**
+- Jakie jest prawdopodobieństwo, że ten scenariusz ulegnie awarii?
+- Jeśli się zepsuje, jak bardzo to wpłynie na biznes? Ile pieniędzy stracisz, czyli „Czy zostanę zwolniony, jeśli coś się zepsuje?”
+- Jeśli się zepsuje, ile innych scenariuszy ulegnie awarii razem z nim? Na przykład jeśli przestanie działać funkcja wysyłania wiadomości e-mail, wiele innych funkcji, które od niej zależą, również przestanie działać.
+- Jak często zmienia się ten kod? Jak bardzo przewidujesz, że będzie się zmieniał w przyszłości? Każda zmiana wprowadza nowe ryzyko.
+
+Musisz znaleźć złoty środek, który będzie kosztował cię najmniej i będzie niosło najmniejsze ryzyko. Każde ryzyko jest implikacją większego kosztu. Z czasem będziesz miał mentalną mapę kompromisów dotyczących tego, ile kosztuje wprowadzenie testu i jakie ryzyko za sobą niesie, jak pokazuje rysunek 4.1.
+
+
+
+![CH04_F01_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_4-1.png)
+
+
+
+Nigdy nie mów głośno komuś „U mnie działa”. To myśl tylko dla ciebie. Nigdy nie będzie kodu, który możesz opisać, mówiąc: „Cóż, u mnie na komputerze nie działało, ale byłem dziwnie optymistyczny!” Oczywiście, że działa u ciebie na komputerze! Czy potrafisz sobie wyobrazić wdrażanie czegoś, co nawet u siebie nie potrafisz uruchomić? Możesz używać tego jako mantry, gdy zastanawiasz się, czy funkcję należy przetestować, o ile nie ma łańcucha odpowiedzialności. Jeśli nikt nie wymusza odpowiedzi na twoje błędy, to rób, co chcesz. Oznacza to, że nadmierna budżet firmy, dla której pracujesz, pozwala twoim szefom tolerować te błędy.
+
+Jeśli jednak musisz naprawić własne błędy, podejście „U mnie działa” wprowadza cię w bardzo wolny i marnujący czas cykl z powodu opóźnień między wdrożeniem a pętlami zwrotnymi. Jednym z podstawowych problemów z produktywnością programisty jest to, że przerwy powodują znaczne opóźnienia. Powodem jest „strefa”. Omówiłem już, jak zagrzewanie się do kodu może sprawić, że twoje koła produktywności zaczną się kręcić. Ten stan umysłu jest czasem nazywany „strefą”. Jesteś w strefie, jeśli znajdujesz się w tym produktywnym stanie umysłu. Podobnie przerywanie może spowodować zatrzymanie się tych kół i wyjście ze strefy, więc musisz się ponownie rozgrzać. Jak pokazuje rysunek 4.2, zautomatyzowane testy łagodzą ten problem, trzymając cię w strefie, aż osiągniesz pewien stopień pewności co do ukończenia funkcji. Pokazuje to dwa różne cykle, jak kosztowne może być podejście „U mnie działa” zarówno dla biznesu, jak i dla programisty. Za każdym razem, gdy wychodzisz ze strefy, potrzebujesz dodatkowego czasu, aby do niej wrócić, czasami może być to nawet dłużej niż czas wymagany do ręcznego przetestowania swojej funkcji.
+
+
+
+![CH04_F02_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_4-2.png)
+
+Możesz osiągnąć szybki cykl iteracji podobny do zautomatyzowanych testów za pomocą testów manualnych, ale po prostu zajmują one więcej czasu. Dlatego zautomatyzowane testy są świetne: trzymają cię w strefie i kosztują cię najmniej czasu. Można argumentować, że pisanie i uruchamianie testów to rozłączne czynności, które mogą wyprowadzić cię ze strefy. Niemniej jednak uruchamianie testów jednostkowych jest niezwykle szybkie i powinno zakończyć się w ciągu sekund. Pisanie testów jest nieco rozłączną aktywnością, ale pozwala ci zastanowić się nad kodem, który napisałeś. Możesz nawet uznać to za ćwiczenie podsumowujące. Ten rozdział dotyczy głównie testów jednostkowych ogólnie, ponieważ znajdują się one w korzystnej pozycji pod względem kosztów w stosunku do ryzyka, jak pokazano na rysunku 4.1.
+
+4.2 Jak przestać irytować się na testy i je pokochać
+
+Testowanie jednostkowe polega na pisaniu testowego kodu, który testuje pojedynczą jednostkę twojego kodu, zwykle funkcję. Zdarzą się osoby, które będą dyskutować o tym, co stanowi jednostkę. W zasadzie nie ma to dużego znaczenia, pod warunkiem że możesz przetestować daną jednostkę w izolacji. I tak czy inaczej nie możesz przetestować całej klasy za jednym testem. Każdy test faktycznie testuje tylko pojedynczy scenariusz dla danej funkcji. Dlatego zwykle dla jednej funkcji można mieć wiele testów.
+
+Frameworki testowe ułatwiają pisanie testów, ale nie są konieczne. Pakiet testowy może po prostu być oddzielnym programem, który uruchamia testy i pokazuje wyniki. Tak naprawdę, przed pojawieniem się frameworków testowych, to był jedyny sposób na przetestowanie swojego programu. Chciałbym pokazać ci prosty fragment kodu i jak ewoluowało testowanie jednostkowe na przestrzeni lat, dzięki czemu będziesz mógł pisać testy dla danej funkcji tak łatwo, jak to tylko możliwe.
+
+Wyobraź sobie, że masz za zadanie zmienić sposób wyświetlania daty postów na mikroblogowej stronie internetowej o nazwie Blabber. Daty postów były wyświetlane jako pełna data, a zgodnie z nową modą na mediach społecznościowych, bardziej korzystne jest stosowanie skrótów, które pokazują czas od utworzenia posta wyrażony w sekundach, minutach, godzinach, itp. Musisz napisać funkcję, która przyjmuje obiekt DateTimeOffset i zamienia go na ciąg tekstowy, który pokazuje czas trwania jako "3h" dla trzech godzin, "2m" dla dwóch minut lub "1s" dla jednej sekundy. Powinna ona pokazywać tylko najważniejszą jednostkę. Jeśli post ma trzy godziny, dwie minuty i jedną sekundę, powinien pokazać tylko "3h".
