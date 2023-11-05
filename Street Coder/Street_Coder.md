@@ -241,7 +241,7 @@ Brak jasności co do tego, nad czym pracujesz, sprawia, że programowanie staje 
 
 3. Slavoj Žižek to współczesny filozof, który cierpi na schorzenie, które zmusza go do krytykowania wszystkiego na świecie, bez wyjątków.
 
-4. Zeno był starożytnym Grekiem, który żył tysiące lat temu i nie mógł przestać zadawać frustrujących pytań. Naturalnie żadne z jego pism nie przetrwały.
+4. Zenon z Elei był starożytnym Grekiem, który żył tysiące lat temu i nie mógł przestać zadawać frustrujących pytań. Naturalnie żadne z jego pism nie przetrwały. Wszystkie Zenki to fajne chłopaki (oprócz Zenka Martyniuka).
 
 5. PHP był kiedyś językiem programowania, który stanowił przykład tego, jak nie projektować języka programowania. O ile wiem, PHP przeszedł długą drogę od czasów, gdy był obiektem żartów programistycznych, i teraz jest fantastycznym językiem programowania. Niemniej jednak wciąż ma pewne problemy z wizerunkiem marki do rozwiązania.
 
@@ -253,7 +253,9 @@ Brak jasności co do tego, nad czym pracujesz, sprawia, że programowanie staje 
 
 9. JIT, kompilacja "just-in-time". Mityczne pojęcie stworzone przez firmę Sun Microsystems, twórcę języka Java, że jeśli skompilujesz kod podczas jego działania, stanie się szybszy, ponieważ optymalizator będzie miał więcej danych zebranych podczas działania. To nadal mit.
 
-10. Napisałem o debacie dotyczącej używania tabulatorów czy spacji z pragmatycznego punktu widzenia: https://medium.com/ @ssg/tabs-vs-spaces-towards-a-better-bike-shed-686e111a5cce.
+10. Napisałem o debacie dotyczącej używania tabulatorów czy spacji z pragmatycznego punktu widzenia: 
+
+    https://medium.com/@ssg/tabs-vs-spaces-towards-a-better-bike-shed-686e111a5cce.
 
 11. Spinnery są współczesnymi klepsydrami w świecie komputerów. W czasach starożytnych, komputery używały klepsydr do sprawienia, żebyś czekał przez nieokreślony czas. Spinner to nowoczesny odpowiednik tej animacji. Zazwyczaj jest to nieskończony obracający się łuk. To tylko dystrakcja, która pozwala utrzymać frustrację użytkownika pod kontrolą.
 
@@ -1564,3 +1566,856 @@ Jeśli nie możesz znaleźć nic do poprawy, możesz skorzystać z analizatorów
 Nawet nie musisz stosować wprowadzonych zmian, ponieważ służą one tylko do rozgrzewki przed kodowaniem. Na przykład możesz być niepewny, czy możesz zastosować określoną poprawkę, może wydawać się ryzykowna, ale zrobiłeś już tak wiele. Ale jak już się nauczyłeś, po prostu to odrzuć. Zawsze możesz zacząć od nowa i zrobić to jeszcze raz. Nie martw się zbytnio o odrzucanie swojej pracy. Jeśli jesteś bardzo zainteresowany, zrób kopię zapasową, ale naprawdę bym się tym nie martwił.
 
 Jeśli wiesz, że twoja drużyna będzie zadowolona z wprowadzonych zmian, opublikuj je. Satysfakcja z poprawy, choćby najmniejszej, może cię zmotywować do wprowadzenia większych zmian.
+
+
+
+#### 3.4 Nie powtarzaj się
+Powielanie i programowanie metodą kopiuj-wklej to koncepcje, które są patrzone z goryczą w środowisku rozwoju oprogramowania. Jak każda zdrowa zasada, stały się one ostatecznie jakaś formą religii, co powoduje cierpienie ludzi.
+
+Teoria jest taka: napisujesz kawałek kodu. Potrzebujesz tego samego kawałka kodu w innym miejscu w programie. Zachętą początkującego programisty byłoby po prostu skopiowanie i wklejenie tego samego kodu i użycie go. Na razie wszystko jest w porządku. Następnie znajdujesz błąd w skopiowanym kodzie. Teraz musisz zmienić kod w dwóch oddzielnych miejscach. Musisz trzymać je w synchronizacji. To stworzy więcej pracy i sprawi, że nie dotrzymasz terminów.
+
+Brzmi logicznie, prawda? Zazwyczaj rozwiązaniem tego problemu jest umieszczenie kodu w wspólnym pliku klasy lub module i używanie go w obu częściach programu. Więc, kiedy zmieniasz wspólny kod, zmieniasz go magicznie wszedzie tam, gdzie jest używany, co pozwala zaoszczędzić wiele czasu.
+
+Na razie wszystko jest w porządku, ale to nie trwa wiecznie. Problemy zaczynają się pojawiać, kiedy zaczynasz stosować tą zasadę do wszystkiego, co możliwe, i to w niewłączony sposób. Jedna drobna rzecz, którą pomijasz, próbując przerobić kod na ponownie używalne klasy, polega na tym, że tworzysz nowe zależności, a zależności wpływają na twój projekt. Czasami nawet mogą cię zmusić do określonego podejścia.
+
+Największy problem z wspólnymi zależnościami polega na tym, że części oprogramowania, które używają wspólnego kodu, mogą się różnić w swoich wymaganiach. Kiedy to się zdarzy, odruchem programisty jest dostosowanie się do różnych potrzeb przy użyciu tego samego kodu. Oznacza to dodawanie opcjonalnych parametrów, logiki warunkowej, aby upewnić się, że wspólny kod może obsługiwać dwa różne wymagania. To sprawia, że właściwy kod staje się bardziej skomplikowany, co ostatecznie powoduje więcej problemów, niż rozwiązuje. W pewnym momencie zaczynasz myśleć o bardziej skomplikowanym projekcie niż kod kopiowany i wklejany.
+
+Rozważmy przykład, w którym masz za zadanie napisać interfejs API dla sklepu internetowego. Klient chce zmienić adres dostawy dla klienta, który jest reprezentowany przez klasę o nazwie PostalAddress, wyglądającą tak:
+
+```csharp
+public class PostalAddress {
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Address1 { get; set; }
+    public string Address2 { get; set; }
+    public string City { get; set; }
+    public string ZipCode { get; set; }
+    public string Notes { get; set; }
+}
+```
+
+Musisz zastosować pewne normalizacje do pól, takie jak kapitalizacja, aby wyglądały one odpowiednio nawet wtedy, gdy użytkownik nie poda prawidłowych danych wejściowych. Funkcja aktualizacji mogłaby wyglądać jak sekwencja operacji normalizacji i aktualizacji w bazie danych:
+
+```csharp
+public void SetShippingAddress(Guid customerId, PostalAddress newAddress) {
+    normalizeFields(newAddress);
+    db.UpdateShippingAddress(customerId, newAddress);
+}
+
+private void normalizeFields(PostalAddress address) {
+    address.FirstName = TextHelper.Capitalize(address.FirstName);
+    address.LastName = TextHelper.Capitalize(address.LastName);
+    address.Notes = TextHelper.Capitalize(address.Notes);
+}
+```
+
+Nasza metoda `Capitalize` działałaby przez zamienianie pierwszego znaku na wielką literę, a resztę ciągu na małe litery.
+
+
+
+Teraz wydaje się, że działa to dla notatek i imion: "gunyuz" staje się "Gunyuz", a "PLEASE LEAVE IT AT THE DOOR" staje się "Proszę zostawić to przy drzwiach", co oszczędza nieco nerwów dostawcy. Po uruchomieniu aplikacji na pewien czas chcesz również znormalizować nazwy miast. Dodajesz to do funkcji `normalizeFields`:
+
+```csharp
+address.City = TextHelper.Capitalize(address.City);
+```
+
+Jak dotąd wszystko jest w porządku, ale gdy zaczynasz otrzymywać zamówienia z San Francisco, zauważasz, że są one znormalizowane jako "San francisco." Teraz musisz zmienić logikę funkcji kapitalizującej, aby kapitalizować każde słowo, więc nazwa miasta staje się "San Francisco." To pomoże również w przypadku imion dzieci Elona Muska. Ale potem zauważasz, że notatka dostawy staje się "Please Leave It At The Door." To jest lepsze niż całe zdanie w dużych literach, ale szef chce, żeby było idealnie. Co zrobić?
+
+Najłatwiejszą zmianą, która wprowadza najmniejsze zmiany w kodzie, wydaje się być zmiana funkcji `Capitalize`, aby przyjmowała dodatkowy parametr dotyczący zachowania. Kod w poniższym listingu 3.2 przyjmuje dodatkowy parametr o nazwie `everyWord`, który określa, czy ma kapitalizować każde słowo czy tylko pierwsze słowo. Proszę zauważyć, że nie nazwałeś tego parametru `isCity` lub czegoś w tym stylu, ponieważ to, do czego go używasz, nie jest problemem funkcji `Capitalize`. Nazwy powinny wyjaśniać rzeczy w kontekście, w którym są używane, a nie wywołującego. W każdym razie dzielisz tekst na słowa, jeśli `everyWord` jest prawdziwe, i kapitalizujesz każde słowo osobno, wywołując siebie dla każdego słowa, a następnie łączysz słowa z powrotem w nowy ciąg znaków.
+
+```swift
+public static string Capitalize(string text, 
+    bool everyWord = false) {
+    if (text.Length < 2) {
+      return text;
+    }
+    if (!everyWord) {
+      return Char.ToUpper(text[0]) + text.Substring(1).ToLower(); 
+    }    
+    string[] words = text.Split(' ');
+    for (int i = 0; i < words.Length; i++) {
+      words[i] = Capitalize(words[i]);
+    }
+    return String.Join(" ", words);
+  }
+```
+
+Już teraz zaczyna to wyglądać na skomplikowane, ale proszę wytrzymaj ze mną - naprawdę chcę, abyś się przekonał o tym. Zmiana zachowania funkcji wydaje się być najprostszym rozwiązaniem. Po prostu dodajesz parametr i stosujesz tu i ówdzie instrukcje warunkowe, i gotowe. To tworzy złą nawyk, niemal odruch, aby każdą małą zmianę traktować w ten sposób, co może stworzyć ogromną ilość złożoności.
+
+Załóżmy, że potrzebujesz również kapitalizacji dla nazw plików do pobrania w swojej aplikacji, i już masz funkcję, która poprawia wielkość liter, więc potrzebujesz tylko kapitalizacji nazw plików i ich oddzielenia podkreśleniem. Na przykład, jeśli API otrzyma raport faktury, powinien stać się Invoice_Report. Ponieważ już masz funkcję kapitalizacji, twoim pierwszym instynktem będzie znowu nieznaczna modyfikacja jej zachowania. Dodajesz nowy parametr o nazwie `filename`, ponieważ dodawane zachowanie nie ma bardziej ogólnej nazwy, i sprawdzasz ten parametr w miejscach, gdzie ma to znaczenie. Przy konwersji na wielkie i małe litery musisz używać funkcji ToUpper i ToLower w wersjach z invariant culture, aby nazwy plików na tureckich komputerach nagle nie stały się İnvoice_Report. Zauważ kropkę nad literą "I" w İnvoice_Report? Nasza implementacja teraz wyglądałaby tak, jak pokazano poniżej.
+
+
+
+```swift
+public static string Capitalize(string text,
+    bool everyWord = false, bool filename = false) {
+    if (text.Length < 2) {
+      return text;
+    }
+    if (!everyWord) {
+      if (filename) {
+        return Char.ToUpperInvariant(text[0]) 
+          + text.Substring(1).ToLowerInvariant();
+      }
+      return Char.ToUpper(text[0]) + text.Substring(1).ToLower();
+    }
+    string[] words = text.Split(' ');
+    for (int i = 0; i < words.Length; i++) {
+      words[i] = Capitalize(words[i]);
+    }
+    string separator = " ";
+    if (filename) {
+      separator = "_";
+    }
+    return String.Join(separator, words);
+  }
+```
+
+Spójrz, jakie monstrum stworzyłeś. Naruszyłeś swoją zasadę dotyczącą krzyżujących się zagadnień i sprawiłeś, że twoja funkcja `Capitalize` stała się świadoma twoich konwencji dotyczących nazw plików. Nagle stała się częścią konkretnej logiki biznesowej, zamiast pozostać ogólna. Tak, maksymalnie wykorzystujesz kod wielokrotnego użytku, ale utrudniłeś sobie pracę w przyszłości.
+
+Zauważ, że stworzyłeś nowy przypadek, który nawet nie był uwzględniony w twoim projekcie: nowy format nazwy pliku, w którym nie wszystkie słowa są zapisane wielkimi literami. Jest to widoczne poprzez warunek, gdzie `everyWord` jest fałszywe, a `filename` jest prawdziwe. Nie zamierzałeś tego, ale teraz to masz. Inny programista może polegać na tym zachowaniu, i to właśnie sprawia, że twój kod staje się z czasem chaosem.
+
+Proponuję czystsze podejście: nie bój się powtarzać. Zamiast próbować scalenia każdego drobiazgu logicznego w ten sam kod, staraj się mieć osobne funkcje, które być może mają nieco powtarzający się kod. Możesz mieć oddzielne funkcje dla każdego przypadku użycia. Możesz mieć jedną, która kapitalizuje tylko pierwszą literę, inną, która kapitalizuje każde słowo, i jeszcze inną, która faktycznie formatuje nazwę pliku. Nawet nie muszą one być obok siebie - kod dotyczący nazwy pliku może pozostać bliżej logiki biznesowej, dla której jest wymagany. Zamiast tego masz te trzy funkcje, które lepiej przekazują swoje intencje. Pierwsza nosi nazwę `CapitalizeFirstLetter`, więc jej funkcja jest jasna. Druga to `CapitalizeEveryWord`, co też lepiej wyjaśnia, co robi. Wywołuje `CapitalizeFirstLetter` dla każdego słowa, co jest znacznie łatwiejsze do zrozumienia niż próba zastanawiania się nad rekurencją. Na koniec masz `FormatFilename`, która ma zupełnie inną nazwę, ponieważ kapitalizacja to nie jedyna rzecz, którą robi. Zawiera całą logikę kapitalizacji zaimplementowaną od podstaw. Pozwala to swobodnie modyfikować funkcję, gdy twoje zasady formatowania nazw plików się zmieniają, bez konieczności zastanawiania się, jak wpłynie to na pracę z wielkością liter, jak pokazano poniżej.
+
+```swift
+public static string CapitalizeFirstLetter(string text) {
+   if (text.Length < 2) {
+     return text.ToUpper();
+   }
+   return Char.ToUpper(text[0]) + text.Substring(1).ToLower();
+ }
+
+ public static string CapitalizeEveryWord(string text) {
+   var words = text.Split(' ');
+   for (int n = 0; n < words.Length; n++) {
+     words[n] = CapitalizeFirstLetter(words[n]);
+   }
+   return String.Join(" ", words);
+ }
+
+ public static string FormatFilename(string filename) {
+   var words = filename.Split(' ');
+   for (int n = 0; n < words.Length; n++) {
+     string word = words[n];
+     if (word.Length < 2) {
+       words[n] = word.ToUpperInvariant();
+     } else {
+       words[n] = Char.ToUpperInvariant(word[0]) +
+         word.Substring(1).ToLowerInvariant();
+     }
+   }
+   return String.Join("_", words);
+ }
+```
+
+W ten sposób nie będziesz musiał wciskać każdego możliwego fragmentu logiki do jednej funkcji. To staje się szczególnie istotne, gdy wymagania różnią się między użytkownikami.
+
+**3.4.1 Powtórne użycie czy kopiowanie?**
+Jak decydujesz między ponownym użyciem kodu a jego replikacją w innym miejscu? Największym czynnikiem jest to, jak opisujesz obawy użytkownika, czyli opisanie wymagań użytkownika tak, jak są one naprawdę. Gdy opisujesz wymagania funkcji, w której nazwa pliku musi być sformatowana, jesteś stronniczy ze względu na istnienie funkcji, która jest dość bliska temu, co chcesz zrobić (kapitalizacja), co natychmiast sygnalizuje twojemu umysłowi, aby użyć tej istniejącej funkcji. Jeśli nazwa pliku miałaby być kapitalizowana dokładnie tak samo, może to mieć sens, ale różnice w wymaganiach powinny być sygnałem alarmowym.
+
+W informatyce trzy rzeczy są trudne: nieprawidłowe nazywanie, nazywanie rzeczy i błędy o jeden.3 Prawidłowe nazywanie rzeczy jest jednym z najważniejszych czynników podczas rozumienia konfliktujących wymagań w ponownym użyciu kodu. Nazwa `Capitalize` prawidłowo określa funkcję. Mogliśmy nazwać ją `NormalizeName`, gdy ją pierwszy raz tworzyliśmy, ale uniemożliwiłoby nam to ponowne użycie jej w innych polach. To, co zrobiliśmy, to nazwanie rzeczy tak blisko, jak to tylko możliwe, ich rzeczywistej funkcjonalności. W ten sposób nasza funkcja może obsługiwać różne cele bez wprowadzania zamieszania, a co ważniejsze, lepiej wyjaśnia swoją pracę, gdziekolwiek jest używana. Możesz zobaczyć, jak różne podejścia do nazywania wpływają na opis rzeczywistego zachowania na rysunku 3.8.
+
+![CH03_F08_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_3-8.png)
+
+Moglibyśmy zagłębić się w rzeczywistą funkcjonalność, taką jak "Ta funkcja zamienia pierwsze litery każdego słowa w ciągu na wielkie litery i pozostałe litery zamienia na małe litery", ale to trudno zmieścić w nazwie. Nazwy powinny być jak najkrótsze i jak najbardziej jednoznaczne. Nazwa `Capitalize` spełnia te wymagania.
+
+Świadomość obaw związanych z danym fragmentem kodu to ważna umiejętność. Zazwyczaj przypisuję funkcjom i klasom osobowości, aby sklasyfikować ich obawy. Mówię na przykład: "Ta funkcja się tym nie przejmuje", jakby to była osoba. W ten sposób możesz zrozumieć obawy danego fragmentu kodu. Dlatego nazwaliśmy parametr do kapitalizacji każdego słowa `everyWord`, a nie `isCity`, ponieważ funkcja po prostu nie przejmuje się tym, czy to miasto, czy nie. To nie jest troska funkcji.
+
+Kiedy nazywasz rzeczy bliżej ich kręgu zainteresowań, ich wzorce użycia stają się bardziej widoczne. Dlaczego więc nazwaliśmy funkcję formatującą nazwę pliku `FormatFilename`? Czy nie powinniśmy nazwać jej `CapitalizeInvariantAndSeparateWithUnderscores`? Nie. Funkcje mogą wykonywać wiele rzeczy, ale wykonują tylko jedno zadanie, i powinny być nazwane zgodnie z tym zadaniem. Jeśli czujesz potrzebę użycia spójników "i" lub "lub" w nazwie funkcji, albo źle ją nazwałeś, albo nadajesz jej zbyt wiele odpowiedzialności.
+
+Nazwa to tylko jeden aspekt obaw związanych z kodem. Gdzie kod się znajduje, jego moduł, jego klasa, także może być wskazaniem, jak zdecydować, czy go ponownie użyć.
+
+### 3.5 Wymyśl to sam
+Istnieje powszechne tureckie wyrażenie, które dosłownie tłumaczy się na "Nie wymyślaj teraz wynalazku". Oznacza to: "Nie sprawiaj nam kłopotów próbując teraz czegoś nowego, nie mamy na to czasu". Wynajdywanie koła na nowo jest problematyczne. Ta patologia ma nawet swoją nazwę w środowisku informatycznym: Zespół "Nie Wynaleźliśmy Tego Tu". Odnosi się ona do osób, które nie potrafią spać spokojnie, jeśli sami nie wynalazą już istniejącego produktu.
+
+Oczywiście, tworzenie czegoś od podstaw, kiedy istnieje znane i działające alternatywne rozwiązanie, to dużo pracy. Jest to również podatne na błędy. Problem pojawia się, gdy ponowne używanie istniejących rozwiązań staje się normą, a tworzenie czegoś nowego staje się nieosiągalne. Zaognienie tego punktu widzenia ostatecznie zamienia się w motto "nigdy niczego nie wynajduj". Nie powinieneś bać się wynajdywania rzeczy.
+
+Po pierwsze, wynalazca ma umysł pytający. Jeśli będziesz ciągle zadawać pytania, nieuchronnie stanie się z ciebie wynalazca. Kiedy wyraźnie uniemożliwiasz sobie zadawanie pytań, zaczynasz stawać się nudny i zamieniasz się w pracownika umysłowego. Powinieneś unikać tego podejścia, ponieważ osobie pozbawionej pytającego umysłu niemożliwe jest zoptymalizowanie swojej pracy.
+
+Po drugie, nie wszystkie wynalazki mają alternatywy. Twoje własne abstrakcje to także wynalazki - twoje klasy, twoje projekty, pomocnicze funkcje, które wymyślasz. Wszystkie one są ułatwieniem pracy, ale wymagają wynalezienia.
+
+Zawsze chciałem napisać stronę internetową, która dostarcza raporty ze statystyk Twittera dotyczące moich obserwujących oraz osób, które obserwuję. Problem polega na tym, że nie chcę uczyć się, jak działa Twitter API. Wiem, że istnieją biblioteki, które się tym zajmują, ale również nie chcę uczyć się, jak one działają, a co ważniejsze, nie chcę, aby ich implementacja wpływała na mój projekt. Jeśli użyję konkretnej biblioteki, zwiąże mnie to z API tej biblioteki, i jeśli zechcę ją zmienić, będę musiał przepisać kod wszędzie.
+
+Sposób radzenia sobie z tymi problemami polega na wynalezieniu czegoś własnego. Tworzymy nasze wymarzone interfejsy i umieszczamy je jako abstrakcje przed biblioteką, którą używamy. W ten sposób unikamy związania się z konkretnym projektem API. Jeśli chcemy zmienić używaną bibliotekę, po prostu zmieniamy naszą abstrakcję, a nie cały kod w naszym projekcie. Obecnie nie mam pojęcia, jak działa Twitterowe API internetowe, ale wyobrażam sobie, że jest to zwykły żądanie sieciowe z jakimś elementem identyfikującym autoryzację dostępu do API Twittera. Oznacza to uzyskanie informacji od Twittera.
+
+Pierwszy odruch programisty to znalezienie pakietu i sprawdzenie dokumentacji, jak go zintegrować z własnym kodem. Zamiast tego wynalazłem własne API i używam go, które ostatecznie wywołuje bibliotekę, którą używam pod spodem. Moje API powinno być jak najprostsze dla moich wymagań. Stań się swoim własnym klientem.
+
+Po pierwsze, przejrzyj wymagania dotyczące API. API oparte na stronie internetowej zapewnia interfejs użytkownika w sieci, umożliwiający udzielenie uprawnień dla aplikacji. Otwiera stronę na Twitterze, która prosi o pozwolenie i przekierowuje z powrotem do aplikacji, jeśli użytkownik zatwierdzi. Oznacza to, że musimy wiedzieć, którego URL-a użyć do autoryzacji i którego URL-a przekierować z powrotem. Następnie możemy użyć danych ze strony przekierowanej do wykonania dodatkowych wywołań API później.
+
+Nie powinniśmy potrzebować niczego więcej po autoryzacji. Wyobrażam sobie API do tego celu w następujący sposób.
+
+
+
+```swift
+public class Twitter { 
+  public static Uri GetAuthorizationUrl(Uri callbackUrl) {
+    string redirectUrl = ""; 
+    // ... do something here to build the redirect url 
+    return new Uri(redirectUrl); 
+  } 
+ 
+  public static TwitterAccessToken GetAccessToken(
+    TwitterCallbackInfo callbackData) { 
+    // we should be getting something like this  
+    return new TwitterAccessToken(); 
+  } 
+ 
+  public Twitter(TwitterAccessToken accessToken) { 
+    // we should store this somewhere 
+  } 
+ 
+  public IEnumerable<TwitterUserId> GetListOfFollowers(
+    TwitterUserId userId) { 
+    // no idea how this will work 
+  } 
+} 
+ 
+public class TwitterUserId {
+  // who knows how twitter defines user ids 
+} 
+ 
+public class TwitterAccessToken {
+  // no idea what this will be 
+} 
+ 
+public class TwitterCallbackInfo {
+  // this neither 
+}
+```
+
+
+
+
+
+Wynaleźliśmy coś od podstaw, nowe API Twittera, chociaż niewiele wiemy o tym, jak naprawdę działa Twitter API. Nasze API może nie być najlepsze dla ogólnego użytku, ale naszymi klientami jesteśmy sami, więc mamy luksus zaprojektowania go tak, aby odpowiadał naszym potrzebom. Na przykład nie sądzę, że będę musiał radzić sobie z tym, jak dane są przesyłane porcjami z oryginalnego API, i nie obchodzi mnie, czy muszę czekać i blokować działający kod, co może nie być pożądane w bardziej ogólnym API.
+
+UWAGA
+
+To podejście do posiadania własnych wygodnych interfejsów, które działają jako adapter, jest, jak nietrudno się domyślić, nazywane wzorcem adaptera na ulicach. Unikam podkreślania nazw nad rzeczywistą użyteczność, ale w przypadku, gdy ktoś zapyta, teraz już wiesz.
+
+Później możemy wyodrębnić interfejs z klas, które zdefiniowaliśmy, aby nie musieć polegać na konkretnych implementacjach, co ułatwia testowanie. Nawet nie wiemy, czy używana przez nas biblioteka Twittera obsługuje łatwe zastępowanie swojej implementacji. Czasami możesz napotkać przypadki, gdy twój wymarzony projekt naprawdę nie pasuje do projektu rzeczywistego produktu. W takim przypadku musisz dostosować swój projekt, ale to dobry znak - oznacza to, że twój projekt również odzwierciedla twoje zrozumienie podstawowej technologii.
+
+Więc może trochę skłamałem. Nie pisz biblioteki Twittera od zera. Ale nie odbiegaj od myślenia wynalazcy. Idą one w parze i powinieneś trzymać się obu.
+
+### 3.6 Nie używaj dziedziczenia
+
+Programowanie obiektowe (OOP) spadło na świat programowania jak kowadło w latach 90. XX wieku, powodując zmianę paradygmatu z programowania strukturalnego. Uważano je za rewolucyjne. Wiekowe problemy związane z ponownym użyciem kodu zostały wreszcie rozwiązane.
+
+Najbardziej podkreślaną cechą OOP była dziedziczenie. Można było definiować ponowne użycie kodu jako zestaw dziedziczonych zależności. Dzięki temu możliwe było nie tylko prostsze ponowne użycie kodu, ale także prostsza modyfikacja kodu. Aby stworzyć nowy kod o nieco innych zachowaniach, nie musiałeś myśleć o zmianie oryginalnego kodu. Po prostu dziedziczyłeś go i przesłaniałeś odpowiednią część, aby uzyskać zmodyfikowane zachowanie.
+
+Dziedziczenie przysporzyło jednak więcej problemów, niż rozwiązało w dłuższej perspektywie. Jednym z pierwszych problemów było wielokrotne dziedziczenie. Co by było, gdybyś musiał użyć kodu z wielu klas, a wszystkie miały metodę o tej samej nazwie, być może o tej samej sygnaturze? Jak to miałoby działać? A co z problemem diamentowej zależności, przedstawionym na rysunku 3.9? Byłoby to naprawdę skomplikowane, dlatego bardzo mało języków programowania zdecydowało się na jego implementację.
+
+
+
+
+
+![CH03_F09_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_3-9.png)
+
+Oprócz wielokrotnego dziedziczenia, większym problemem z dziedziczeniem jest silna zależność, znana również jako ścisłe powiązanie. Jak już wspomniałem, zależności są korzeniem wszelkiego zła. Ze względu na swoją naturę dziedziczenie łączy cię z konkretną implementacją, co jest uważane za naruszenie jednej z uznawanych zasad programowania obiektowego, czyli zasady odwrócenia zależności. Ta zasada mówi, że kod nie powinien zależeć od konkretnej implementacji, lecz od abstrakcji.
+
+Dlaczego istnieje taka zasada? Ponieważ gdy jesteś związany z konkretną implementacją, twój kod staje się sztywny i niezmienny. Jak już widzieliśmy, sztywny kod jest bardzo trudny do przetestowania lub zmodyfikowania.
+
+Jak więc można ponownie użyć kodu? Jak można odziedziczyć swoją klasę po abstrakcji? To proste - nazywa się to kompozycją. Zamiast dziedziczyć po klasie, otrzymujesz jej abstrakcję jako parametr w swoim konstruktorze. Wyobraź sobie swoje komponenty jako klocki Lego, które wzajemnie się wspierają, zamiast jako hierarchię obiektów.
+
+W przypadku zwykłego dziedziczenia, związek między wspólnym kodem a jego wariantami jest wyrażany modelem przodka/potomka. W przeciwieństwie do tego, kompozycja traktuje wspólną funkcję jako osobny komponent.
+
+
+
+ZASADY SOLID
+
+Istnieje słynny skrótowiec SOLID, który oznacza pięć zasad programowania obiektowego. Problem polega na tym, że SOLID wydaje się być stworzony po to, aby utworzyć sensowne słowo, a nie po to, aby uczynić nas lepszymi programistami. Nie uważam, że wszystkie jego zasady mają takie samo znaczenie, a niektóre mogą w ogóle nie mieć znaczenia. Zdecydowanie sprzeciwiam się przyjmowaniu zestawu zasad bez przekonania się o ich wartości.
+
+Zasada pojedynczej odpowiedzialności, litera S w SOLID, mówi, że klasa powinna być odpowiedzialna za jedną rzecz, a nie za wiele, jak w przypadku tzw. klas boskich. Jest to dość niejasne, ponieważ to my definiujemy, co oznacza jedna rzecz. Czy możemy powiedzieć, że klasa z dwoma metodami nadal jest odpowiedzialna za jedną rzecz? Nawet klasa boska jest odpowiedzialna za jedną rzecz na pewnym poziomie: bycie klasą boską. Zamiast tego proponuję zasadę klarownej nazwy: nazwa klasy powinna jak najmniej niejasno wyjaśniać jej funkcję. Jeśli nazwa jest zbyt długa lub niejasna, klasę należy podzielić na kilka mniejszych klas.
+
+Zasada otwarte/zamknięte, litera O w SOLID, mówi, że klasa powinna być otwarta na rozszerzenie, ale zamknięta na modyfikację. Oznacza to, że powinniśmy projektować klasy tak, aby ich zachowanie można było modyfikować z zewnątrz. Jest to ponownie bardzo niejasne i może być czasochłonne. Rozszerzalność to decyzja projektowa, która nie zawsze jest pożądana, praktyczna lub nawet bezpieczna. Wydaje się to być porównywalne do rady „użyj opon wyścigowych” w programowaniu. Zamiast tego powiedziałbym „Potraktuj rozszerzalność jako funkcję”.
+
+Zasada podstawienia Liskov, wymyślona przez Barbarę Liskov, mówi, że zachowanie programu nie powinno się zmieniać, jeśli jedną z używanych klas zostanie zastąpiona klasą pochodną. Chociaż rada jest słuszna, nie sądzę, że ma znaczenie w codziennej pracy programisty. Wydaje się to być porównywalne do rady „Nie popełniaj błędów”. Jeśli łamiesz kontrakt interfejsu, program będzie miał błędy. Jeśli projektujesz zły interfejs, program również będzie miał błędy. To naturalny porządek rzeczy. Może to być ujęte w prostsze i bardziej praktyczne rady, takie jak „Przestrzegaj kontraktu”.
+
+Zasada segregacji interfejsów faworyzuje mniejsze i konkretne interfejsy nad ogólnymi i szeroko zakrojonymi interfejsami. Jest to zbyt skomplikowana i niejasna rada, a czasem po prostu błędna. Mogą wystąpić sytuacje, w których szeroko zakrojone interfejsy są bardziej odpowiednie dla zadania, a nadmiernie rozbudowane interfejsy mogą generować zbyt duże obciążenie. Podział interfejsów powinien wynikać z rzeczywistych wymagań projektowych, a nie arbitralnych kryteriów dotyczących ich zakresu. Jeśli pojedynczy interfejs nie spełnia wymagań, można go podzielić, ale nie dla spełnienia określonych kryteriów granulacji.
+
+Zasada odwrócenia zależności jest ostatnią zasadą. Ponownie, nie jest to zbyt dobra nazwa. Po prostu nazywajmy to zależnością od abstrakcji. Tak, uzależnienie od konkretnych implementacji prowadzi do silnego powiązania, a widzieliśmy już jego niepożądane skutki. Ale to nie oznacza, że powinieneś zaczynać tworzyć interfejsy dla każdej zależności. Wręcz przeciwnie: warto uzależniać się od abstrakcji, gdy zależy nam na elastyczności i widzimy w tym wartość, a od konkretnej implementacji w przypadkach, gdzie to nie ma znaczenia. Twój kod powinien dostosowywać się do twojego projektu, a nie na odwrót. Śmiało eksperymentuj z różnymi modelami.
+
+
+
+Kompozycja jest bardziej podobna do relacji klient-serwer niż do relacji rodzic-dziecko. Wywołujesz ponownie używany kod za jego referencją, zamiast dziedziczyć jego metody w swoim zakresie. Możesz konstruować klasę, od której zależysz, w swoim konstruktorze, a jeszcze lepiej, możesz ją otrzymać jako parametr, co pozwoliłoby ci używać jej jako zewnętrznego źródła. Pozwala to na bardziej konfigurowalne i elastyczne zarządzanie tą relacją.
+
+Otrzymywanie jej jako parametru ma dodatkową zaletę ułatwiającą testowanie jednostkowe obiektu przez wstrzykiwanie atrap (ang. mock) konkretnych implementacji. Omówię wstrzykiwanie zależności bardziej szczegółowo w rozdziale 5.
+
+Użycie kompozycji zamiast dziedziczenia może wymagać napisania znacznie więcej kodu, ponieważ możesz potrzebować definiować zależności za pomocą interfejsów zamiast konkretnych odwołań, ale jednocześnie pozwoli to na uwolnienie kodu od zależności. Nadal musisz rozważyć za i przeciw kompozycji, zanim zdecydujesz się jej użyć.
+
+
+
+**3.7 Nie używaj klas**
+
+Żeby było jasne – klasy są świetne. Wykonują swoją pracę, a potem ustępują miejsca. Jak omawiałem w rozdziale 2, niosą ze sobą niewielkie obciążenie odwołań do referencji i zajmują nieco więcej przestrzeni w stosunku do typów wartości. Te kwestie nie będą miały znaczenia większość czasu, ale ważne jest, abyś znał ich zalety i wady, aby zrozumieć kod oraz jak możesz wpływać na niego podejmując złe decyzje.
+
+Typy wartości mogą być, cóż, wartościowe. Podstawowe typy wartości dostępne w języku C#, takie jak int, long i double, już są typami wartości. Możesz również tworzyć własne typy wartości za pomocą konstrukcji takich jak enum i struct.
+
+
+
+### 3.7.1 Enumeracje są cacy!
+
+Enumeracje są świetne do przechowywania dyskretnych wartości porządkowych. Klasy również mogą być używane do definiowania dyskretnych wartości, ale brakuje im pewnych udogodnień, których enums posiadają. Oczywiście, klasa zawsze jest lepsza od zakodowania wartości na stałe.
+
+Jeśli piszesz kod obsługujący odpowiedź na żądanie sieciowe, które wysyłasz w swojej aplikacji, możesz być zmuszony do radzenia sobie z różnymi numerycznymi kodami odpowiedzi. Załóżmy, że odpytujesz serwis pogodowy Narodowej Służby Meteorologicznej o informacje pogodowe dla podanej lokalizacji użytkownika i piszesz funkcję do pobierania potrzebnych danych. W kodzie przedstawionym w listingu 3.6 używamy RestSharp do żądań API oraz Newtonsoft.JSON do analizy odpowiedzi, sprawdzając, czy kod statusu HTTP jest udany, korzystając z hardcoded wartości (200) w warunku if. Następnie używamy biblioteki Json.NET do analizy odpowiedzi na dynamiczny obiekt, aby wydobyć potrzebne informacje.
+
+
+
+```swift
+static double? getTemperature(double latitude,
+  double longitude) {
+  const string apiUrl = "https://api.weather.gov";
+  string coordinates = $"{latitude},{longitude}";
+  string requestPath = $"/points/{coordinates}/forecast/hourly";
+  var client = new RestClient(apiUrl);
+  var request = new RestRequest(requestPath);
+  var response = client.Get(request);
+  if (response.StatusCode == 200) {
+    dynamic obj = JObject.Parse(response.Content);
+    var period = obj.properties.periods[0];
+    return (double)period.temperature;
+  }
+  return null;
+}
+```
+
+Największym problemem z zakodowanymi na stałe wartościami jest niezdolność ludzi do zapamiętania liczb. Nie jesteśmy w tym dobry. Nie jesteśmy w stanie zrozumieć ich od razu, z wyjątkiem liczby zer na naszych wypłatach. Są trudniejsze do wpisania niż proste nazwy, ponieważ trudno jest skojarzyć liczby z mnemonikami, a jednak łatwo popełnić literówkę. Drugim problemem z zakodowanymi wartościami jest to, że wartości mogą się zmieniać. Jeśli używasz tej samej wartości wszędzie indziej, oznacza to, że trzeba zmienić wszystko inne tylko po to, aby zmienić jedną wartość.
+
+Drugi problem z liczbami polega na tym, że brakuje im intencji. Wartość numeryczna, tak jak 200, może oznaczać cokolwiek. Nie wiemy, co to jest. Dlatego unikaj zakodowywania wartości na stałe.
+
+Klasy są jednym ze sposobów na hermetyzowanie wartości. Możesz hermetyzować kody statusu HTTP w klasie, na przykład tak:
+
+```csharp
+class HttpStatusCode {
+    public const int OK = 200;
+    public const int NotFound = 404;
+    public const int ServerError = 500;
+    // ... i tak dalej
+}
+```
+
+W ten sposób możesz zmienić linię, która sprawdza, czy żądanie HTTP zostało pomyślnie wykonane, używając kodu podobnego do tego:
+
+```csharp
+if (response.StatusCode == HttpStatusCode.OK) {
+    // ...
+}
+```
+
+Ta wersja jest znacznie bardziej opisowa. Od razu rozumiemy kontekst, co wartość oznacza i jakie ma znaczenie w danym kontekście. Jest to absolutnie opisowe.
+
+A więc po co są enumy? Czy nie możemy użyć klas do tego? Weźmy pod uwagę, że mamy inną klasę do przechowywania wartości:
+
+```csharp
+class ImageWidths {
+    public const int Small = 50;
+    public const int Medium = 100;
+    public const int Large = 200;
+}
+```
+
+Teraz ten kod skompiluje się i co ważniejsze, zwróci prawdę:
+
+```csharp
+return HttpStatusCode.OK == ImageWidths.Large;
+```
+
+To coś, czego prawdopodobnie nie chcesz. Załóżmy, że napisalibyśmy to za pomocą enuma:
+
+```csharp
+enum HttpStatusCode {
+    OK = 200,
+    NotFound = 404,
+    ServerError = 500,
+}
+```
+
+To o wiele łatwiejsze do napisania, prawda? Jego użycie byłoby takie samo w naszym przykładzie. Co ważniejsze, każdy zdefiniowany typ enum jest odrębny, co sprawia, że wartości są bezpieczne pod względem typów, w przeciwieństwie do naszego przykładu z klasami i constami. Enumy są błogosławieństwem w naszym przypadku. Gdybyśmy próbowali porównać dwie różne typy enum, kompilator wygenerowałby błąd:
+
+```csharp
+error CS0019: Operator '==' cannot be applied to operands of type 
+'HttpStatusCode' and 'ImageWidths'
+```
+
+Świetnie! Enumy oszczędzają nam czasu, nie pozwalając nam porównywać jabłek do pomarańczy podczas kompilacji. Przekazują też intencję, podobnie jak klasy zawierające wartości. Enumy są również typami wartości, co oznacza, że są tak szybkie jak przekazywanie wartości liczbowej.
+
+### 3.7.2 Struktury są świetne!
+
+Jak wskazano w rozdziale 2, klasy posiadają niewielki narzut na pamięć. Każda klasa musi przechowywać nagłówek obiektu oraz tablicę metod wirtualnych, gdy jest instancjonowana. Dodatkowo klasy są alokowane na stercie (heap) i są ewidencjonowane przez mechanizm zbierania śmieci.
+
+Oznacza to, że .NET musi śledzić każdą zinstancjonowaną klasę i usuwać je z pamięci, gdy nie są już potrzebne. To bardzo wydajny proces - większość czasu nawet nie zauważasz, że tam jest. Jest to magia. Nie wymaga ręcznego zarządzania pamięcią. Więc nie, nie musisz się obawiać używania klas.
+
+Ale jak widzieliśmy, warto wiedzieć, kiedy możesz skorzystać z darmowej korzyści, gdy jest dostępna. Struktury są podobne do klas. Możesz w nich definiować właściwości, pola i metody. Struktury mogą również implementować interfejsy. Jednak struktura nie może być dziedziczona i także nie może dziedziczyć po innej strukturze ani klasie. To dlatego, że struktury nie mają tablicy metod wirtualnych ani nagłówka obiektu. Nie są zbierane przez mechanizm zbierania śmieci, ponieważ są alokowane na stosie wywołań (call stack).
+
+Jak już wspomniałem w rozdziale 2, stos wywołań to po prostu ciągły blok pamięci, którego jedyną zmienną jest wskaźnik do jego górnej części, który porusza się w górę i w dół w miarę wywoływania i kończenia funkcji. To sprawia, że stos jest bardzo efektywnym mechanizmem przechowywania, ponieważ oczyszczanie jest szybkie i automatyczne. Nie ma możliwości fragmentacji, ponieważ zawsze jest to LIFO (Last In, First Out).
+
+Skoro stos jest tak szybki, dlaczego nie używamy go do wszystkiego? Dlaczego istnieje sterta (heap) i mechanizm zbierania śmieci? To dlatego, że stos może istnieć tylko przez czas życia funkcji. Gdy twoja funkcja zwróci wartość, wszystko na stosie ramki funkcji jest usuwane, więc inne funkcje mogą używać tego samego miejsca na stosie. Potrzebujemy sterty dla obiektów, które przetrwają funkcje.
+
+
+
+Warto również wiedzieć, że stos ma ograniczony rozmiar. To właśnie z tego powodu istnieje cała strona internetowa o nazwie "Stack Overflow": dlatego, że twoja aplikacja ulegnie awarii, jeśli przekroczysz limit stosu. Respektuj stos - poznaj jego ograniczenia.
+
+Mimo że struktury same w sobie są typami wartości, mogą nadal zawierać typy referencyjne. Jeśli na przykład struktura zawiera ciąg znaków, nadal jest to typ referencyjny wewnątrz typu wartości, podobnie jak możesz mieć typy wartości wewnątrz typu referencyjnego. Pokażę to na ilustracjach w tej sekcji.
+
+Jeśli masz strukturę, która zawiera tylko wartość całkowitą, to zajmuje ona ogólnie mniej miejsca w pamięci niż referencja do klasy zawierającej wartość całkowitą, jak pokazano na rysunku 3.10. Nasze struktury i warianty klas służą do przechowywania identyfikatorów, o których rozmawiałem w rozdziale 2. Dwa rodzaje tej samej struktury wyglądałyby tak, jak pokazano w poniższym przykładzie.
+
+
+
+```swift
+public class Id {
+ public int Value { get; private set; }
+
+ public Id (int value) {
+   this.Value = value;
+ }
+}
+
+public struct Id {
+ public int Value { get; private set; }
+
+ public Id (int value) {
+   this.Value = value;
+ }
+}
+```
+
+
+
+Jedyna różnica w kodzie polega na słowach kluczowych `struct` i `class`, ale zauważ, jak różnią się one w sposobie przechowywania, gdy są tworzone w funkcji, np. takiej jak ta:
+
+```csharp
+var a = new Id(123);
+```
+
+Rysunek 3.10 pokazuje, jak są one rozmieszczone.
+
+
+
+![CH03_F10_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_3-10.png)
+
+Ponieważ struktury są typami wartości, przypisanie jednej struktury do drugiej tworzy również kolejną kopię całej zawartości struktury, zamiast tworzyć tylko kolejną kopię referencji:
+
+```csharp
+var a = new Id(123);
+var b = a;
+```
+
+W tym przypadku rysunek 3.11 pokazuje, jak struktury mogą być efektywne w przechowywaniu małych typów.
+
+
+
+![CH03_F11_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_3-11.png)
+
+Chociaż przechowywanie danych na stosie jest tymczasowe podczas wykonywania funkcji, jest ono znacznie mniejsze w porównaniu do sterty. Stos ma rozmiar 1 megabajta w .NET, podczas gdy sterta może pomieścić terabajty danych. Stos jest szybki, ale jeśli wypełnisz go dużymi strukturami, może łatwo się zapełnić. Ponadto kopiowanie dużych struktur jest również wolniejsze niż kopiowanie tylko referencji. Załóżmy, że chcemy przechowywać pewne informacje o użytkowniku razem z naszymi identyfikatorami. Nasza implementacja wyglądałaby jak w poniższym przykładzie.
+
+Listing 3.8 Definicja większej klasy lub struktury
+
+```csharp
+public class Person {
+  public int Id { get; private set; }
+  public string FirstName { get; private set; }
+  public string LastName { get; private set; }
+  public string City { get; private set; }
+ 
+  public Person(int id, string firstName, string lastName,
+    string city) {
+    Id = id;
+    FirstName = firstName;
+    LastName = lastName;
+    City = city;
+  }
+}
+```
+
+Jedyna różnica między tymi dwoma definicjami to słowa kluczowe struct i class. Niemniej jednak tworzenie i przypisywanie jednego do drugiego ma głęboki wpływ na to, jak działają rzeczy za kulisami. Rozważ ten prosty kod, gdzie Person może być zarówno strukturą, jak i klasą:
+
+```csharp
+var a = new Person(42, "Sedat", "Kapanoglu", "San Francisco");
+var b = a;
+```
+
+Po przypisaniu a do b, różnice w układach pamięci wynikowych są pokazane na rysunku 3.12.
+
+
+
+![CH03_F12_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_3-12.png)
+
+
+
+
+
+Stos wywołań może być niezwykle szybki i efektywny w przechowywaniu danych. Są świetne do pracy z małymi wartościami o mniejszym nakładzie pracy, ponieważ nie podlegają one gromadzeniu odpadów (garbage collection). Ponieważ nie są typami referencyjnymi, nie mogą mieć wartości null, co oznacza, że nie jest możliwe wystąpienie wyjątku null reference exception w przypadku struktur.
+
+Nie można używać struktur do wszystkiego, co jest oczywiste ze względu na sposób ich przechowywania: nie można udostępniać im wspólnego odniesienia, co oznacza, że nie można zmieniać wspólnej instancji z różnych odniesień. To jest coś, co często robimy nieświadomie i o czym nigdy nie myślimy. Rozważmy, że chcemy, aby struktura była mutowalna i używamy modyfikatorów get; set; zamiast get; private set;. Oznacza to, że możemy modyfikować strukturę na bieżąco. Spójrzmy na poniższy przykład.
+
+```swift
+public struct Person {
+ public int Id { get; set; }
+ public string FirstName { get; set; }
+ public string LastName { get; set; }
+ public string City { get; set; }
+
+ public Person(int id, string firstName, string lastName,
+   string city) {
+   Id = id;
+   FirstName = firstName;
+   LastName = lastName;
+   City = city;
+ }
+}
+```
+
+Przyjrzyjmy się temu kawałkowi kodu z mutowalną strukturą:
+
+```csharp
+var a = new Person(42, "Sedat", "Kapanoglu", "San Francisco");
+var b = a;
+b.City = "Eskisehir";
+Console.WriteLine(a.City);
+Console.WriteLine(b.City);
+```
+
+Jak myślisz, jaki będzie wynik? Gdyby to była klasa, obie linie pokazałyby "Eskisehir" jako nowe miasto. Ale ponieważ mamy dwie osobne kopie, wydrukuje "San Francisco" i "Eskisehir". Z tego powodu zawsze warto, aby struktury były prawie niezmienne, dzięki czemu nie można ich przypadkowo zmieniać później i powodować błędów.
+
+Chociaż powinieneś preferować kompozycję nad dziedziczeniem dla ponownego użycia kodu, dziedziczenie może być również przydatne, gdy dana zależność jest zawarta. Klasy mogą zapewnić większą elastyczność niż struktury w tych przypadkach.
+
+Klasy mogą zapewnić bardziej efektywne przechowywanie, gdy są większe rozmiarowo, ponieważ w przypadku przypisania będą kopiowane tylko ich odniesienia. Biorąc pod uwagę wszystko to, śmiało używaj struktur do małych, niezmienialnych typów wartości, które nie wymagają dziedziczenia.
+
+### 3.8. Napisz zły kod
+Dobre praktyki wynikają z złego kodu, ale zarazem zły kod może również powstawać w wyniku ślepego stosowania dobrych praktyk. Programowanie strukturalne, obiektowe, a nawet funkcyjne są opracowane po to, aby programiści pisali lepszy kod. Podczas gdy uczymy się dobrych praktyk, niektóre złe praktyki są też wytykane jako "zło" i całkowicie wykluczone. Przejrzyjmy niektóre z nich.
+
+
+
+#### 3.8.1 Nie używaj instrukcji If/Else
+Instrukcja If/Else jest jednym z pierwszych elementów, które uczysz się w programowaniu. Jest to wyraz jednej z podstawowych części komputerów: logiki. Kochamy If/Else. Pozwala nam wyrażać logikę naszego programu w sposób przypominający schemat przepływu. Jednak tego rodzaju wyrażenie może także sprawić, że kod staje się mniej czytelny.
+
+Podobnie jak wiele konstrukcji programistycznych, bloki If/Else powodują, że kod w warunkach jest wcięty. Załóżmy, że chcemy dodać pewną funkcjonalność do naszej klasy Person z ostatniej sekcji, aby przetworzyć rekord w bazie danych. Chcemy sprawdzić, czy właściwość City klasy Person została zmieniona i zmienić ją również w bazie danych, jeśli klasa Person wskazuje na ważny rekord. Jest to dość przesunięta implementacja. Są lepsze sposoby na realizację tych rzeczy, ale chcę ci pokazać, jak kod może się skończyć, a nie jego rzeczywistą funkcjonalność. Przedstawiam ci kształt w poniższym kodzie.
+
+```swift
+public UpdateResult UpdateCityIfChanged() {
+ if (Id > 0) {
+   bool isActive = db.IsPersonActive(Id);
+   if (isActive) {
+     if (FirstName != null && LastName != null) {
+       string normalizedFirstName = FirstName.ToUpper();
+       string normalizedLastName = LastName.ToUpper();
+       string currentCity = db.GetCurrentCityByName(
+         normalizedFirstName, normalizedLastName);
+       if (currentCity != City) {
+         bool success = db.UpdateCurrentCity(Id, City);
+         if (success) {
+           return UpdateResult.Success;
+         } else {
+           return UpdateResult.UpdateFailed;
+         }
+       } else {
+         return UpdateResult.CityDidNotChange;
+       }
+     } else {
+       return UpdateResult.InvalidName;
+     }
+   } else {
+     return UpdateResult.PersonInactive;
+   }
+ } else {
+   return UpdateResult.InvalidId;
+ }
+}
+```
+
+Nawet jeśli wytłumaczyłem, co funkcja robi krok po kroku, po pięciu minutach wrócenie do tej funkcji może ponownie wywołać zamieszanie. Jednym z powodów tego zamieszania jest zbyt dużo wcięć. Ludzie nie są przyzwyczajeni do czytania rzeczy w formacie wciętym, z małym wyjątkiem użytkowników Reddit. Trudno określić, do jakiego bloku należy dany wiersz, jaki jest kontekst. Ciężko jest zrozumieć logikę.
+
+Ogólna zasada unikania niepotrzebnych wcięć polega na jak najszybszym opuszczaniu funkcji oraz unikaniu stosowania else, gdy przepływ już implikuje else. Na listingu 3.11 pokazane jest, jak instrukcje return już same wskazują koniec przepływu kodu, eliminując potrzebę stosowania else.
+
+```swift
+public UpdateResult UpdateCityIfChanged() {
+  if (Id <= 0) {
+    return UpdateResult.InvalidId;
+  }
+  bool isActive = db.IsPersonActive(Id);
+  if (!isActive) {
+    return UpdateResult.PersonInactive;
+  }
+  if (FirstName is null || LastName is null) {
+    return UpdateResult.InvalidName;
+  }
+  string normalizedFirstName = FirstName.ToUpper();
+  string normalizedLastName = LastName.ToUpper();
+  string currentCity = db.GetCurrentCityByName(
+    normalizedFirstName, normalizedLastName);
+  if (currentCity == City) {
+    return UpdateResult.CityDidNotChange;
+  }
+  bool success = db.UpdateCurrentCity(Id, City);
+  if (!success) {
+    return UpdateResult.UpdateFailed;
+  }
+  return UpdateResult.Success;
+}
+```
+
+Zastosowana tutaj technika nazywana jest podążaniem ścieżką optymistyczną (happy path). Ścieżka optymistyczna w kodzie to fragment kodu, który jest wykonywany, jeśli nic innego nie pójdzie źle. To, co idealnie powinno zdarzyć się podczas wykonania. Ponieważ ścieżka optymistyczna podsumowuje główną pracę funkcji, musi być najłatwiejsza do odczytania. Przekształcając kod w instrukcje return zamiast używać else, pozwalamy czytelnikowi łatwiej zidentyfikować ścieżkę optymistyczną, niż gdybyśmy mieli matryoszkowe układy instrukcji warunkowych.
+
+Waliduj wcześnie, i zwracaj jak najwcześniej. Umieszczaj przypadki wyjątkowe wewnątrz instrukcji warunkowych, a staramy się umieścić ścieżkę optymistyczną poza blokami. Zapoznaj się z tymi dwoma kształtami, aby uczynić swój kod bardziej czytelnym i łatwiejszym w utrzymaniu.
+
+### 3.8.2 Użyj goto
+
+Cała teoria programowania można streścić jako pamięć, podstawowa arytmetyka oraz instrukcje warunkowe if i goto. Instrukcja goto przekierowuje wykonanie programu bezpośrednio do arbitralnego punktu docelowego. Są trudne do śledzenia, i ich stosowanie było zniechęcane od czasu, gdy Edsger Dijkstra napisał artykuł zatytułowany „Go to statement is considered harmful” (https://dl.acm.org/doi/10.1145/362929.362947). Istnieje wiele nieporozumień dotyczących tego artykułu Dijkstry, przede wszystkim co do jego tytułu. Dijkstra zatytułował swoją pracę „A case against the GO TO statement”, ale jego redaktor, również wynalazca języka Pascal, Niklaus Wirth, zmienił tytuł, co sprawiło, że stanowisko Dijkstry stało się bardziej agresywne, a walka przeciwko goto zamieniła się w polowanie na wiedźmy.
+
+Wszystko to wydarzyło się przed latami 80. Języki programowania miały dużo czasu, aby stworzyć nowe konstrukcje rozwiązujące funkcje instrukcji goto. Pętle for/while, instrukcje return/break/continue, a nawet wyjątki zostały stworzone, aby obsłużyć konkretne scenariusze, które wcześniej były możliwe tylko za pomocą goto. Byli programiści BASIC zapamiętają słynną instrukcję obsługi błędów ON ERROR GOTO, która była prymitywnym mechanizmem obsługi wyjątków.
+
+Chociaż wiele nowoczesnych języków nie ma już odpowiedników instrukcji goto, C# ma, i działa świetnie w jednym konkretnym scenariuszu: eliminuje nadmiarowe punkty wyjścia z funkcji. Możliwe jest użycie instrukcji goto w sposób łatwy do zrozumienia i sprawia, że twój kod jest mniej podatny na błędy, oszczędzając jednocześnie czas. To jak trzykrotne uderzenie w grze Mortal Kombat.
+
+Punkt wyjścia to każda instrukcja w funkcji, która powoduje jej powrót do wywołującego ją kodu. W języku C# każda instrukcja return stanowi punkt wyjścia. Eliminowanie punktów wyjścia w starszych językach programowania było ważniejsze niż obecnie, ponieważ ręczne sprzątanie było bardziej powszechną częścią codziennego życia programisty. Musiałeś pamiętać, co alokowałeś i co musisz posprzątać przed powrotem.
+
+C# dostarcza doskonałe narzędzia do strukturalnego sprzątania, takie jak bloki try/finally i instrukcje using. Mogą wystąpić przypadki, w których żadne z nich nie jest odpowiednie dla twojego scenariusza, i możesz użyć instrukcji goto również do sprzątania, ale naprawdę świetnie się sprawdza w eliminowaniu nadmiarowości. Załóżmy, że rozwijamy formularz wprowadzania adresu dostawy dla strony internetowej z zakupami online. Formularze internetowe są świetne do demonstracji wielopoziomowej walidacji, która w nich zachodzi. Załóżmy, że chcielibyśmy używać ASP.NET Core do tego celu. Oznacza to, że potrzebujemy akcji przesyłania dla naszego formularza. Kod dla niej może wyglądać tak, jak w poniższym przykładzie. Mamy walidację modelu, która odbywa się po stronie klienta, ale jednocześnie potrzebujemy pewnej walidacji po stronie serwera z naszym formularzem, abyśmy mogli sprawdzić, czy adres jest naprawdę poprawny, korzystając z API USPS. Po sprawdzeniu możemy próbować zapisać informacje do bazy danych, a jeśli to się powiedzie, przekierowujemy użytkownika do strony z informacjami o płatności. W przeciwnym razie musimy ponownie wyświetlić formularz adresu dostawy.
+
+```swift
+[HttpPost]
+public IActionResult Submit(ShipmentAddress form) {
+  if (!ModelState.IsValid) {
+    return RedirectToAction("Index", "ShippingForm", form);
+  }
+  var validationResult = service.ValidateShippingForm(form);
+  if (validationResult != ShippingFormValidationResult.Valid) {
+    return RedirectToAction("Index", "ShippingForm", form);
+  }
+  bool success = service.SaveShippingInfo(form);
+  if (!success) {
+    ModelState.AddModelError("", "Problem occurred while " +
+      "saving your information, please try again");
+    return RedirectToAction("Index", "ShipingForm", form);
+  }
+  return RedirectToAction("Index", "BillingForm");
+}
+```
+
+
+
+Już omówiłem kilka problemów z kopiowaniem i wklejaniem, ale wiele punktów wyjścia w przykładzie 3.12 stanowi kolejny problem. Zauważyłeś literówkę w trzecim poleceniu return? Przez pomyłkę usunęliśmy znak bez zauważenia, a ponieważ znajduje się on w ciągu znaków, ten błąd jest niemożliwy do wykrycia, chyba że napotkamy problem podczas zapisywania formularza w produkcji lub zbudujemy rozbudowane testy dla naszych kontrolerów. Duplikacja może powodować problemy w tych przypadkach. Instrukcja goto może pomóc w scaleniu poleceń return pod jedną etykietą goto, jak pokazano w przykładzie 3.13. Tworzymy nową etykietę dla przypadku błędu w naszej ścieżce głównej i wielokrotnie jej używamy w naszej funkcji, korzystając z instrukcji goto.
+
+```swift
+[HttpPost]
+public IActionResult Submit2(ShipmentAddress form) {
+  if (!ModelState.IsValid) {
+    goto Error;
+  }
+  var validationResult = service.ValidateShippingForm(form);
+  if (validationResult != ShippingFormValidationResult.Valid) {
+    goto Error;
+  }
+  bool success = service.SaveShippingInfo(form);
+  if (!success) {
+    ModelState.AddModelError("", "Problem occurred while " +
+      "saving your shipment information, please try again");
+    goto Error;
+  }
+  return RedirectToAction("Index", "BillingForm");
+Error:
+  return RedirectToAction("Index", "ShippingForm", form);
+}
+```
+
+
+
+To, co jest świetne w tym rodzaju konsolidacji, polega na tym, że jeśli kiedykolwiek chcesz dodać więcej do wspólnego kodu wyjścia, musisz to zrobić tylko w jednym miejscu. Powiedzmy, że chcesz zapisać plik cookie na kliencie, gdy wystąpi błąd. Wystarczy, że dodasz go po etykiecie "Error", jak pokazano poniżej.
+
+Listing 3.14 Łatwość dodawania dodatkowego kodu do wspólnego kodu wyjścia
+
+```csharp
+[HttpPost]
+public IActionResult Submit3(ShipmentAddress form) {
+  if (!ModelState.IsValid) {
+    goto Error;
+  }
+  var validationResult = service.ValidateShippingForm(form);
+  if (validationResult != ShippingFormValidationResult.Valid) {
+    goto Error;
+  }
+  bool success = service.SaveShippingInfo(form);
+  if (!success) {
+    ModelState.AddModelError("", "Problem occurred while " +
+      "saving your information, please try again");
+    goto Error;
+  }
+  return RedirectToAction("Index", "BillingForm");
+Error:
+  Response.Cookies.Append("shipping_error", "1");
+  return RedirectToAction("Index", "ShippingForm", form);
+}
+```
+
+Korzystając z instrukcji goto, zachowaliśmy czytelniejszy styl kodu, z mniejszą ilością wcięć, zaoszczędziliśmy czas i ułatwiliśmy wprowadzanie zmian w przyszłości, ponieważ musimy to zrobić tylko raz.
+
+Instrukcja goto nadal może wprowadzić w zakłopotanie kolegę, który nie jest przyzwyczajony do tego składni. Na szczęście w C# 7.0 wprowadzono lokalne funkcje, które mogą być używane do wykonania tego samego zadania, być może w sposób łatwiejszy do zrozumienia. Deklarujemy lokalną funkcję o nazwie "error", która wykonuje wspólne operacje zwracania błędów i zwraca jej wynik, zamiast korzystać z instrukcji goto. Możesz zobaczyć to w akcji w poniższym przykładzie.
+
+
+
+```swift
+[HttpPost]
+public IActionResult Submit4(ShipmentAddress form) {
+  IActionResult error() {
+    Response.Cookies.Append("shipping_error", "1");
+    return RedirectToAction("Index", "ShippingForm", form);
+  }
+  if (!ModelState.IsValid) {
+    return error();
+  }
+  var validationResult = service.ValidateShippingForm(form);
+  if (validationResult != ShippingFormValidationResult.Valid) {
+    return error();
+  }
+  bool success = service.SaveShippingInfo(form);
+  if (!success) {
+    ModelState.AddModelError("", "Problem occurred while " +
+      "saving your information, please try again");
+    return error();
+  }
+  return RedirectToAction("Index", "BillingForm");
+}
+```
+
+Korzystanie z lokalnych funkcji pozwala nam również na deklarację obsługi błędów na początku funkcji, co jest normą w nowoczesnych językach programowania, takich jak Go, za pomocą instrukcji takich jak defer, chociaż w naszym przypadku musimy jawnie wywołać funkcję error(), aby ją wykonać.
+
+
+
+### 3.9 Nie pisz komentarzy w kodzie
+
+Turecki architekt o imieniu Sinan żył w XVI wieku. Zbudował słynną meczet Sulejmaniye w Stambule oraz wiele innych budowli. Istnieje opowieść o jego umiejętnościach w architekturze. Według tej historii, wiele lat po śmierci Sinana, grupa architektów rozpoczęła prace restauracyjne na jednym z jego budynków. W jednym z łuków był kluczowy kamień, który musieli wymienić. Ostrożnie usunęli kamień i znaleźli małą fiolkę z zamieszczoną wewnątrz notatką. Notatka brzmiała: „Ten kamień kluczowy przetrwał tylko trzysta lat. Jeśli czytasz tę notatkę, musi się on już zepsuć lub próbujesz go naprawić. Istnieje tylko jeden właściwy sposób, aby właściwie umieścić nowy kamień kluczowy.” Notatka zawierała techniczne szczegóły dotyczące właściwej wymiany kamienia kluczowego.
+
+Sinan architekt mógł być pierwszą osobą w historii, która użyła komentarzy w kodzie prawidłowo. Rozważmy przeciwny przypadek, gdyby budynek był pokryty wszędzie napisami. Drzwi miałyby napis „To jest drzwi”. Okna miałyby napis „Okno” nad nimi. Pomiędzy każdą cegłą znajdowała się fiolka z notatką w środku mówiącą: „To są cegły”.
+
+Nie musisz pisać komentarzy w kodzie, jeśli twój kod jest wystarczająco samowyjaśniający się. Z drugiej strony, nadmiernymi komentarzami możesz zaszkodzić czytelności kodu. Nie pisz komentarzy w kodzie tylko dla samego pisania komentarzy. Używaj ich mądrze i tylko wtedy, gdy jest to konieczne.
+
+Rozważ przykład w poniższym spisie. Gdybyśmy przesadzili z komentarzami w kodzie, mogłoby to wyglądać tak.
+
+```swift
+[HttpPost]
+public IActionResult Submit(ShipmentAddress form) {
+    // Funkcja obsługująca błędy, która zapisuje plik cookie 
+    // i przekierowuje użytkownika z powrotem do formularza
+    // wprowadzania informacji o przesyłce.
+    IActionResult obslugaBledow() {
+        Response.Cookies.Append("shipping_error", "1");
+        return RedirectToAction("Index", "ShippingForm", form);
+    }
+    
+    // Sprawdź, czy stan modelu jest prawidłowy.
+    if (!ModelState.IsValid) {
+        return obslugaBledow();
+    }
+
+    // Sprawdź poprawność formularza z wykorzystaniem logiki 
+    // walidacji po stronie serwera.
+    var wynikWalidacji = service.ValidateShippingForm(form);
+    // Czy walidacja zakończyła się sukcesem?
+    if (wynikWalidacji != ShippingFormValidationResult.Valid) {
+        return obslugaBledow();
+    }
+
+    // Zapisz informacje o przesyłce.
+    bool sukces = service.SaveShippingInfo(form);
+    if (!sukces) {
+        // Nie udało się zapisać. Zgłoś błąd użytkownikowi.
+        ModelState.AddModelError("", "Wystąpił problem podczas " +
+            "zapisywania informacji, spróbuj ponownie");
+        return obslugaBledow();
+    }
+
+    // Przejdź do formularza płatności.
+    return RedirectToAction("Index", "BillingForm");
+}
+```
+
+Kod, który czytamy, opowiada nam historię nawet bez komentarzy. Przejdźmy przez ten sam kod bez komentarzy i odkryjmy ukryte wskazówki w nim (rysunek 3.13).
+
+![CH03_F13_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_3-13.png)
+
+To może wyglądać na dużo pracy. Próbujesz połączyć różne elementy, aby zrozumieć, co robi kod. Z czasem będzie łatwiej. Im lepiej się w tym znajdziesz, tym mniej wysiłku będziesz musiał wkładać. Istnieją jednak pewne rzeczy, które możesz zrobić, aby ułatwić życie biednej duszy, która czyta twój kod, a nawet sobie samemu, za pół roku, ponieważ po pół roku może to być równie dobrze kod kogoś innego.
+
+
+
+#### 3.9.1 Wybieraj świetne nazwy
+
+Dotknąłem znaczenia dobrych nazw na początku tego rozdziału, o tym, jak nasze nazwy powinny jak najdokładniej odzwierciedlać lub podsumowywać funkcjonalność. Funkcje nie powinny mieć dwuznacznych nazw jak Process, DoWork, Make, i tak dalej, chyba że kontekst jest absolutnie jasny. Czasami może to wymagać od Ciebie wpisania dłuższych nazw niż zwykle, ale zazwyczaj można tworzyć dobre nazwy, zachowując jednocześnie zwięzłość.
+
+To samo dotyczy nazw zmiennych. Rezerwuj jednoliterowe nazwy zmiennych tylko dla zmiennych pętli (i, j, n) oraz współrzędnych takich jak x, y i z, gdzie są oczywiste. W przeciwnym razie zawsze wybieraj opisową nazwę i unikaj skrótów. W porządku jest korzystanie z dobrze znanych skrótów takich jak HTTP i JSON lub dobrze znanych skrótów takich jak ID i DB, ale nie skracaj słów. Nazwę zmiennej i tak wpisujesz tylko raz. Później za resztę może zadbać automatyczne uzupełnianie kodu. Korzyści płynące z opisowych nazw są ogromne. Co najważniejsze, oszczędzają Ci czas. Gdy wybierasz opisową nazwę, nie musisz pisać komentarza w pełnym zdaniu, aby wyjaśnić ją tam, gdzie jest używana. Przejrzyj dokumentację dotyczącą konwencji języka programowania, którego używasz. Przykładowo, wytyczne Microsoftu dotyczące konwencji nazewnictwa w .NET są doskonałym punktem wyjścia dla C#: https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/naming-guidelines.
+
+#### 3.9.2 Wykorzystuj funkcje
+Małe funkcje są łatwiejsze do zrozumienia. Postaraj się, aby funkcja była na tyle mała, aby zmieścić się na ekranie programisty. Przewijanie w górę i w dół jest okropne dla zrozumienia tego, co robi kod. Powinieneś być w stanie zobaczyć wszystko, co funkcja robi, bez przewijania ekranu.
+
+Jak skrócić funkcję? Początkujący mogą być skłonni umieścić jak najwięcej na jednej linii, aby funkcja była bardziej skompresowana. Nie! Nigdy nie umieszczaj wielu instrukcji w jednej linii. Zawsze miej co najmniej jedną linię na jedną instrukcję. Możesz nawet dodawać puste linie w funkcji, aby grupować ze sobą odpowiednie instrukcje. W związku z tym przyjrzyjmy się naszej funkcji w następnym przykładzie.
+
+```swift
+[HttpPost]
+public IActionResult Submit(ShipmentAddress form) {
+  IActionResult error() {
+    Response.Cookies.Append("shipping_error", "1");
+    return RedirectToAction("Index", "ShippingForm", form);
+  }
+  if (!ModelState.IsValid) {
+    return error();
+  }
+  var validationResult = service.ValidateShippingForm(form);
+  if (validationResult != ShippingFormValidationResult.Valid) {
+    return error();
+  }
+  bool success = service.SaveShippingInfo(form);
+  if (!success) {
+    ModelState.AddModelError("", "Problem occurred while " +
+      "saving your information, please try again");
+    return error();
+  }
+  return RedirectToAction("Index", "BillingForm");
+}
+```
+
+Rzeczywista funkcja jest tak prosta, że prawie czyta się jak zdanie w języku angielskim—no cóż, może jak hybryda angielskiego i tureckiego, ale nadal bardzo czytelne. Osiągnęliśmy bardzo opisowy kod, nie pisząc ani jednej linii komentarza, i to jest klucz, który powinieneś mieć na uwadze, jeśli zastanawiasz się, czy to jest zbyt dużo pracy. To mniej pracy niż pisanie akapitów komentarza. Będziesz również wdzięczny sobie samemu, potrząsając lewą ręką prawą ręką, kiedy dowiesz się, że nie musisz utrzymywać komentarzy i kodu zgodnych, aby komentarze pozostały przydatne przez cały okres trwania projektu. To o wiele lepsze rozwiązanie.
+
+Wyodrębnianie funkcji może wydawać się żmudne, ale w rzeczywistości jest łatwe dzięki środowiskom programistycznym, takim jak Visual Studio. Wystarczy zaznaczyć fragment kodu, który chcesz wyodrębnić, i nacisnąć Ctrl-. (kropka) lub wybrać ikonę żarówki pojawiającą się obok kodu i wybrać opcję Wyodrębnij Metodę. Wszystko, co musisz zrobić, to nadać jej nazwę.
+
+Gdy wyodrębniasz te fragmenty, otwierasz także możliwość ponownego wykorzystania ich w tym samym pliku, co może zaoszczędzić ci czas, gdy piszesz formularz do faktur, jeśli semantyka obsługi błędów nie różni się.
+
+To wszystko może brzmieć, jakbym był przeciwny komentarzom w kodzie. To dokładnie przeciwnie. Unikanie niepotrzebnych komentarzy sprawia, że użyteczne komentarze błyszczą jak klejnoty. To jedyny sposób, aby komentarze były użyteczne. Kiedy piszesz komentarze, myśl jak Sinan: "Czy ktoś będzie potrzebował wyjaśnienia dla tego?" Jeśli to wymaga wyjaśnienia, bądź jak najbardziej jasny, być może rozwlekły, nawet rysuj diagramy ASCII, jeśli to konieczne. Napisz tyle akapitów, ile potrzebujesz, tak aby inni programiści pracujący nad tym samym kodem nie musieli przychodzić do twojego biurka i pytać, co ten fragment kodu robi lub nie naprawiać go błędnie, dlatego że zapomniałeś się wyjaśnić. Gdy produkcja pada, to od ciebie zależy, aby poprawnie naprawić kod. Jesteś to winien zarówno sobie, jak i wszystkim innym.
+
+Są przypadki, w których musisz pisać komentarze, czy są one użyteczne czy nie, takie jak publiczne interfejsy API, ponieważ użytkownicy mogą nie mieć dostępu do kodu. Ale to także nie oznacza, że napisanie komentarzy sprawia, że twój kod staje się łatwy do zrozumienia. Nadal musisz pisać czytelny kod z małymi, łatwymi do strawienia fragmentami.
+
+### Podsumowanie:
+
+- Unikaj tworzenia sztywnego kodu, przestrzegając granic logicznych zależności.
+
+- Nie obawiaj się rozpoczęcia pracy od podstaw, ponieważ za każdym razem będzie to szło znacznie szybciej.
+
+- Rozbijaj kod, gdy istnieją zależności, które w przyszłości mogą sprawić problemy, a następnie je napraw.
+
+- Unikaj pogłębiania się w dołku dziedzictwa, regularnie aktualizuj kod i rozwiązuj problemy, które powoduje.
+
+- Unikaj powtarzania kodu, zamiast tego przemyślaj jego ponowne użycie, aby unikać naruszania logicznych odpowiedzialności.
+
+- Twórz inteligentne abstrakcje, aby przyszły kod wymagał mniej czasu. Używaj abstrakcji jako inwestycji.
+
+- Nie pozwól, aby zewnętrzne biblioteki, które używasz, dyktowały twoje projekty.
+
+- Preferuj kompozycję nad dziedziczeniem, aby uniknąć wiązania kodu z określoną hierarchią.
+
+- Staraj się zachować styl kodu, który jest łatwy do czytania od góry w dół.
+
+- Zakończ funkcje wcześniej i unikaj używania instrukcji else.
+
+- Używaj goto lub, jeszcze lepiej, lokalnych funkcji, aby trzymać wspólny kod w jednym miejscu.
+
+- Unikaj bezcelowych, zbędnych komentarzy w kodzie, które sprawiają, że trudno odróżnić drzewo od lasu.
+
+- Pisz samoopisujący się kod, wykorzystując dobre nazewnictwo zmiennych i funkcji.
+
+- Dziel funkcje na łatwe do przyswajania podfunkcje, aby zachować kod jak najbardziej opisowy.
+
+- Dodawaj komentarze w kodzie, gdy są one przydatne.
+
+  
+
+1. Hacker News to platforma udostępniająca wiadomości związane z technologią, gdzie każdy jest ekspertem we wszystkim: https://news.ycombinator.com.
+
+2. Aplikacja czatowa o nazwie Yo, w której można było wysyłać tylko tekst zawierający "Yo", została kiedyś wyceniona na 10 milionów dolarów. Firma została zamknięta w 2016 roku: https://en.wikipedia.org/wiki/Yo_(app).
+
+3. To doskonała wariacja na słynne słowa Phila Karltona stworzona przez Leona Bambricka (https://twitter.com/secretGeek/status/7269997868). Phil Karlton oryginalnie wypowiedział te słowa bez części dotyczącej "błędów o jeden": [brak linku].
