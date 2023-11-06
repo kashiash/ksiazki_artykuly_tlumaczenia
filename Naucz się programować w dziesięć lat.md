@@ -4,6 +4,8 @@
 
 http://norvig.com/21-days.html
 
+*Uwaga oryginalny artykuł ma już kilkanaście lat, więc niektore linki,  języki itp. proponowane przez autora mogą już nie być aktualne.*
+
 ## Dlaczego wszyscy tak się spieszą?
 
 Wejdź do dowolnej księgarni, a zobaczysz jak nauczysz się Javy w 24 godziny obok nieskończonej liczby wariacji oferujących naukę C, SQL, Ruby, algorytmów itp. w kilka dni lub godzin. Przeszukanie zaawansowane w Amazonie pod hasłem [tytuł: naucz się, sam, godziny, od: 2000] dało wynik 512 książek. Spośród dziesięciu najlepszych, dziewięć to książki programistyczne (jedna dotyczy księgowości). Podobne wyniki uzyskano, zamieniając "naucz się" na "naucz się" lub "godziny" na "dni".
