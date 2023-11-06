@@ -2511,3 +2511,660 @@ Testowanie jednostkowe polega na pisaniu testowego kodu, który testuje pojedync
 Frameworki testowe ułatwiają pisanie testów, ale nie są konieczne. Pakiet testowy może po prostu być oddzielnym programem, który uruchamia testy i pokazuje wyniki. Tak naprawdę, przed pojawieniem się frameworków testowych, to był jedyny sposób na przetestowanie swojego programu. Chciałbym pokazać ci prosty fragment kodu i jak ewoluowało testowanie jednostkowe na przestrzeni lat, dzięki czemu będziesz mógł pisać testy dla danej funkcji tak łatwo, jak to tylko możliwe.
 
 Wyobraź sobie, że masz za zadanie zmienić sposób wyświetlania daty postów na mikroblogowej stronie internetowej o nazwie Blabber. Daty postów były wyświetlane jako pełna data, a zgodnie z nową modą na mediach społecznościowych, bardziej korzystne jest stosowanie skrótów, które pokazują czas od utworzenia posta wyrażony w sekundach, minutach, godzinach, itp. Musisz napisać funkcję, która przyjmuje obiekt DateTimeOffset i zamienia go na ciąg tekstowy, który pokazuje czas trwania jako "3h" dla trzech godzin, "2m" dla dwóch minut lub "1s" dla jednej sekundy. Powinna ona pokazywać tylko najważniejszą jednostkę. Jeśli post ma trzy godziny, dwie minuty i jedną sekundę, powinien pokazać tylko "3h".
+
+**UNIKAJ ZASZUMIANIA AUTOMATYCZNEGO UZUPEŁNIANIA KODU METODAMI ROZSZERZAJĄCYMI**
+
+W języku C# istnieje przyjazny składniowo sposób definiowania dodatkowych metod dla typów, nawet jeśli nie masz dostępu do ich źródła. Jeśli przed pierwszym parametrem funkcji dodasz słowo kluczowe `this`, ta metoda zacznie pojawiać się na liście dostępnych metod danego typu w automatycznym uzupełnianiu kodu. Jest to bardzo wygodne, co sprawia, że programiści polubili metody rozszerzające i często starają się zamieniać wszystko w metody rozszerzające zamiast używać metod statycznych. Załóżmy, że masz prostą metodę, jak ta:
+
+```csharp
+static class PomocnikSumy {
+ static int Suma(int a, int b) => a + b;
+}
+```
+
+Aby wywołać tę metodę, musisz napisać `PomocnikSumy.Suma(liczba, stawka);` i, co ważniejsze, musisz wiedzieć, że istnieje klasa o nazwie `PomocnikSumy`. Możesz jednak napisać to jako metodę rozszerzającą, jak w poniższym przykładzie:
+
+```csharp
+static class PomocnikSumy {
+ static decimal Suma(this int a, int b) => a + b;
+}
+```
+
+Teraz możesz wywołać tę metodę w ten sposób:
+
+```csharp
+int wynik = 5.Suma(10);
+```
+
+Wygląda dobrze, ale jest problem. Za każdym razem, gdy tworzysz metodę rozszerzającą dla dobrze znanej klasy, takiej jak string lub int, pojawia się ona w automatycznym uzupełnianiu kodu, które jest rozwijane po wpisaniu kropki po identyfikatorze w programie Visual Studio. Może to być niezwykle irytujące, gdy próbujesz znaleźć odpowiednią metodę wśród zupełnie nieistotnych metod na liście.
+
+Nie dodawaj metody o określonym zastosowaniu do powszechnie używanych klas .NET. Zrób to tylko dla ogólnych metod, które będą powszechnie używane. Na przykład metoda `Reverse` w klasie `string` może być akceptowalna, ale `UtwórzNazwęPlikuCdn` niekoniecznie. `Reverse` może być stosowane w różnych kontekstach, ale `UtwórzNazwęPlikuCdn` byłoby potrzebne tylko wtedy, gdy trzeba byłoby utworzyć nazwę pliku odpowiednią dla sieci dostarczania treści, którą używasz. W przeciwnym razie może to być kłopotliwe zarówno dla ciebie, jak i dla każdego innego programisty w twoim zespole. Nie sprawiaj, aby ludzie cię nie znosili. Co ważniejsze, nie sprawiaj, abyś sam siebie nie znosił. W takich przypadkach doskonale możesz użyć statycznej klasy i składni w rodzaju `Cdn.UtwórzNazwęPliku()`. 
+
+Nie twórz metody rozszerzającej, gdy możesz włączyć ją jako część klasy. Ma to sens tylko wtedy, gdy chcesz wprowadzić nową funkcjonalność poza granicą zależności. Na przykład możesz mieć projekt sieci webowej, który używa klasy zdefiniowanej w bibliotece, która nie zależy od komponentów sieci webowej. Później możesz chcieć dodać określoną funkcjonalność tej klasy związanej z funkcjonalnością sieci webowej w projekcie sieci webowej. Lepiej jest wprowadzić nową zależność tylko dla metody rozszerzającej w projekcie sieci webowej, zamiast sprawiać, aby biblioteka zależała od twoich komponentów sieci webowej. Niepotrzebne zależności mogą splątać twoje sznurowadła.
+
+
+
+Listing 4.1 pokazuje taką funkcję. W tym zestawieniu definiujemy metodę rozszerzającą dla klasy `DateTimeOffset` w .NET, dzięki czemu możemy ją wywołać wszędzie tam, gdzie chcemy, jakby była to metoda wbudowana w klasie `DateTimeOffset`.
+
+Obliczamy różnicę między bieżącym czasem a czasem publikacji i sprawdzamy jego pola, aby określić najważniejszą jednostkę tego odstępu, a następnie zwracamy wynik na jej podstawie.
+
+Listing 4.1 Funkcja, która przekształca datę w ciąg znaków reprezentujący odstęp
+
+```csharp
+public static class DateTimeExtensions {
+  public static string ToIntervalString(
+    this DateTimeOffset postTime) {
+    TimeSpan interval = DateTimeOffset.Now - postTime;
+    if (interval.TotalHours >= 1.0) {
+      return $"{(int)interval.TotalHours}h";
+    }
+    if (interval.TotalMinutes >= 1.0) {
+      return $"{(int)interval.TotalMinutes}m";
+    }
+    if (interval.TotalSeconds >= 1.0) {
+      return $"{(int)interval.TotalSeconds}s";
+    }
+    return "now";
+  }
+}
+```
+
+Mamy ogólną specyfikację funkcji i możemy zacząć pisać dla niej testy. Dobrym pomysłem jest zapisanie możliwych wejść i oczekiwanych wyników w tabeli, aby upewnić się, że funkcja działa poprawnie, jak w przypadku tabeli 4.1.
+
+
+
+Mamy ogólną specyfikację dotyczącą funkcji, i możemy zacząć pisać dla niej niektóre testy. Dobrym pomysłem jest zapisanie możliwych danych wejściowych i oczekiwanych wyników w tabeli, takiej jak tabela 4.1 poniżej, aby upewnić się, że funkcja działa poprawnie.
+
+| Input        | Output       |
+| ------------ | ------------ |
+| < 1 sekunda  | "teraz"      |
+| < 1 minuta   | "<sekundy>s" |
+| < 1 godzina  | "<minuty>m"  |
+| >= 1 godzina | "<godziny>h" |
+
+Jeśli DateTimeOffset byłby klasą, musielibyśmy przetestować również przypadki, gdy przekazujemy wartość null. Jednakże, ponieważ jest to struktura, nie może być null. To pozwoliło nam zaoszczędzić jeden test. Zwykle nie trzeba tworzyć takiej tabeli, zazwyczaj można sobie poradzić z modelem mentalnym, ale jeśli masz wątpliwości, zapisz to.
+
+Nasze testy powinny obejmować wywołania z różnymi DateTimeOffsets i porównania z różnymi ciągami znaków. W tym momencie niepewność dotycząca niezawodności testów staje się problemem, ponieważ DateTime.Now zawsze się zmienia, i nasze testy nie są gwarantowane do uruchamiania się o konkretnej godzinie. Jeśli inny test był uruchomiony lub jeśli coś spowolniło działanie komputera, łatwo można by było uzyskać nieoczekiwane wyniki, nawet dla wartości "teraz". Oznacza to, że nasze testy byłyby niestabilne i czasami mogłyby zawodzić.
+
+To wskazuje na problem z naszym projektem. Prostym rozwiązaniem byłoby uczynienie naszej funkcji deterministyczną, przekazując TimeSpan zamiast DateTimeOffset i obliczając różnicę w miejscu wywołania funkcji. Jak widać, pisanie testów dla kodu pomaga również identyfikować problemy z projektem, co jest jednym z argumentów przemawiających za stosowaniem podejścia znanego jako Test-Driven Development (TDD). W naszym przypadku nie użyliśmy TDD, ponieważ wiemy, że możemy łatwo zmienić funkcję, aby przyjmowała TimeSpan bez tworzenia nowych testów.
+
+
+
+```csharp
+// Listing 4.2 Nasz udoskonalony design
+
+public static string ToIntervalString(
+  this TimeSpan interval) {
+  if (interval.TotalHours >= 1.0) {
+    return $"{(int)interval.TotalHours}h";
+  }
+  if (interval.TotalMinutes >= 1.0) {
+    return $"{(int)interval.TotalMinutes}m";
+  }
+  if (interval.TotalSeconds >= 1.0) {
+    return $"{(int)interval.TotalSeconds}s";
+  }
+  return "teraz";
+}
+```
+
+Nasze przypadki testowe się nie zmieniły, ale nasze testy będą teraz znacznie bardziej niezawodne. Co ważniejsze, oddzieliliśmy od siebie dwa różne zadania: obliczanie różnicy między dwiema datami i konwersję przedziału czasowego na reprezentację tekstową. Rozdzielanie tych zagadnień w kodzie może pomóc w uzyskaniu lepszych projektów. Obliczanie różnic może być też nużące, i możesz mieć osobną funkcję-wrapper dla tego celu.
+
+Teraz jak sprawdzimy, czy nasza funkcja działa? Po prostu możemy ją wprowadzić do produkcji i poczekać kilka minut, żeby usłyszeć jakiekolwiek skargi. Jeśli ich nie ma, jesteśmy gotowi. A tak swoją drogą, czy Twoje CV jest aktualne? Bez powodu, tylko pytam.
+
+Możemy napisać program, który przetestuje funkcję i zobaczymy wyniki. Przykładowy program mógłby wyglądać tak jak w listingu 4.3. Jest to prosty program konsolowy, który odwołuje się do naszego projektu i używa metody Debug.Assert z przestrzeni nazw System.Diagnostics, żeby się upewnić, że funkcja przechodzi testy. Zapewnia, że funkcja zwraca oczekiwane wartości. Ponieważ asercje uruchamiane są tylko w konfiguracji Debug, również upewniamy się na początku, żeby kod nie był uruchamiany w żadnej innej konfiguracji, używając dyrektywy kompilatora.
+
+```csharp
+// Listing 4.3 Początkowe testy jednostkowe
+
+#if !DEBUG
+#error asercje będą działać tylko w konfiguracji Debug
+#endif
+
+using System;
+using System.Diagnostics;
+
+namespace DateUtilsTests {
+  public class Program {
+    public static void Main(string[] args) {
+      var span = TimeSpan.FromSeconds(3);
+      Debug.Assert(span.ToIntervalString() == "3s",
+        "Przypadek 3s niepowodzenie");
+      span = TimeSpan.FromMinutes(5);
+      Debug.Assert(span.ToIntervalString() == "5m",
+        "Przypadek 5m niepowodzenie");
+      span = TimeSpan.FromHours(7);
+      Debug.Assert(span.ToIntervalString() == "7h",
+        "Przypadek 7h niepowodzenie");
+      span = TimeSpan.FromMilliseconds(1);
+      Debug.Assert(span.ToIntervalString() == "teraz",
+        "Przypadek teraz niepowodzenie");
+    }
+  }
+}
+```
+
+Dlaczego więc potrzebujemy frameworków do testowania jednostkowego? Czy nie możemy pisać wszystkich testów w ten sposób? Teoretycznie tak, ale wymagałoby to więcej pracy. W naszym przykładzie zauważysz następujące rzeczy:
+
+1. Nie ma możliwości wykrycia, czy któryś z testów nie powiódł się z zewnątrz, np. z narzędzia do budowania. Wymaga to specjalnego podejścia. Frameworki do testowania wraz z narzędziami do ich uruchamiania łatwo sobie z tym radzą.
+
+2. Pierwszy niepowodzenie testu spowoduje zakończenie programu. To będzie czasochłonne, jeśli będziemy mieli wiele innych błędów. Będziemy musieli wielokrotnie uruchamiać testy, co jest marnotrawstwem czasu. Frameworki do testowania potrafią uruchomić wszystkie testy i zgłosić błędy razem, podobnie jak błędy kompilacji.
+
+3. Niemożliwe jest selektywne uruchamianie określonych testów. Możesz pracować nad określoną funkcją i chcieć debugować funkcję, którą napisałeś, debugując kod testów. Frameworki do testowania pozwalają na debugowanie konkretnych testów bez konieczności uruchamiania reszty.
+
+4. Frameworki do testowania mogą generować raport pokrycia kodu, który pomaga zidentyfikować brakujące pokrycie testami w twoim kodzie. Nie jest to możliwe, pisząc ad hoc testowy kod. Jeśli przypadkiem napiszesz narzędzie do analizy pokrycia, równie dobrze możesz pracować nad stworzeniem frameworku do testowania.
+
+5. Chociaż te testy nie zależą od siebie nawzajem, są uruchamiane sekwencyjnie, więc uruchamianie całego zestawu testów zajmuje dużo czasu. Zazwyczaj nie stanowi to problemu przy niewielkiej liczbie przypadków testowych, ale w średnio skomplikowanych projektach może być ich tysiące, a każdy z nich może trwać różną ilość czasu. Można utworzyć wątki i uruchamiać testy równolegle, ale to wymaga dużo pracy. Frameworki do testowania mogą wykonać wszystko to za pomocą jednego przełącznika.
+
+6. Kiedy występuje błąd, wiesz tylko, że jest problem, ale nie masz pojęcia, jaki to rodzaj problemu. Łańcuchy znaków są niezgodne, więc jaki rodzaj niezgodności to jest? Czy funkcja zwróciła null? Czy pojawił się dodatkowy znak? Frameworki do testowania potrafią również raportować te szczegóły.
+
+7. Cokolwiek poza użyciem dostarczanego przez .NET Debug.Assert wymaga od nas napisania dodatkowego kodu: pewnego rodzaju konstrukcji, jeśli chcesz. Jeśli zaczynasz tę ścieżkę, korzystanie z istniejącego frameworku jest znacznie lepsze.
+
+8. Będziesz miał okazję wziąć udział w niekończących się debatach na temat tego, który framework do testowania jest lepszy, i poczuć się wyjątkowy z kompletnie niewłaściwych powodów.
+
+Teraz spróbujmy napisać te same testy za pomocą frameworku do testowania, jak pokazano w listingu 4.4. Większość frameworków do testowania wygląda podobnie, z wyjątkiem xUnit, który był prawdopodobnie rozwijany przez pozaziemskie formy życia odwiedzające Ziemię. W zasadzie nie powinno mieć to znaczenia, który framework używasz, z wyjątkiem drobnych różnic w terminologii. W tym przykładzie używamy NUnit, ale możesz użyć dowolnego innego frameworka. Zobaczysz, jak dużo czytelniejszy jest kod z użyciem frameworku. Większość naszego kodu testowego jest właściwie tekstową wersją naszej tabeli wejścia/wyjścia, jak w tabeli 4.1. Jest jasne, co testujemy, a co ważniejsze, chociaż mamy tylko jedną metodę testową, mamy możliwość uruchamiania lub debugowania każdego testu osobno w narzędziu do uruchamiania testów. Technika, którą użyliśmy w listingu 4.4 z użyciem atrybutów TestCase, nazywa się testem parametryzowanym. Jeśli masz określony zestaw danych wejściowych i wyjściowych, po prostu możesz je zadeklarować jako dane i używać ich w tej samej funkcji wielokrotnie, unikając powtarzania pisania osobnych testów dla każdego przypadku. Podobnie, łącząc wartości ExpectedResult i deklarując funkcję z wartością zwracaną, nie musisz nawet pisać Assertów jawnie. Framework robi to automatycznie. Jest to mniej pracy!
+
+![CH04_F03_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_4-3.png)
+
+Można uruchomić te testy w oknie Test Explorer w programie Visual Studio: Widok ® Test Explorer. Można także uruchomić test za pomocą polecenia dotnet test w wierszu poleceń, lub nawet użyć zewnętrznego narzędzia do uruchamiania testów, takiego jak NCrunch. Wyniki testów w Test Explorer w programie Visual Studio będą wyglądać jak na rysunku 4.3.
+
+Listing 4.4 Magia frameworku do testowania
+
+```csharp
+using System;
+using NUnit.Framework;
+
+namespace DateUtilsTests {
+  class DateUtilsTest {
+    [TestCase("00:00:03.000", ExpectedResult = "3s")]
+    [TestCase("00:05:00.000", ExpectedResult = "5m")]
+    [TestCase("07:00:00.000", ExpectedResult = "7h")]
+    [TestCase("00:00:00.001", ExpectedResult = "now")]
+    public string ToIntervalString_ReturnsExpectedValues(
+      string timeSpanText) {
+      var input = TimeSpan.Parse(timeSpanText);
+      return input.ToIntervalString();
+    }
+  }
+}
+```
+
+Widzisz, jak pojedyncza funkcja jest faktycznie dzielona na cztery różne funkcje podczas fazy uruchamiania testów, a jej argumenty są wyświetlane razem z nazwą testu na rysunku 4.3. Co ważniejsze, możesz wybrać pojedynczy test, uruchomić go lub debugować. A jeśli test nie powiedzie się, zobaczysz doskonały raport, który precyzyjnie wskazuje, co jest nie tak z Twoim kodem. Powiedzmy, że przez przypadek napisałeś "nov" zamiast "now". Błąd w teście wyglądałby tak:
+
+```
+Message: 
+     Długości ciągów wynoszą obie 3. Ciągi różnią się na indeksie 2.
+     Oczekiwano: "now"
+     Otrzymano:  "nov"
+     -------------^
+```
+
+Nie tylko widzisz, że wystąpił błąd, ale także otrzymujesz klarowne wyjaśnienie, gdzie on wystąpił.
+
+Użycie frameworków do testowania jest oczywiste i zaczniesz kochać pisanie testów jeszcze bardziej, gdy zdasz sobie sprawę, jak oszczędzają Ci dodatkową pracę. To są światełka ostrzegawcze przed startem w NASA, komunikaty o "normalnym stanie systemu", to Twoje małe nanoboty, które pracują za Ciebie. Kochaj testy, kochaj frameworki do testowania.
+
+
+
+### 4.3 Nie używaj TDD ani innych skrótów
+Testowanie jednostkowe, podobnie jak każda udana religia, podzieliło się na frakcje. Test-Driven Development (TDD) i Behavior-Driven Development (BDD) to przykłady. Zaczynam wierzyć, że są ludzie w branży oprogramowania, którzy naprawdę uwielbiają tworzyć nowe paradygmaty i standardy, które należy bezwzględnie stosować, i są ludzie, którzy uwielbiają je bezwzględnie stosować. Uwielbiamy recepty i rytuały, ponieważ wszystko, co musimy zrobić, to je bezmyślnie podążać. To może kosztować nas wiele czasu i sprawić, że znienawidzimy testowanie.
+
+Idea stojąca za TDD polega na tym, że napisanie testów przed właściwym kodem może pomóc ci napisać lepszy kod. TDD nakazuje, że powinieneś napisać testy dla klasy najpierw, zanim napiszesz jedną linię kodu tej klasy, więc kod, który piszesz, stanowi wytyczną, jak należy zaimplementować właściwy kod. Piszecie testy. Nie kompilują się. Zaczynasz pisać właściwy kod, i kompiluje się. Następnie uruchamiasz testy, i one nie przechodzą. Potem naprawiasz błędy w swoim kodzie, aby testy przeszły. BDD to również podejście test-first z różnicami w nazewnictwie i układzie testów.
+
+Filozofia stojąca za TDD i BDD nie jest całkowicie nonsensowna. Kiedy zastanawiasz się, jak powinien być przetestowany jakiś kod, może to wpływać na sposób myślenia o jego projektowaniu. Problem z TDD nie leży w mentalności, ale w praktyce, w rytualnym podejściu: napisz testy, i ponieważ właściwy kod jeszcze nie istnieje, otrzymasz błąd kompilacji (naprawdę, Sherlock?); po napisaniu kodu, napraw błędy testów. Nienawidzę błędów. Czuję się nieudolnie. Każda czerwona fala podkreślenia w edytorze, każdy znak STOP na liście błędów i każda ikona ostrzeżenia to obciążenie poznawcze, które mnie dezorientuje i rozprasza.
+
+Kiedy skupiasz się na teście, zanim napiszesz choćby jedną linię kodu, zaczynasz myśleć bardziej o testach niż o swojej dziedzinie problemu. Zaczynasz myśleć o lepszych sposobach pisania testów. Twój umysł jest przeznaczony na zadanie pisania testów, syntaktyczne elementy frameworku testowego i organizację testów, zamiast samego kodu produkcyjnego. To nie jest cel testowania. Testy nie powinny sprawiać, że musisz się głowić. Testy powinny być najłatwiejszym fragmentem kodu, jaki możesz napisać. Jeśli tak nie jest, robisz to źle.
+
+Pisanie testów przed napisaniem kodu wywołuje efekt utraconych nakładów. Pamiętasz, jak w rozdziale 3 zależności sprawiały, że twój kod był bardziej sztywny? Zaskoczenie! Testy również zależą od twojego kodu. Kiedy masz pełen zestaw testów, zaczynasz niechętnie zmieniać projekt kodu, ponieważ oznaczałoby to konieczność zmiany testów. To ogranicza twoją elastyczność podczas prototypowania kodu. Można by twierdzić, że testy mogą dać pewne pomysły na to, czy projekt naprawdę działa, ale tylko w izolowanych scenariuszach. Później możesz odkryć, że prototyp nie działa dobrze z innymi komponentami i zmienić projekt przed napisaniem jakichkolwiek testów. Może to być akceptowalne, jeśli poświęcasz dużo czasu na rysunki, gdy projektujesz, ale to zwykle nie jest przypadek w praktyce. Musisz mieć możliwość szybkiej zmiany projektu.
+
+Rozważ pisanie testów, gdy uważasz, że jesteś już w dużej mierze zadowolony z prototypu i wydaje się, że działa w porządku. Tak, testy sprawią, że twój kod będzie trudniejszy do zmiany, ale jednocześnie zrekompensują to, sprawiając, że będziesz pewniejszy w zachowaniu swojego kodu, co ułatwi wprowadzanie zmian. W rezultacie będziesz działać szybciej.
+
+### 4.4 Pisz testy dla własnego dobra
+Tak, pisanie testów poprawia oprogramowanie, ale także poprawia Twoje warunki życia. Omówiłem już, jak pisanie testów na początku może ograniczać Cię w zmianach projektu kodu. Pisanie testów na końcu może sprawić, że Twój kod stanie się bardziej elastyczny, ponieważ później łatwo możesz wprowadzać znaczące zmiany, nie martwiąc się o zepsucie zachowania po zapomnieniu o kodzie. Działa jak ubezpieczenie, prawie jak odwrotność efektu utraconych nakładów. Różnica polega na tym, że podczas pisania testów poźniej nie jesteś zniechęcony w szybkim etapie iteracji, takim jak prototypowanie. Musisz przeprojektować jakiś kod? Pierwszym krokiem, jaki musisz podjąć, jest napisanie dla niego testów.
+
+Pisanie testów po stworzeniu dobrego prototypu działa jak powtórka z ćwiczeń dla Twojego projektu. Ponownie przechodzisz przez cały kod z myślą o testach. Możesz zidentyfikować pewne problemy, których nie zauważyłeś podczas tworzenia prototypu.
+
+Pamiętasz, jak zaznaczyłem, że wykonywanie małych, trywialnych poprawek w kodzie może przygotować Cię do większych zadań programistycznych? Cóż, pisanie testów to świetny sposób na to. Znajdź brakujące testy i dodaj je. Nigdy nie zaszkodzi mieć więcej testów, chyba że są one zbędne. Nie muszą one być związane z Twoją nadchodzącą pracą. Po prostu ślepo dodawaj testy, a kto wie, może znajdziesz błędy podczas tego procesu.
+
+Testy mogą pełnić rolę specyfikacji lub dokumentacji, jeśli są napisane w sposób klarowny i łatwy do zrozumienia. Kod dla każdego testu powinien opisywać wejście i oczekiwany wynik funkcji, zarówno przez sposób jego napisania, jak i jego nazwę. Kod może nie być najlepszym sposobem na opisanie czegoś, ale zawsze lepszy niż brak jakiejkolwiek dokumentacji.
+
+Czy nie masz dosyć, gdy Twoi koledzy psują Twój kod? Testy są po to, aby pomóc. Testy wymuszają umowę między kodem a specyfikacją, której programiści nie mogą złamać. Nie będziesz musiał czytać komentarzy takich jak te:
+
+```swift
+// Kiedy ten kod został napisany,
+// tylko Bóg i ja wiedzieliśmy, co robi.
+// Teraz wie tylko Bóg.
+
+```
+
+ *To znane zdanie jest żartem pochodzącym pierwotnie od autora Johna Paula Friedricha Richtera, który żył w XIX wieku. On nie napisał ani jednej linijki kodu https://quoteinvestigator.com/2013/09/24/god-knows/* 
+
+Testy zapewniają, że naprawiony błąd pozostanie naprawiony i nie pojawi się ponownie. Za każdym razem, gdy naprawiasz błąd i dodajesz do niego test, możesz być pewien, że nigdy więcej nie będziesz musiał mieć z nim do czynienia. W przeciwnym razie, kto wie, kiedy kolejna zmiana ponownie go wywoła? Testy są kluczowym narzędziem oszczędzającym czas, gdy są używane w ten sposób.
+
+Testy poprawiają zarówno oprogramowanie, jak i umiejętności dewelopera. Pisz testy, aby być bardziej efektywnym programistą.
+
+### 4.5 Decyzja, co testować
+
+To, co jest niezatrzymane, może wiecznie trwać,
+A w dziwnych eonach nawet testy mogą upaść.
+
+— H. P. Codecraft
+
+Napisanie jednego testu i zobaczenie, że przechodzi, to tylko połowa historii. To nie oznacza, że Twoja funkcja działa. Czy zawiódłby, gdyby kod się zepsuł? Pokryłeś wszystkie możliwe scenariusze? Co powinieneś testować? Jeśli Twoje testy nie pomagają Ci znaleźć błędów, są już nieudane.
+
+Jeden z moich menedżerów miał manualną technikę, aby zapewnić, że jego zespół pisze niezawodne testy: losowo usuwał linie kodu z produkcji i uruchamiał testy ponownie. Jeśli testy przechodziły, to oznaczało, że zawodziłeś.
+
+Istnieją lepsze podejścia do określenia, które przypadki testować. Specyfikacja jest świetnym punktem wyjścia, ale rzadko masz do czynienia z nią w praktyce. Być może ma sens stworzenie specyfikacji samodzielnie, ale nawet jeśli masz jedynie kod, są sposoby na określenie, co należy przetestować.
+
+#### 4.5.1 Uwzględniaj granice
+
+Możesz wywołać funkcję, która przyjmuje zwykłą liczbę całkowitą o czterech miliardach różnych wartości. Czy to oznacza, że musisz przetestować, czy Twoja funkcja działa dla każdej z nich? Nie. Zamiast tego powinieneś próbować zidentyfikować, które wartości wejściowe powodują, że kod rozgałęzia się na gałęzi lub powodują przepełnienie wartości, a następnie testować wartości wokół tych przypadków.
+
+Rozważ funkcję, która sprawdza, czy data urodzenia jest prawidłowym wiekiem dla strony rejestracyjnej Twojej gry online. Jest to trywialne dla każdej osoby, która urodziła się 18 lat wcześniej (zakładając, że 18 lat to minimalny wiek dla Twojej gry): po prostu odejmujesz lata i sprawdzasz, czy ma co najmniej 18 lat. Ale co, jeśli ta osoba skończyła 18 lat w zeszłym tygodniu? Czy zamierzasz pozbawić tę osobę możliwości korzystania z Twojej gry typu "płać, aby wygrać" z przeciętną grafiką? Oczywiście, że nie.
+
+Przyjmijmy, że mamy funkcję IsLegalBirthdate. Używamy klasy DateTime zamiast DateTimeOffset do reprezentowania daty urodzenia, ponieważ daty urodzenia nie mają stref czasowych. Jeśli urodziłeś się 21 grudnia na Samoa, Twoje urodziny są 21 grudnia wszędzie na świecie, nawet w Samoa Amerykańskim, który jest 24 godziny przed Samoa, mimo że dzieli je tylko sto mil. Jestem pewien, że tam każdego roku toczą się intensywne dyskusje o tym, kiedy zaprosić krewnych na kolację wigilijną. Strefy czasowe są dziwaczne.
+
+Tak czy inaczej, najpierw obliczamy różnicę w latach. Jedyne przypadki, gdy musimy zajrzeć na dokładne daty, to rok osiemnastych urodzin danej osoby. Jeśli to ten rok, sprawdzamy również miesiąc i dzień. W przeciwnym razie sprawdzamy tylko, czy osoba ma więcej niż 18 lat. Używamy stałej, aby oznaczyć pełnoletniość, zamiast wszędzie wpisywać liczbę, ponieważ wpisywanie liczby jest podatne na literówki. Gdy szef zapyta Cię, "Hej, czy możesz podnieść wiek pełnoletności do 21 lat?", masz tylko jedno miejsce do edycji w tej funkcji. Unikasz także konieczności dodawania komentarzy // pełnoletniość obok każdej liczby 18 w kodzie, aby to wyjaśnić. Nagle staje się to jasne samo przez się. Każde wyrażenie warunkowe w funkcji - obejmujące instrukcje if, pętle while, przypadki switch i tak dalej - powoduje, że tylko określone wartości wejściowe uruchamiają kod wewnątrz niego. Oznacza to, że możemy podzielić zakres wartości wejściowych na podstawie tych warunków, w zależności od parametrów wejściowych. W przykładzie przedstawionym w zestawieniu 4.5, nie musimy testować wszystkich możliwych wartości DateTime pomiędzy 1 stycznia roku 1 naszej ery a 31 grudnia 9999 roku, co daje około 3,6 miliona dat. Musimy przetestować jedynie 7 różnych wejść.
+
+Zestawienie 4.5 Algorytm "bramkarza"
+
+```swift
+public static bool IsLegalBirthdate(DateTime birthdate) {
+  const int legalAge = 18;
+  var now = DateTime.Now;
+  int age = now.Year - birthdate.Year;
+  if (age == legalAge) {
+    return now.Month > birthdate.Month
+      || (now.Month == birthdate.Month
+          && now.Day > birthdate.Day);
+  }
+  return age > legalAge;
+}
+```
+
+Siedem różnych wartości wejściowych znajduje się w tabeli 4.2.
+
+| Różnica lat | Miesiąc daty urodzenia | Dzień daty urodzenia | Oczekiwany wynik |
+| ----------- | ---------------------- | -------------------- | ---------------- |
+| = 18        | = Obecny miesiąc       | < Obecny dzień       | prawda           |
+| = 18        | = Obecny miesiąc       | = Obecny dzień       | fałsz            |
+| = 18        | = Obecny miesiąc       | > Obecny dzień       | fałsz            |
+| = 18        | < Obecny miesiąc       | Dowolny              | prawda           |
+| = 18        | > Obecny miesiąc       | Dowolny              | fałsz            |
+| > 18        | Dowolny                | Dowolny              | prawda           |
+| < 18        | Dowolny                | Dowolny              | fałsz            |
+
+Nagle ograniczyliśmy naszą liczbę przypadków z 3,6 miliona do 7, po prostu identyfikując warunki logiczne. Te warunki, które dzielą zakres wejściowy, nazywane są warunkami granicznymi, ponieważ określają one granice wartości wejściowych dla możliwych ścieżek kodu w funkcji. Następnie możemy przejść do napisania testów dla tych wartości wejściowych, jak pokazano w listingu 4.6. W zasadzie tworzymy kopię naszej tabeli testowej jako naszych danych wejściowych, konwertujemy je na typ DateTime i przepuszczamy przez naszą funkcję. Nie możemy wprowadzać wartości DateTime bezpośrednio do naszej tabeli wejść/wyjść, ponieważ legalność daty urodzenia zmienia się w zależności od bieżącego czasu.
+
+Moglibyśmy przekształcić to w funkcję opartą na typie TimeSpan, tak jak wcześniej, ale legalny wiek nie opiera się na dokładnej liczbie dni, lecz na dokładnej dacie i godzinie. Tabela 4.2 jest również lepsza, ponieważ lepiej odzwierciedla nasz model myślenia. Używamy -1 dla wartości mniejszych niż, 1 dla wartości większych niż i 0 dla równości, i przygotowujemy nasze rzeczywiste wartości wejściowe, korzystając z tych wartości jako odniesienia.
+
+Listing 4.6 Tworzenie naszej funkcji testowej na podstawie tabeli 4.2
+
+```csharp
+[TestCase(18,  0, -1, ExpectedResult = true)]
+[TestCase(18,  0,  0, ExpectedResult = false)]
+[TestCase(18,  0,  1, ExpectedResult = false)]
+[TestCase(18, -1,  0, ExpectedResult = true)]
+[TestCase(18,  1,  0, ExpectedResult = false)]
+[TestCase(19,  0,  0, ExpectedResult = true)]
+[TestCase(17,  0,  0, ExpectedResult = false)]
+public bool IsLegalBirthdate_ReturnsExpectedValues(
+  int yearDifference, int monthDifference, int dayDifference) {
+  var now = DateTime.Now;
+  var input = now.AddYears(-yearDifference)
+    .AddMonths(monthDifference)
+    .AddDays(dayDifference);
+  return DateTimeExtensions.IsLegalBirthdate(input);
+}
+```
+
+Udało się! Zawężyliśmy liczbę możliwych wejść i dokładnie określiliśmy, co należy przetestować w naszej funkcji, tworząc konkretny plan testów.
+
+Kiedy potrzebujesz dowiedzieć się, co przetestować w funkcji, powinieneś zacząć od specyfikacji. W rzeczywistości jednakże zazwyczaj odkryjesz, że specyfikacja nigdy nie istniała lub była przestarzała od dawna, więc drugim najlepszym sposobem jest zaczęcie od warunków granicznych. Korzystanie z testów z parametrami pomaga nam również skupić się na tym, co należy przetestować, zamiast na pisaniu powtarzalnych testów. Czasem nieuniknione jest konieczność stworzenia nowej funkcji dla każdego testu, ale zwłaszcza w przypadku testów z danymi, takich jak ten, testy z parametrami mogą zaoszczędzić Ci wiele czasu.
+
+#### 4.5.2 Pokrycie kodu
+Pokrycie kodu to magia i podobnie jak magia, często opiera się na opowieściach. Pokrycie kodu jest mierzone poprzez wstrzykiwanie każdej linii kodu z wywołaniami zwrotnymi, aby śledzić, jak daleko kod wywołany przez test jest wykonywany i które części są pomijane. Dzięki temu można dowiedzieć się, które części kodu nie są testowane i dlatego brakuje im testów.
+
+Środowiska programistyczne rzadko są wyposażone w narzędzia do pomiaru pokrycia kodu na starcie. Takie narzędzia są dostępne w wersjach Visual Studio o kosmicznych cenach lub w płatnych narzędziach innych firm, takich jak NCrunch, dotCover i NCover. Codecov (https://codecov.io) to usługa, która może współpracować z twoim repozytorium online i oferuje darmowy plan. Darmowy pomiar pokrycia kodu lokalnie w .NET był możliwy tylko dzięki bibliotece Coverlet i rozszerzeniom raportowania pokrycia kodu w Visual Studio Code, gdy ta książka była tworzona.
+
+Narzędzia do pomiaru pokrycia kodu informują, które części kodu zostały uruchomione podczas uruchamiania testów. Jest to bardzo przydatne, aby zobaczyć, jakiego rodzaju pokrycie testowe jesteś w stanie uzyskać, aby przetestować wszystkie ścieżki kodu. To jednak nie jest jedyny aspekt tej historii i z pewnością nie jest najskuteczniejszy. O brakujących przypadkach testowych będę rozmawiał później w tym rozdziale.
+
+Załóżmy, że zakomentowaliśmy testy, które wywołują naszą funkcję IsLegalBirthdate z datą urodzenia dokładnie 18 lat temu, jak w poniższym listingu.
+
+Listing 4.7 Brakujące testy
+
+```csharp
+//[TestCase(18,  0, -1, ExpectedResult = true)]
+//[TestCase(18,  0,  0, ExpectedResult = false)]
+//[TestCase(18,  0,  1, ExpectedResult = false)]
+//[TestCase(18, -1,  0, ExpectedResult = true)]
+//[TestCase(18,  1,  0, ExpectedResult = false)]
+[TestCase(19,  0,  0, ExpectedResult = true)]
+[TestCase(17,  0,  0, ExpectedResult = false)]
+public bool IsLegalBirthdate_ReturnsExpectedValues(
+  int yearDifference, int monthDifference, int dayDifference) {
+  var now = DateTime.Now;
+  var input = now.AddYears(-yearDifference)
+    .AddMonths(monthDifference)
+    .AddDays(dayDifference);
+  return DateTimeExtensions.IsLegalBirthdate(input);
+}
+```
+
+W tym przypadku narzędzie takie jak NCrunch pokaże brakujące pokrycie, jak na rysunku 4.4. Okrąg pokrycia obok instrukcji return wewnątrz polecenia if jest wygaszony, ponieważ nigdy nie wywołujemy funkcji z parametrem spełniającym warunek age == legalAge. Oznacza to, że brakuje nam pewnych wartości wejściowych.
+
+
+
+![CH04_F04_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_4-4.png)
+
+Gdy odkomentujesz te zakomentowane testy i ponownie uruchomisz testy, pokrycie kodu pokaże, że masz 100% pokrycia kodu, jak pokazano na rysunku 4.5.
+
+
+
+![CH04_F05_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_4-5.png)
+
+Narzędzia do pomiaru pokrycia kodu są dobrym punktem wyjścia, ale nie są w pełni skuteczne w pokazywaniu rzeczywistego pokrycia testami. Nadal powinieneś mieć dobrą znajomość zakresu wartości wejściowych i warunków brzegowych. Sto procent pokrycia kodu nie oznacza 100% pokrycia testami. Rozważmy poniższą funkcję, w której musisz zwrócić element z listy według indeksu:
+
+```csharp
+public Tag GetTagDetails(byte numberOfItems, int index) {
+    return GetTrendingTags(numberOfItems)[index];
+}
+```
+
+Wywołanie funkcji `GetTagDetails(1, 0);` powiodłoby się, i od razu uzyskalibyśmy 100% pokrycia kodu. Czy przetestowalibyśmy wszystkie możliwe przypadki? Nie. Nasze pokrycie wejścia byłoby dalekie od tego. Co, jeśli `numberOfItems` wynosi zero, a `index` jest różne od zera? Co się stanie, jeśli `index` jest ujemny?
+
+Te obawy oznaczają, że nie powinniśmy skupiać się wyłącznie na pokryciu kodu i próbie zapełnienia wszystkich luk. Zamiast tego powinniśmy być świadomi pokrycia naszych testów, biorąc pod uwagę wszystkie możliwe wejścia i mądrze dobierając wartości brzegowe. Niemniej jednak te podejścia nie są wzajemnie wykluczające się: można używać obu podejść jednocześnie.
+
+### 4.6 Nie pisz testów
+Tak, testowanie jest pomocne, ale nic nie jest lepsze niż całkowite unikanie pisania testów. Jak możesz obejść się bez pisania testów i jednocześnie zachować niezawodność swojego kodu?
+
+#### 4.6.1 Nie pisz kodu
+Jeśli kawałek kodu nie istnieje, nie trzeba go testować. Skasowany kod nie ma błędów. Zastanów się nad tym, gdy piszesz kod. Czy warto pisać dla niego testy? Być może wcale nie musisz go pisać. Na przykład czy możesz użyć istniejącego pakietu zamiast implementować go od podstaw? Czy możesz skorzystać z istniejącej klasy, która robi dokładnie to samo, co próbujesz zaimplementować? Na przykład możesz być kuszony, aby pisać niestandardowe wyrażenia regularne do walidacji adresów URL, podczas gdy wystarczy skorzystać z klasy System.Uri.
+
+Oczywiście kod osób trzecich nie jest gwarantowany jako idealny ani zawsze odpowiedni dla twoich celów. Później możesz odkryć, że kod nie działa dla ciebie, ale zwykle warto podjąć to ryzyko przed próbą napisania czegoś od zera. Podobnie w kodzie, nad którym pracujesz, może już istnieć kod wykonujący tę samą pracę, napisany przez kolegę z zespołu. Przeszukaj kod, aby sprawdzić, czy coś już istnieje.
+
+Jeśli nic nie działa, bądź gotów do implementacji własnej wersji. Nie bój się wynajdywania koła na nowo. To może być bardzo pouczające, jak omówiłem w rozdziale 3.
+
+#### 4.6.2 Nie pisz wszystkich testów
+Słynna zasada Pareto głosi, że 80% konsekwencji wynika z 20% przyczyn. Przynajmniej tak twierdzi 80% definicji. Powszechnie nazywana jest też zasadą 80/20. Można ją również zastosować w testowaniu. Można uzyskać 80% niezawodności przy 20% pokryciu testów, jeśli mądrze wybierzesz testy.
+
+Błędy nie pojawiają się równomiernie. Nie każda linia kodu ma taką samą prawdopodobieństwo generowania błędu. Najprawdopodobniej błędy występują w kodzie używanym częściej oraz w kodzie o dużym ruchu. Można nazwać te obszary kodu, gdzie problem jest bardziej prawdopodobny, ścieżkami o dużym obciążeniu.
+
+Dokładnie to zrobiłem ze swoją stroną internetową. Nie miała ona żadnych testów, pomimo że stała się jedną z najpopularniejszych tureckich stron na świecie. Potem musiałem dodać testy, ponieważ zaczęło pojawiać się zbyt wiele błędów związanych z parserem znaczników tekstowych. Składnia była niestandardowa i ledwie przypominała Markdown, ale stworzyłem ją jeszcze przed tym, zanim Markdown stał się powszechnie używanym formatem. Ponieważ logika parsowania była skomplikowana i podatna na błędy, stało się ekonomicznie nieopłacalne naprawianie każdego problemu po wdrożeniu do produkcji. Opracowałem dla niej zestaw testów. To było jeszcze przed erą frameworków do testowania, więc musiałem stworzyć swój własny. Stopniowo dodawałem więcej testów w miarę pojawiania się kolejnych błędów, ponieważ nienawidziłem tworzyć tych samych błędów, i później opracowaliśmy dość obszerny zestaw testów, który uratował nas przed tysiącami nieudanych wdrożeń na produkcję. Testy po prostu działają.
+
+Nawet samo przeglądanie strony głównej swojej witryny zapewnia spore pokrycie kodu, ponieważ obejmuje wiele wspólnych ścieżek kodu z innymi stronami. W ulicznej mowie nazywa się to testowaniem dymnym. To pochodzi z czasów, kiedy tworzono pierwszy prototyp komputera i próbowano go uruchomić, aby zobaczyć, czy nie zacznie dymić. Jeśli nie było dymu, było to dość dobrym znakiem. Podobnie jak w przypadku krytycznych, wspólnych komponentów, dobrze jest mieć dobrą pokrywę testów. Jest to ważniejsze niż posiadanie 100% pokrycia kodu. Nie trać godzin na dodawanie pokrycia testów dla pojedynczej linii w prymitywnym konstruktorze, który nie jest pokryty testami, jeśli to nie zrobi dużo różnicy. Wiesz już, że pokrycie kodu to nie cała historia.
+
+### 4.7 Pozwól kompilatorowi przetestować twój kod
+W przypadku języka silnie typowanego możesz wykorzystać system typów, aby zmniejszyć liczbę przypadków testowych, które będą potrzebne. Omówiłem już, jak nullażalne referencje mogą pomóc Ci unikać sprawdzania wartości null w kodzie, co również zmniejsza potrzebę pisania testów dla przypadków null. Przyjrzyjmy się prostemu przykładowi. W poprzednim rozdziale sprawdziliśmy, czy osoba, która chce się zarejestrować, ma co najmniej 18 lat. Teraz musimy zweryfikować, czy wybrana nazwa użytkownika jest prawidłowa, więc potrzebujemy funkcji do walidacji nazw użytkowników.
+
+#### 4.7.1 Wyeliminuj sprawdzanie wartości null
+Załóżmy, że zasada dotycząca nazwy użytkownika to małe litery, alfanumeryczne znaki, o długości do ośmiu znaków. Wzorzec wyrażenia regularnego dla takiej nazwy użytkownika będzie wyglądał tak: "^[a-z0-9]{1,8}$". Możemy napisać klasę Username, jak w przykładzie w listingu 4.8. Definiujemy klasę Username, aby reprezentować wszystkie nazwy użytkowników w kodzie. Unikamy konieczności zastanawiania się, gdzie powinniśmy zweryfikować nasze dane wejściowe, przekazując je do dowolnego kodu, który wymaga nazwy użytkownika.
+
+Aby upewnić się, że nazwa użytkownika nigdy nie będzie nieprawidłowa, sprawdzamy parametr w konstruktorze i wyrzucamy wyjątek, jeśli nie jest w prawidłowym formacie. Poza konstruktorem, reszta kodu to schemat, który pozwala na porównywanie scenariuszy. Pamiętaj, że zawsze możesz pochodzić od takiej klasy, tworząc podstawową klasę StringValue i pisząc minimalny kod dla każdej klasy wartości opartej na ciągu znaków. Chciałem zachować duplikacje implementacji w książce, aby wyjaśnić, co dokładnie obejmuje kod. Zauważ użycie operatora nameof zamiast wpisanych na stałe ciągów znaków jako odniesienia do parametrów. Pozwala to na utrzymanie zgodności nazw po zmianie. Można go również używać dla pól i właściwości, zwłaszcza w przypadku przypadków testowych, gdzie dane są przechowywane w oddzielnym polu, a trzeba się do niego odnosić za pomocą jego nazwy.
+
+```csharp
+public class Username {
+  public string Value { get; private set; }
+  private const string validUsernamePattern = @"^[a-z0-9]{1,8}$";
+ 
+  public Username(string username) {
+    if (username is null) {
+      throw new ArgumentNullException(nameof(username));
+    }
+    if (!Regex.IsMatch(username, validUsernamePattern)) {
+      throw new ArgumentException(nameof(username), 
+        "Invalid username");
+    }
+    this.Value = username;
+  }
+ 
+  public override string ToString() => base.ToString();
+  public override int GetHashCode() => Value.GetHashCode();
+  public override bool Equals(object obj) {
+    return obj is Username other && other.Value == Value;
+  }
+  public static implicit operator string(Username username) {
+    return username.Value;
+  }
+  public static bool operator==(Username a, Username b) {
+    return a.Value == b.Value;
+  }
+  public static bool operator !=(Username a, Username b) {
+    return !(a == b);
+  }
+}
+```
+
+Testowanie konstruktora klasy `Username` wymagałoby napisania trzech różnych metod testowych, jak pokazano w poniższym kodzie (listing 4.9): jedna dla możliwości przyjęcia wartości null, ponieważ podniesie ona wyjątek innego typu; druga dla niepustego, ale nieprawidłowego wejścia; i wreszcie trzecia dla prawidłowych wejść, ponieważ musimy się upewnić, że także prawidłowe wejścia są uznawane za poprawne.
+
+```csharp
+class UsernameTest {
+ [Test]
+ public void ctor_nullUsername_ThrowsArgumentNullException() {
+   Assert.Throws<ArgumentNullException>(
+     () => new Username(null));
+ }
+
+ [TestCase("")]
+ [TestCase("Upper")]
+ [TestCase("toolongusername")]
+ [TestCase("root!!")]
+ [TestCase("a b")]
+ public void ctor_invalidUsername_ThrowsArgumentException(string username) {
+   Assert.Throws<ArgumentException>(
+     () => new Username(username));
+ }
+
+ [TestCase("a")]
+ [TestCase("1")]
+ [TestCase("hunter2")]
+ [TestCase("12345678")]
+ [TestCase("abcdefgh")]
+ public void ctor_validUsername_DoesNotThrow(string username) {
+   Assert.DoesNotThrow(() => new Username(username));
+ }
+}
+```
+
+Gdybyśmy włączyli obsługę nullable references dla projektu, w którym znajduje się klasa `Username`, nie musielibyśmy pisać testów dla przypadku wartości null. Jedynym wyjątkiem byłaby sytuacja, gdy piszemy publiczne API, które nie działałoby wobec kodu świadomego nullable references. W takim przypadku nadal musielibyśmy sprawdzać null'e.
+
+Podobnie, deklaracja `Username` jako struktury (struct), gdy jest to odpowiednie, sprawi, że będzie to typ wartościowy, co również wyeliminuje potrzebę sprawdzania wartości null. Używanie odpowiednich typów i właściwych struktur dla typów danych pomoże nam zredukować liczbę testów. Kompilator zadba o poprawność naszego kodu.
+
+Używanie konkretnych typów ogranicza potrzebę pisania testów. Gdy funkcja rejestracji przyjmuje `Username` zamiast zwykłego ciągu znaków (string), nie musisz sprawdzać, czy funkcja rejestracji poprawnie waliduje swoje argumenty. Podobnie, gdy Twoja funkcja przyjmuje argument URL jako obiekt klasy `Uri`, nie musisz już sprawdzać, czy Twoja funkcja poprawnie przetwarza URL.
+
+> MITY NA TEMAT WYRAŻEŃ REGULARNYCH
+>
+> Wyrażenia regularne są jednym z najbardziej genialnych wynalazków w historii informatyki. Zawdzięczamy je szanowanemu Stephenowi Cole Kleene'owi. Pozwalają stworzyć analizator tekstu za pomocą kilku znaków. Wzorzec "light" pasuje tylko do ciągu "light", podczas gdy "[ln]ight" pasuje zarówno do "light", jak i "night". Podobnie, wyrażenie "li(gh){1,2}t" pasuje tylko do słów "light" i "lighght", co nie jest błędem, ale jednosłowowym wierszem Arama Saroyana.
+>
+> Jamie Zawinski słynnie powiedział: "Niektórzy ludzie, gdy napotkają problem, myślą: 'Wiem, użyję wyrażeń regularnych'. Teraz mają dwa problemy". Fraza "wyrażenie regularne" wiąże się z określonymi cechami analizy. Wyrażenia regularne nie są świadome kontekstu, więc nie można użyć pojedynczego wyrażenia regularnego, aby znaleźć najbardziej zagnieżdżony tag w dokumencie HTML lub wykryć niepasujące tagi zamykające. Oznacza to, że nie są odpowiednie do skomplikowanych zadań analizy. Niemniej jednak można ich używać do analizy tekstu o strukturze nienestującej.
+>
+> Wyrażenia regularne są zaskakująco wydajne dla przypadków, które obsługują. Jeśli potrzebujesz dodatkowej wydajności, możesz je skompilować w języku C# tworząc obiekt Regex z opcją RegexOptions.Compiled. Oznacza to, że niestandardowy kod analizujący ciąg na podstawie wzorca zostanie utworzony na żądanie. Twój wzorzec zamienia się w kod C#, a następnie w kod maszynowy. Kolejne wywołania tego samego obiektu Regex będą ponownie używać skompilowanego kodu, co przyniesie wydajność dla wielu iteracji.
+>
+> Mimo swojej wydajności nie powinieneś używać wyrażeń regularnych, gdy istnieje prostsze rozwiązanie. Jeśli musisz sprawdzić, czy ciąg ma określoną długość, proste "str.Length == 5" będzie znacznie szybsze i czytelniejsze niż "Regex.IsMatch(@"^.{5}$", str)". Podobnie klasa string zawiera wiele wydajnych metod do powszechnych operacji na ciągach, takich jak StartsWith, EndsWith, IndexOf, LastIndexOf, IsNullOrEmpty i IsNullOrWhiteSpace. Zawsze preferuj dostarczane metody przed wyrażeniami regularnymi dla ich konkretnych przypadków użycia.
+>
+> Mimo to ważne jest, abyś znał przynajmniej podstawową składnię wyrażeń regularnych, ponieważ mogą być potężne w środowisku programistycznym. Można nimi manipulować kodem w skomplikowany sposób, co może zaoszczędzić godziny pracy. Wszystkie popularne edytory tekstu obsługują wyrażenia regularne w operacjach wyszukiwania i zamiany. Mówię o operacjach takich jak "chcę przenieść setki nawiasów w kodzie do nowej linii tylko wtedy, gdy pojawią się obok linii kodu". Możesz poświęcić kilka minut na znalezienie poprawnych wzorców wyrażeń regularnych zamiast ręcznego wykonania tego przez godzinę.
+
+
+
+#### 4.7.2 Eliminacja sprawdzania zakresu
+Możesz używać typów całkowitoliczbowych bez znaku (unsigned integer) w celu ograniczenia zakresu możliwych błędnych wartości wejściowych. W tabeli 4.3 widoczne są wersje bez znaku dla podstawowych typów całkowitoliczbowych. Możesz tam znaleźć różne typy danych z ich możliwymi zakresami, które mogą być bardziej odpowiednie dla Twojego kodu. Ważne jest również, abyś zastanowił się, czy dany typ jest bezpośrednio kompatybilny z typem `int`, ponieważ jest to typ całkowitoliczbowy, który .NET stosuje jako domyślny. Prawdopodobnie już spotkałeś się z tymi typami, ale może nie przyszło Ci do głowy, że mogą one zaoszczędzić Ci konieczności pisania dodatkowych przypadków testowych. Na przykład, jeśli Twoja funkcja wymaga tylko wartości dodatnich, to po co używać `int` i sprawdzać wartości ujemne oraz wyrzucać wyjątki? Po prostu użyj typu `uint`.
+
+
+
+Tabela 4.3 Alternatywne typy całkowitoliczbowe o różnych zakresach wartości (zobacz tabelę poniżej)
+
+| Nazwa  | Typ całkowitoliczbowy | Zakres wartości                           | Przypisywalny do int bez utraty danych? |
+| ------ | --------------------- | ----------------------------------------- | --------------------------------------- |
+| int    | 32-bitowy ze znakiem  | -2147483648..2147483647                   | Oczywiste                               |
+| uint   | 32-bitowy bez znaku   | 0..4294967295                             | Nie                                     |
+| long   | 64-bitowy ze znakiem  | -9223372036854775808..9223372036854775807 | Nie                                     |
+| ulong  | 64-bitowy bez znaku   | 0..18446744073709551615                   | Nie                                     |
+| short  | 16-bitowy ze znakiem  | -32768..32767                             | Tak                                     |
+| ushort | 16-bitowy bez znaku   | 0..65535                                  | Tak                                     |
+| sbyte  | 8-bitowy ze znakiem   | -128..127                                 | Tak                                     |
+| byte   | 8-bitowy bez znaku    | 0..255                                    | Tak                                     |
+
+Kiedy używasz typu bez znaku (unsigned), próba przekazania do funkcji wartości stałej ujemnej spowoduje błąd kompilacji. Przekazanie zmiennej o wartości ujemnej jest możliwe tylko za pomocą jawnej konwersji typu, co zmusza cię do zastanowienia się, czy wartość, którą masz, jest naprawdę odpowiednia dla funkcji w miejscu wywołania. Nie jest już odpowiedzialnością funkcji walidować argumenty na wypadek wartości ujemnych. Załóżmy, że funkcja ma zwrócić popularne tagi na twojej stronie mikroblogowej, ale tylko określoną liczbę tagów. Funkcja ta przyjmuje liczbę elementów do pobrania wierszy z postami, jak w poniższym przykładzie (listing 4.10).
+
+Również w przykładzie (listing 4.10), funkcja GetTrendingTags zwraca elementy, uwzględniając liczbę przekazanych elementów. Zauważ, że wartość wejściowa to typ byte zamiast int, ponieważ nie mamy przypadku użycia, w którym potrzebujemy więcej niż 255 elementów na liście popularnych tagów. To od razu eliminuje sytuacje, w których wartość wejściowa może być ujemna lub zbyt duża. Nie musimy już nawet walidować tej wartości wejściowej. To skutkuje mniejszą liczbą przypadków testowych i znacznie lepszym zakresem wartości wejściowych, co natychmiastowo zmniejsza możliwość wystąpienia błędów.
+
+```swift
+using System;
+using System.Collections.Generic;
+using System.Linq;
+ 
+namespace Posts {
+  public class Tag {
+    public Guid Id { get; set; }
+    public string Title { get; set; }
+  }
+ 
+  public class PostService {
+    public const int MaxPageSize = 100;
+    private readonly IPostRepository db;
+ 
+    public PostService(IPostRepository db) {
+      this.db = db;
+    }
+ 
+    public IList<Tag> GetTrendingTags(byte numberOfItems) {
+      return db.GetTrendingTagTable()
+        .Take(numberOfItems)
+        .ToList();
+    }
+  }
+}
+```
+
+W tym przypadku dzieją się dwie rzeczy. Po pierwsze, wybraliśmy mniejszy typ danych dla naszego przypadku użycia. Nie zamierzamy obsługiwać miliardów wierszy w polu z popularnymi tagami. Nawet nie wiemy, jak by to wyglądało. Ograniczyliśmy naszą przestrzeń danych wejściowych. Po drugie, wybraliśmy typ byte, który jest typem bez znaku (unsigned) i nie może przyjmować wartości ujemnych. W ten sposób uniknęliśmy możliwego przypadku testowego i potencjalnego problemu, który mógłby spowodować wyjątek. Funkcja Take z LINQ nie rzuca wyjątkiem przy użyciu List, ale może to zrobić, gdy jest przetwarzana na zapytanie dla bazy danych, takiej jak Microsoft SQL Server. Zmieniając typ, unikamy tych przypadków i nie musimy pisać dla nich testów.
+
+Należy zauważyć, że .NET używa typu int jako standardowego typu dla wielu operacji, takich jak indeksowanie i zliczanie. Wybór innego typu może wymagać rzutowania i konwersji wartości na int, jeśli masz do czynienia ze standardowymi komponentami .NET. Musisz się upewnić, że nie wpadasz w pułapkę pedantyzmu. Twoja jakość życia i przyjemność z pisania kodu są ważniejsze niż pewien jednorazowy przypadek, który próbujesz unikać. Na przykład, jeśli w przyszłości będziesz potrzebować więcej niż 255 elementów, będziesz musiał zamienić wszystkie odwołania do typu byte na shorty lub inty, co może być czasochłonne. Musisz być pewien, że oszczędzasz sobie pisanie testów dla ważnego celu. W wielu przypadkach nawet napisanie dodatkowych testów może być bardziej korzystne niż borykanie się z różnymi typami. Ostatecznie liczy się tylko twoje samopoczucie i czas, pomimo jak potężne może być używanie typów do wskazywania na prawidłowe zakresy wartości.
+
+#### 4.7.3 Wyeliminuj sprawdzanie poprawności wartości
+
+Czasem używamy wartości, aby oznaczyć operację w funkcji. Powszechnym przykładem jest funkcja fopen w języku programowania C. Przyjmuje drugi parametr w postaci łańcucha znaków, który symbolizuje tryb otwarcia pliku, czyli może oznaczać otwarcie do odczytu, otwarcie do dopisywania, otwarcie do zapisywania, itp.
+
+Dziesięciolecia po C, zespół .NET podjął lepszą decyzję i stworzył osobne funkcje dla każdego przypadku. Masz osobne metody File.Create, File.OpenRead i File.OpenWrite, co eliminuje potrzebę dodatkowego parametru i parsowania tego parametru. Niemożliwe jest przekazanie niewłaściwego parametru. Niemożliwe jest, aby funkcje miały błędy w parsowaniu parametru, ponieważ takiego parametru nie ma.
+
+Często stosuje się takie wartości, aby oznaczyć rodzaj operacji. Powinieneś rozważyć ich oddzielenie w osobne funkcje, które będą lepiej wyrażać intencję i ograniczą powierzchnię testową.
+
+Jedną powszechnie stosowaną techniką w języku C# jest używanie parametrów typu Boolean do zmiany logiki działania funkcji. Przykładem może być opcja sortowania w funkcji pobierania popularnych tagów, jak w przykładzie 4.11. Załóżmy, że potrzebujemy popularnych tagów również na naszej stronie zarządzania tagami i lepiej je jest tam pokazać posortowane alfabetycznie. W sprzeczności z prawami termodynamiki, programiści mają tendencję do nieustannego tracenia entropii. Zawsze starają się wprowadzić zmiany, które mają jak najmniej entropii, nie zastanawiając się nad tym, jak bardzo będą one uciążliwe w przyszłości. Pierwszym instynktem programisty może być dodanie parametru typu Boolean i zakończenie tematu.
+
+**Listing 4.11 Parametry typu Boolean**
+
+```swift
+public IList<Tag> GetTrendingTags(byte numberOfItems,
+  bool sortByTitle) {
+  var query = db.GetTrendingTagTable();
+  if (sortByTitle) {
+    query = query.OrderBy(p => p.Title);
+  }
+  return query.Take(numberOfItems).ToList();
+}
+```
+
+Naszym problemem jest to, że jeśli będziemy dodawać kolejne wartości typu Boolean w ten sposób, może to stać się naprawdę skomplikowane z powodu różnych kombinacji parametrów funkcji. Załóżmy, że inna funkcja wymaga popularnych tagów z wczoraj. Dodajemy to jako kolejny parametr w poniższym kodzie. Teraz nasza funkcja musi obsługiwać kombinacje sortByTitle i yesterdaysTags.
+
+**Listing 4.12 Więcej parametrów typu Boolean**
+
+```csharp
+public IList<Tag> GetTrendingTags(byte numberOfItems,
+  bool sortByTitle, bool yesterdaysTags) {
+  var query = yesterdaysTags
+    ? db.GetTrendingTagTable()
+    : db.GetYesterdaysTrendingTagTable();
+  if (sortByTitle) {
+    query = query.OrderBy(p => p.Title);
+  }
+  return query.Take(numberOfItems).ToList();
+}
+```
+
+Widać tutaj trwający trend. Złożoność naszej funkcji wzrasta wraz z każdym dodanym parametrem typu Boolean. Mimo że mamy trzy różne przypadki użycia, nasza funkcja ma cztery warianty z każdym nowym parametrem typu Boolean. Dodając kolejne wartości typu Boolean, tworzymy fikcyjne wersje funkcji, których nikt nie będzie używać, chociaż ktoś może kiedyś tego potrzebować i wpakować się w tarapaty. Lepszym podejściem jest posiadanie osobnej funkcji dla każdego przypadku użycia, jak pokazano poniżej.
+
+#####  Listing 4.13 Rozdzielone funkcje
+
+```csharp
+public IList<Tag> GetTrendingTags(byte numberOfItems) {
+  return db.GetTrendingTagTable()
+    .Take(numberOfItems)
+    .ToList();
+}
+ 
+public IList<Tag> GetTrendingTagsByTitle(
+  byte numberOfItems) {
+  return db.GetTrendingTagTable()
+    .OrderBy(p => p.Title)
+    .Take(numberOfItems)
+    .ToList();
+}
+ 
+public IList<Tag> GetYesterdaysTrendingTags(byte numberOfItems) {
+  return db.GetYesterdaysTrendingTagTable()
+    .Take(numberOfItems)
+    .ToList();
+}
+```
+
+Teraz masz o jeden test mniej. Dostajesz znacznie lepszą czytelność i nieco zwiększoną wydajność jako darmowy bonus. Zyski są oczywiście minimalne i niezauważalne dla pojedynczej funkcji, ale w miejscach, gdzie kod musi skalować, mogą robić różnicę, nawet nie zdając sobie z tego sprawy. Oszczędności zwiększą się eksponencjalnie, gdy unikniesz prób przekazywania stanu za pomocą parametrów i jak najwięcej wykorzystasz funkcji. Nadal może cię irytować powtarzający się kod, który można łatwo zrefaktoryzować do wspólnych funkcji, jak w poniższym przykładzie.
+
+**Listing 4.14 Oddzielne funkcje z zrefaktoryzowaną wspólną logiką**
+
+```csharp
+private IList<Tag> toListTrimmed(byte numberOfItems,
+  IQueryable<Tag> query) {
+  return query.Take(numberOfItems).ToList();
+}
+ 
+public IList<Tag> GetTrendingTags(byte numberOfItems) {
+  return toListTrimmed(numberOfItems, db.GetTrendingTagTable());
+}
+ 
+public IList<Tag> GetTrendingTagsByTitle(byte numberOfItems) {
+  return toListTrimmed(numberOfItems, db.GetTrendingTagTable()
+    .OrderBy(p => p.Title));
+}
+ 
+public IList<Tag> GetYesterdaysTrendingTags(byte numberOfItems) {
+  return toListTrimmed(numberOfItems,
+    db.GetYesterdaysTrendingTagTable());
+}
+```
+
+Nasze oszczędności tutaj nie są imponujące, ale takie refaktoryzacje mogą robić większą różnicę w innych przypadkach. Ważne jest, aby stosować refaktoryzację, aby unikać powtarzania kodu i "kombinatorycznego piekła".
+
+Tę samą technikę można zastosować z parametrami typu enum, które są używane do wyznaczania określonej operacji w funkcji. Używaj oddzielnych funkcji, a nawet możesz stosować kompozycję funkcji, zamiast przekazywać listę zakupów parametrów.
+
+### 4.8 Nazewnictwo testów
+W nazwie tkwi wiele znaczenia. Dlatego ważne jest, aby mieć dobre konwencje nazewnicze zarówno w kodzie produkcyjnym, jak i w kodzie testowym, chociaż niekoniecznie muszą one się pokrywać. Testy o dobrym pokryciu mogą pełnić rolę specyfikacji, jeśli są odpowiednio nazwane. Z nazwy testu powinieneś być w stanie odczytać:
+
+- Nazwę testowanej funkcji
+
+- Wejście i początkowy stan
+- Oczekiwane zachowanie
+- Kogo obwinić
+
+Oczywiście żartuję z tym ostatnim. Pamiętasz? Już zaakceptowałeś ten kod podczas przeglądu kodu. Nie masz już prawa obwiniać kogoś innego. W najlepszym przypadku możesz podzielić się odpowiedzialnością. W mojej praktyce często używam formatu "A_B_C" do nazwania testów, co różni się od tego, co zwykle stosujesz w nazewnictwie swoich funkcji. W poprzednich przykładach stosowaliśmy prostszy schemat nazewnictwa, ponieważ mogliśmy użyć atrybutu TestCase do opisu początkowego stanu testu. Ja używam dodatkowego ReturnsExpectedValues, ale możesz po prostu dodawać przyrostek Test do nazwy funkcji. Lepiej, jeśli nie używasz samej nazwy funkcji, ponieważ może to wprowadzić zamieszanie, gdy pojawia się na liście uzupełniania kodu. Podobnie, jeśli funkcja nie przyjmuje żadnych danych wejściowych lub nie zależy od początkowego stanu, możesz pominąć opisującą tę część. Celem jest umożliwienie Ci oszczędzenia czasu przy tworzeniu testów, a nie poddawanie Cię wojskowemu szkoleniu dotyczącemu zasad nazewnictwa.
+
+Wyobraź sobie, że szef poprosił Cię o napisanie nowej reguły walidacji dla formularza rejestracji, aby upewnić się, że kod rejestracji zwraca błąd, jeśli użytkownik nie zaakceptował warunków polityki. Nazwa takiego testu mogłaby być Register_LicenseNotAccepted_ShouldReturnFailure, jak w przypadku przedstawionym na rysunku 4.6.
+
+![CH04_F06_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_4-6.png)
+
+### Podsumowanie:
+
+- Można pokonać niechęć do pisania testów, nie pisząc ich w ogóle.
+
+- Test-driven development i podobne paradygmaty mogą zwiększyć niechęć do pisania testów. Staraj się pisać testy, które przynoszą radość.
+
+- Wprowadzenie testów może być znacznie ułatwione dzięki frameworkom testowym, zwłaszcza z użyciem testów z parametrami i danymi wejściowymi.
+
+- Liczbę przypadków testowych można znacznie ograniczyć, analizując właściwie wartości graniczne dla danych wejściowych funkcji.
+
+- Prawidłowe stosowanie typów pozwala uniknąć pisania wielu niepotrzebnych testów.
+
+- Testy nie tylko zapewniają jakość kodu, ale także pomagają poprawić umiejętności programistyczne i wydajność.
+
+- Testowanie w produkcji może być akceptowalne, o ile twoje CV jest aktualne.
+
+  
+
+  1. KITT, co oznacza Knight Industries Two Thousand, to samochód autonomiczny wyposażony w rozpoznawanie mowy. Pojawił się w serialu science fiction z lat 80. pod tytułem "Knight Rider". Normalne jest, że nie rozumiesz tego odniesienia, ponieważ wszyscy, którzy je zrozumieli, prawdopodobnie są już martwi, z możliwym wyjątkiem Davida Hasselhoffa. Ten facet jest nieśmiertelny.
