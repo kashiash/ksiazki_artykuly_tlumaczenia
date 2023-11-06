@@ -3168,3 +3168,407 @@ Wyobraź sobie, że szef poprosił Cię o napisanie nowej reguły walidacji dla 
   
 
   1. KITT, co oznacza Knight Industries Two Thousand, to samochód autonomiczny wyposażony w rozpoznawanie mowy. Pojawił się w serialu science fiction z lat 80. pod tytułem "Knight Rider". Normalne jest, że nie rozumiesz tego odniesienia, ponieważ wszyscy, którzy je zrozumieli, prawdopodobnie są już martwi, z możliwym wyjątkiem Davida Hasselhoffa. Ten facet jest nieśmiertelny.
+
+**Rozdział 5: Opłacalne refaktoryzacje**
+
+Ten rozdział obejmuje:
+- Nabieranie pewności w refaktoryzacji
+- Stopniowe refaktoryzacje w przypadku dużych zmian
+- Wykorzystanie testów do przyspieszania zmian w kodzie
+- Wstrzykiwanie zależności
+
+W rozdziale 3 omówiłem, jak opór przed zmianami przyczynił się do upadku francuskiej rodziny królewskiej oraz deweloperów oprogramowania. Refaktoryzacja to sztuka zmiany struktury kodu. Według Martina Fowlera1, termin ten został ukuty przez Leo Brodiego w jego książce "Thinking Forth" już w 1984 roku. Oznacza to, że termin ten ma tyle samo lat co filmy "Powrót do przyszłości" i "Karate Kid", moje ulubione filmy z dzieciństwa.
+
+Pisanie doskonałego kodu to zwykle tylko połowa bycia efektywnym programistą. Druga połowa polega na sprawnym przekształcaniu kodu. W idealnym świecie powinniśmy pisać i zmieniać kod z prędkością myśli. Wciśnięcie klawiszy, opanowanie składni, zapamiętanie słów kluczowych i zmiana filtra do kawy to wszystko przeszkody między twoimi pomysłami a produktem. Ponieważ prawdopodobnie minie jeszcze trochę czasu, zanim sztuczna inteligencja będzie w stanie wykonywać pracę programistyczną za nas, warto doskonalić swoje umiejętności refaktoryzacji.
+
+Edytory zintegrowane środowisko programistycznego (IDE) są niezwykle przydatne w refaktoryzacji. Możesz zmienić nazwę klasy jednym klawiszem (F2 w programie Visual Studio dla systemu Windows) i natychmiastowo zmienić wszystkie odniesienia do niej. Możesz nawet uzyskać dostęp do większości opcji refaktoryzacji za pomocą jednego klawisza. Zdecydowanie polecam zapoznanie się z skrótami klawiszowymi dla funkcji, które często używasz w swoim ulubionym edytorze. Oszczędności czasu będą się gromadzić, a ty będziesz wyglądać na fajnego przed swoimi kolegami.
+
+### 5.1 Dlaczego przeprowadzamy refaktoryzację?
+
+Zmiany są nieuniknione, a zmiany w kodzie są podwójnie nieuniknione. Refaktoryzacja służy celom inne niż po prostu zmiana kodu. Pozwala ci:
+
+- Zmniejszyć powtarzalność i zwiększyć ponowne użycie kodu. Możesz przenieść klasę, która może być ponownie używana przez inne komponenty, do wspólnego miejsca, aby te inne komponenty mogły ją zacząć używać. Podobnie możesz wyodrębnić metody z kodu i udostępnić je do ponownego użycia.
+
+- Zbliżyć swoje pojęcie mentalne do kodu. Nazwy są ważne. Niektóre nazwy mogą być mniej zrozumiałe niż inne. Zmiana nazw jest częścią procesu refaktoryzacji i może pomóc ci osiągnąć lepszy design, który bardziej odpowiada twojemu modelowi mentalnemu.
+
+- Ułatwić zrozumienie i utrzymanie kodu. Możesz zmniejszyć złożoność kodu, dzieląc długie funkcje na mniejsze, łatwiejsze do utrzymania. Podobnie model może być łatwiejszy do zrozumienia, jeśli złożone typy danych są grupowane w mniejsze, atomowe części.
+
+- Zapobiec pojawianiu się pewnych klas błędów. Pewne operacje refaktoryzacji, takie jak zmiana klasy na strukturę, mogą zapobiec błędom związanym z wartościami null, o których rozmawiałem w rozdziale 2. Podobnie włączanie możliwości występowania wartości null w projekcie i zmiana typów danych na te, które nie dopuszczają wartości null, może zapobiec błędom, które są podobnie operacjami refaktoryzacji.
+
+- Przygotować się na znaczącą zmianę architektoniczną. Duże zmiany można przeprowadzić szybciej, jeśli wcześniej przygotujesz kod do tych zmian. Zobaczysz, jak to może być możliwe w kolejnej sekcji.
+
+- Pozbyć się sztywnych fragmentów kodu. Dzięki wstrzykiwaniu zależności możesz usunąć zależności i uzyskać luźno powiązany design.
+
+Większość czasu my, programiści, postrzegamy refaktoryzację jako rutynowe zadanie, które stanowi część naszej pracy programistycznej. Refaktoryzacja to także osobna, zewnętrzna praca, którą wykonujemy nawet jeśli nie piszemy ani jednej linii kodu. Możemy ją przeprowadzać nawet w celu lepszego zrozumienia kodu, ponieważ czasem trudno jest go ogarnąć. Richard Feynman kiedyś powiedział: „Jeśli chcesz naprawdę zrozumieć jakiś temat, napisz o nim książkę”. W podobny sposób możemy naprawdę zrozumieć kod, przeprowadzając jego refaktoryzację.
+
+Proste operacje refaktoryzacyjne nie wymagają żadnych wskazówek. Chcesz zmienić nazwę klasy? Proszę bardzo. Wyodrębnić metody lub interfejsy? To żadne wyzwanie. Nawet są one dostępne w menu kontekstowym w programie Visual Studio, które można otworzyć za pomocą skrótu klawiszowego Ctrl+. na systemie Windows. Większość czasu operacje refaktoryzacyjne nie mają żadnego wpływu na niezawodność kodu. Jednak gdy chodzi o istotną zmianę architektoniczną w kodzie źródłowym, możesz potrzebować pewnych wskazówek.
+
+
+
+#### 5.2 Zmiany architektoniczne
+
+Wykonywanie dużych zmian architektonicznych w jednym podejściu prawie nigdy nie jest dobrym pomysłem. Nie dlatego, że jest to technicznie trudne, ale głównie dlatego, że duże zmiany generują dużą liczbę błędów i problemów z integracją ze względu na długi i szeroki charakter pracy. Przez problemy z integracją mam na myśli to, że jeśli pracujesz nad dużą zmianą, musisz nad nią pracować przez długi czas, nie będąc w stanie integrować zmian dokonywanych przez innych programistów (patrz rysunek 5.1). To stawia cię w trudnej sytuacji. Czy czekasz, aż zakończysz swoją pracę i ręcznie stosujesz każdą zmianę, która została wprowadzona w kodzie w tym czasie, i samodzielnie naprawiasz wszystkie konflikty, czy też mówisz swoim kolegom z zespołu, aby przestali pracować, dopóki nie zakończysz swoich zmian? Ten problem dotyczy głównie refaktoryzacji. Nie ma tego samego problemu podczas tworzenia nowej funkcji, ponieważ możliwość konfliktu z innymi programistami jest znacznie mniejsza: ta funkcja nie istnieje jeszcze w pierwszej kolejności. Dlatego podejście inkrementalne jest lepsze.
+
+![CH05_F01_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_5-1.png)
+
+Aby stworzyć mapę drogową, musisz mieć cel i wiedzieć, gdzie się znajdujesz. Jak chcesz, żeby ostateczny wynik wyglądał? Być może nie jest możliwe wyobrażenie sobie wszystkiego od razu, ponieważ duże oprogramowanie jest naprawdę trudne do ogarnięcia. Zamiast tego możesz mieć pewną listę wymagań.
+
+Pracujmy nad przykładem migracji. Microsoft posiada dwie wersje .NET w swojej ofercie. Pierwsza z nich to .NET Framework, który ma dziesięciolecia historii, a druga nosi po prostu nazwę .NET (wcześniej znana jako .NET Core) i została wydana w 2016 roku. Obydwie są nadal wspierane przez Microsoft w chwili pisania tej książki, ale oczywiste jest, że Microsoft chce iść do przodu z .NET i w pewnym momencie porzucić .NET Framework. Bardzo prawdopodobne jest, że będziesz musiał podjąć się pracy polegającej na migracji z .NET Framework do .NET.
+
+> .NET Framework oznaczało wiele rzeczy w latach 90., gdy internet zaczynał nabierać rozpędu. Istniało nawet czasopismo o nazwie .net, które dotyczyło internetu i działało mniej więcej jako wolniejsza wersja Google. Przeglądanie sieci było powszechnie nazywane "surfowaniem po sieci", "podróżowaniem autostradą informacji", "łączeniem się z cyberprzestrzenią" lub jakąkolwiek inną kombinacją zwodniczego metaforycznego czasownika z wymyślonym rzeczownikiem.
+>
+> .NET Framework był pierwotnym ekosystemem oprogramowania stworzonym, aby ułatwić życie programistom pod koniec lat 90. Zawierał środowisko wykonawcze, standardowe biblioteki, kompilatory dla języków C#, Visual Basic, a później F#. Odpowiednikiem .NET Framework w świecie Java był JDK (Java Development Kit), który zawierał środowisko wykonawcze Java, kompilator języka Java, maszynę wirtualną Java i prawdopodobnie kilka innych rzeczy zaczynających się od słowa "Java".
+>
+> Z czasem pojawiły się inne wersje .NET, które nie były bezpośrednio kompatybilne z .NET Framework, takie jak .NET Compact Framework i Mono. Aby umożliwić współdzielenie kodu między różnymi frameworkami, Microsoft stworzył wspólną specyfikację API, która definiowała wspólny podzbiór funkcji .NET, nazwaną .NET Standard. Java nie boryka się z podobnym problemem, ponieważ Oracle skutecznie zniszczył wszystkie niekompatybilne alternatywy za pomocą armii prawników.
+>
+> Później Microsoft stworzył nową generację .NET Framework, która była wieloplatformowa. Początkowo nazywała się .NET Core i niedawno została przemianowana na .NET, zaczynając od wersji .NET 5. Nie jest bezpośrednio kompatybilna z .NET Framework, ale może współpracować dzięki wspólnej specyfikacji podzbioru .NET Standard.
+>
+> .NET Framework nadal działa na wsparciu życiowym, ale prawdopodobnie nie będziemy go widzieć za pięć lat. Zdecydowanie zalecam wszystkim korzystającym z .NET, aby zaczęli od .NET zamiast .NET Framework, dlatego wybrałem przykład oparty na tej scenariusz migracji.
+
+Oprócz celu podróży musisz również wiedzieć, gdzie się znajdujesz. Przypomina mi to historię o dyrektorze generalnym, który leciał helikopterem i zgubił się we mgle. Zauważyli sylwetkę budynku i kogoś na balkonie. Dyrektor powiedział: „Mam pomysł. Przybliżmy się do tej osoby”. Zaczęli zbliżać się do tej osoby, a dyrektor krzyknął: „Ej! Czy wiesz, gdzie jesteśmy?” Osoba odpowiedziała: „Tak, jesteście w helikopterze!” Dyrektor powiedział: „Okej, to musi być kampus uczelni, a to musi być budynek inżynierii!” Osoba na balkonie była zdziwiona i zapytała: „Jak doszedłeś do tego wniosku?” Dyrektor odpowiedział: „Technicznie rzecz biorąc, odpowiedź, którą nam podałeś, była poprawna, ale całkowicie bezużyteczna!” Osoba krzyknęła: „To musisz być dyrektorem generalnym!” Teraz dyrektor był zdziwiony i zapytał: „Skąd wiedziałeś?” Osoba odpowiedziała: „Zgubiłeś się, nie masz pojęcia, gdzie jesteś ani dokąd zmierzasz, a i tak to moja wina!”
+
+Nie mogę przestać wyobrażać sobie dyrektora generalnego skaczącego z helikoptera na balkon i rozpoczynającego scenę walki jak z filmu Matrix między uciekającym inżynierem a dyrektorem generalnym, obydwaj dzierżący katanę, po prostu dlatego, że pilot nie potrafił odczytać GPS zamiast ćwiczyć precyzyjnego podejścia do lądowania na balkonach.
+
+Wyobraźmy sobie, że mamy naszą anonimową stronę mikroblogową o nazwie Blabber napisaną w .NET Framework i ASP.NET, i chcemy przenieść ją na nową platformę .NET i ASP.NET Core. Niestety, ASP.NET Core i ASP.NET nie są kompatybilne binarnie i są tylko częściowo kompatybilne ze źródłem. Kod platformy jest dołączony do kodu źródłowego książki. Nie będę przedstawiał pełnego kodu tutaj, ponieważ szablon ASP.NET zawiera sporo kodu szkieletowego, ale przedstawię ogólne zarysy architektury, które będą nas kierować podczas tworzenia mapy drogowej dla procesu refaktoryzacji. Nie musisz znać architektury ASP.NET ani ogólnie działania aplikacji internetowych, aby zrozumieć nasz proces refaktoryzacji, ponieważ te informacje nie są bezpośrednio związane z pracą nad refaktoryzacją.
+
+#### 5.2.1 Zidentyfikuj komponenty
+Najlepszym sposobem na pracę z dużą refaktoryzacją jest podzielenie kodu na semantycznie odrębne komponenty. Podzielmy nasz kod na kilka części wyłącznie w celu refaktoryzacji. Nasz projekt to aplikacja ASP.NET MVC z kilkoma klasami modeli i kontrolerami, które dodaliśmy. Możemy stworzyć przybliżoną listę komponentów, jak w przypadku rysunku 5.2. Nie musi być dokładna; może być to, co wymyślisz na początku, ponieważ będzie się zmieniać.
+
+![CH05_F02_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_5-2.png)
+
+Po stworzeniu listy komponentów zacznij oceniać, ile z nich można bezpośrednio przenieść do swojego docelowego środowiska, jak w przypadku .NET 5 w naszym przykładzie. Zauważ, że docelowe środowisko oznacza stan, który symbolizuje końcowy rezultat. Czy komponenty można dostosować do docelowego stanu bez powodowania awarii? Czy uważasz, że będą wymagały pewnych prac? Oceniaj to dla każdego komponentu, a będziemy używać tych domysłów do ustalenia priorytetów. Nie musisz tego dokładnie wiedzieć, ponieważ na chwilę obecną wystarczy przybliżona ocena. Możesz stworzyć tabelę szacunkową prac, podobną do tej przedstawionej w tabeli 5.1.
+
+Tabela 5.1 Ocena względnych kosztów i ryzyka manipulacji komponentami 
+
+| Komponent        | Potrzebne zmiany | Ryzyko konfliktu z innym programistą |
+| ---------------- | ---------------- | ------------------------------------ |
+| Kontrolery       | Minimalne        | Wysokie                              |
+| Modele           | Brak             | Średnie                              |
+| Widoki           | Minimalne        | Wysokie                              |
+| Statyczne zasoby | Kilka            | Niskie                               |
+| Szablony         | Przepisanie      | Niskie                               |
+
+> CO TO JEST MVC?
+>
+> Cała historia informatyki można streścić jako walkę z entropią, zwanych przez wyznawców Latającego Potwora Spaghetti, twórcę całej entropii. MVC to pomysł podziału kodu na trzy części, aby uniknąć zbyt wielu wzajemnych zależności, zwanych potocznie kodem spaghetti: część, która decyduje o wyglądzie interfejsu użytkownika, część modelująca logikę biznesową i część koordynująca obie te części. Są one odpowiednio nazywane widokiem (view), modelem (model) i kontrolerem (controller). Istnieje wiele podobnych prób podziału kodu aplikacji na logicznie oddzielne części, takich jak MVVM (model, view, viewmodel) czy MVP (model, view, presentation), ale idea stojąca za nimi jest niemal identyczna: odseparowanie od siebie różnych obszarów zainteresowań.
+>
+> Taka kompartmentalizacja może pomóc w pisaniu kodu, tworzeniu testów i refaktoryzacji, ponieważ zależności między tymi warstwami stają się bardziej zarządzalne. Ale jak mądrze zauważyli naukowcy David Wolpert i William Macready w Teorii Braku Obiadu za Darmo, darmowego obiadu nie ma. Zwykle trzeba napisać nieco więcej kodu, pracować z większą liczbą plików, mieć więcej podkatalogów i przeżywać więcej chwil, kiedy przeklinasz ekran, aby czerpać korzyści z MVC. W dużej perspektywie jednak staniesz się szybszy i bardziej efektywny.
+
+#### 5.2.3 Prestiż
+
+Refaktoryzacja bez zakłócania pracy kolegów jest praktycznie jak zmienianie opony samochodu w trakcie jazdy po autostradzie. Przypomina sztukę iluzji, która sprawia, że stara architektura znika i zostaje zastąpiona nową, bez żeby ktokolwiek zauważył. Twoim najważniejszym narzędziem w tym procesie będzie wyodrębnianie kodu na części, które można udostępnić, jak pokazano na rysunku 5.3.
+
+![CH05_F03_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_5-3.png)
+
+Oczywiście, dla programistów niemożliwym jest nie zauważenie nowego projektu w repozytorium. Jednakże, o ile wcześniej poinformujesz ich o zmianach, które próbujesz wprowadzić, i o ile będzie dla nich łatwo się dostosować, nie powinieneś mieć problemów z wdrażaniem swoich zmian w trakcie trwania projektu.
+
+Tworzysz oddzielny projekt, jak w naszym przykładzie, Blabber.Models, przenosisz klasy modeli do tego projektu, a następnie dodajesz odwołanie do tego projektu z projektu internetowego. Twój kod będzie nadal działał tak, jak wcześniej, ale nowy kod będzie musiał być dodawany do projektu Blabber.Models zamiast do Blabber, i Twoi koledzy muszą być świadomi tej zmiany. Następnie możesz utworzyć nowy projekt i odwołać się także do Blabber.Models z tego projektu. Nasza mapa drogowa przypomina tę przedstawioną na rysunku 5.4.
+
+
+
+![CH05_F04_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_5-4.png)
+
+Dlatego przechodzimy przez to, aby zminimalizować naszą pracę, jednocześnie pozostając jak najbardziej aktualnymi z główną gałęzią projektu. Ta metoda pozwala również na przeprowadzenie prac związanych z refaktoryzacją w dłuższym okresie czasu, jednocześnie wprowadzając do harmonogramu inne, pilniejsze zadania. Jest to podobne do systemów kontrolnych w grach wideo, gdzie możesz rozpocząć walkę z Walkirią po raz setny w God of War, zamiast wracać na początek całej gry od nowa. Wszystko, co można zintegrować z główną gałęzią projektu bez łamania buildu, staje się ostatnim znanym punktem, który nie wymaga powtarzania. Planowanie pracy z uwzględnieniem wielu etapów integracji jest najbardziej wykonalnym sposobem przeprowadzania obszernej refaktoryzacji.
+
+#### 5.2.4 Refaktoryzacja dla ułatwienia refaktoryzacji
+
+Przenosząc kod między projektami, napotkasz silne zależności, które nie mogą być łatwo przeniesione. W naszym przykładzie część kodu może zależeć od komponentów internetowych, a przeniesienie ich do naszego wspólnego projektu byłoby bezcelowe, ponieważ nasz nowy projekt, BlabberCore, nie działałby z istniejącymi komponentami internetowymi.
+
+W takich przypadkach z pomocą przychodzi kompozycja. Możemy wyodrębnić interfejs, który nasz główny projekt może dostarczyć i przekazać go jako implementację zamiast rzeczywistej zależności.
+
+Nasza obecna implementacja Blabber używa pamięci podręcznej do przechowywania treści opublikowanych na stronie internetowej. Oznacza to, że po zrestartowaniu witryny cała zawartość platformy zostaje utracona. To ma sens dla projektu sztuki postnowoczesnej, ale użytkownicy oczekują przynajmniej pewnego poziomu trwałości. Załóżmy, że chcielibyśmy używać albo Entity Framework, albo Entity Framework Core, w zależności od używanej platformy, ale chcielibyśmy nadal dzielić wspólny kod dostępu do bazy danych między dwoma projektami podczas trwającej migracji, aby praca potrzebna do jej ukończenia była znacznie mniejsza.
+
+Wstrzykiwanie Zależności
+
+Możesz abstrahować od zależności, której nie chcesz bezpośrednio obsługiwać, tworząc dla niej interfejs i otrzymując jej implementację w konstruktorze. Ta technika nazywa się wstrzykiwaniem zależności. Nie myl tego z odwróceniem zależności, który to jest przereklamowanym zasadą, mówiącym po prostu "zależ od abstrakcji", ale brzmiącym mniej głęboko, gdy jest tak przedstawione.
+
+Wstrzykiwanie zależności (DI) to także nieco mylący termin. Sugeruje jakieś ingerencje lub zakłócenia, ale nic takiego się nie dzieje. Być może powinno się to nazywać "odbieraniem zależności", bo o to chodzi: odbieranie zależności podczas inicjalizacji, na przykład w konstruktorze. Wstrzykiwanie zależności jest czasami nazywane IoC (inversion of control), co czasami jest jeszcze bardziej mylące. Typowa technika wstrzykiwania zależności to zmiana projektu, jak pokazano to na rysunku 5.5. Bez wstrzykiwania zależności, instancjonujesz klasy zależne bezpośrednio w swoim kodzie. Dzięki wstrzykiwaniu zależności, otrzymujesz klasy, od których zależysz, w konstruktorze.
+
+![CH05_F05_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_5-5.png)
+
+Chodźmy przez to, jak to jest wykonywane na przykładzie prostego i abstrakcyjnego kodu, abyś mógł skupić się na rzeczywistych zmianach, które zachodzą. W tym przykładzie zobaczysz, jak wygląda kod programu na najwyższym poziomie w C# 9.0, bez metody głównej czy samej klasy programu. Możesz wpisać poniższy kod w pliku .cs w folderze projektu i uruchomić go od razu, bez żadnego dodatkowego kodu. Zwróć uwagę, jak klasa A inicjalizuje instancję klasy B za każdym razem, gdy wywoływana jest metoda X.
+
+```swift
+using System;
+ 
+var a = new A();
+a.X();
+ 
+public class A {
+  public void X() {
+    Console.WriteLine("X got called");
+    var b = new B();
+    b.Y();
+  }
+}
+ 
+public class B {
+  public void Y() {
+    Console.WriteLine("Y got called");
+  }
+}
+```
+
+Kiedy stosujesz wstrzykiwanie zależności, twój kod otrzymuje instancję klasy B w swoim konstruktorze i przez interfejs, dzięki czemu nie ma żadnego sprzężenia pomiędzy klasami A i B. Możesz zobaczyć, jak to wygląda w przykładzie kodu w **Listing 5.2**. Jednak istnieje różnica w konwencjach. Ponieważ przenieśliśmy kod inicjalizacji klasy B do konstruktora, zawsze używa tej samej instancji B zamiast tworzyć nową, co miało miejsce w **Listing 5.1**. Jest to właściwie korzystne, ponieważ redukuje obciążenie dla zbieracza śmieci, ale może prowadzić do nieoczekiwanego zachowania, jeśli stan klasy zmienia się w czasie. Możesz naruszyć zachowanie. Dlatego też warto mieć pokrycie testami od samego początku.
+
+To, co osiągnęliśmy w kodzie z **Listing 5.2**, pozwala nam całkowicie usunąć kod dla B i przenieść go do zupełnie innego projektu, bez łamania kodu w klasie A, o ile zachowamy interfejs, który stworzyliśmy (IB). Co ważniejsze, możemy przenieść wszystko, co potrzebuje B, razem z nim. To daje nam dużo swobody w przemieszczaniu kodu.
+
+```swift
+using System;
+ 
+var b = new B();
+var a = new A(b);
+a.X();
+ 
+public interface IB {
+  void Y();
+}
+ 
+public class A {
+  private readonly IB b;
+  public A(IB b) {
+    this.b = b;
+  }
+  public void X() {
+    Console.WriteLine("X got called");
+    b.Y();
+  }
+}
+ 
+public class B : IB {
+  public void Y() {
+    Console.WriteLine("Y got called");
+  }
+}
+```
+
+Teraz zastosujmy tę technikę do naszego przykładu w Blabber i zmieńmy kod tak, aby używał przechowywania w bazie danych zamiast w pamięci, dzięki czemu nasza zawartość przetrwa restarty. W naszym przypadku, zamiast polegać na konkretnej implementacji silnika bazy danych, w tym przypadku Entity Framework i EF Core, możemy otrzymać interfejs, który dostarcza wymaganej funkcjonalności dla naszego komponentu. Pozwala to dwóm projektom z różnymi technologiami korzystać z tego samego kodu źródłowego, nawet jeśli wspólny kod zależy od konkretnej funkcjonalności bazy danych. Aby to osiągnąć, tworzymy wspólny interfejs, IBlabDb, który wskazuje na funkcjonalność bazy danych, i używamy go w naszym wspólnym kodzie. Nasze dwie różne implementacje dzielą ten sam kod; pozwalają wspólnemu kodowi korzystać z różnych technologii dostępu do bazy danych. Nasza implementacja będzie wyglądać tak, jak na rysunku **Rysunek 5.6**.
+
+![CH05_F06_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_5-6.png)
+
+Aby to zaimplementować, najpierw zmieniamy naszą implementację BlabStorage w Blabber .Models, którą zrefaktorowaliśmy, aby przekazywała pracę do interfejsu. Implementacja w pamięci klasy BlabStorage wygląda tak jak w **Listing 5.3**. Utrzymuje ona statyczną instancję listy, która jest współdzielona między wszystkimi żądaniami, więc używa blokad, aby zapewnić, że rzeczy nie stają się niespójne. Nie dbamy o spójność naszej właściwości Items, ponieważ dodajemy tylko elementy do tej listy, nigdy ich nie usuwamy. W przeciwnym razie miałoby to być problemem. Zauważ, że używamy metody Insert zamiast Add w metodzie Add(), ponieważ pozwala nam to utrzymać posty w porządku malejącym według daty ich utworzenia, bez konieczności sortowania.
+
+**Listing 5.3 Początkowa wersja BlabStorage w pamięci**
+
+```csharp
+using System.Collections.Generic;
+ 
+namespace Blabber.Models {
+    public class BlabStorage {
+        public IList<Blab> items = new List<Blab>();
+        public IEnumerable<Blab> Items => items;
+        public object lockObject = new object();
+        public static readonly BlabStorage Default = 
+new BlabStorage();
+ 
+        public BlabStorage() {
+        }
+ 
+        public void Add(Blab blab) {
+            lock (lockObject) {
+                items.Insert(0, blab);
+            }
+        }
+    }
+}
+```
+
+Kiedy wdrażamy wstrzykiwanie zależności, usuwamy wszystko, co związane z listami w pamięci i używamy zamiast tego abstrakcyjnego interfejsu dla wszystkiego, co związane z bazą danych. Nowa wersja wygląda tak jak w **Listing 5.4**. Widzisz, jak usuwamy wszystko, co związane z logiką przechowywania danych, a nasza klasa BlabStorage staje się samą abstrakcją. Wygląda na to, że BlabStorage nie robi nic więcej, ale w miarę dodawania bardziej skomplikowanych zadań, jesteśmy w stanie dzielić niektórą logikę między naszymi dwoma projektami. Na potrzeby tego przykładu jest to w porządku.
+
+Zachowujemy zależność w prywatnym i tylko do odczytu polu o nazwie db. To dobra praktyka oznaczania pól słowem kluczowym readonly, jeśli nie będą one zmieniać się po utworzeniu obiektu, dzięki czemu kompilator może wykryć próby przypadkowej modyfikacji przez ciebie lub któregoś z twoich kolegów poza konstruktorem.
+
+**Listing 5.4 BlabStorage z wstrzykiwaniem zależności**
+
+```csharp
+using System.Collections.Generic;
+
+namespace Blabber.Models {
+  public interface IBlabDb {
+    IEnumerable<Blab> GetAllBlabs();
+    void AddBlab(Blab blab);
+  }
+
+  public class BlabStorage {
+    private readonly IBlabDb db;
+
+    public BlabStorage(IBlabDb db) {
+      this.db = db;
+    }
+
+    public IEnumerable<Blab> GetAllBlabs() {
+      return db.GetAllBlabs();
+    }
+
+    public void Add(Blab blab) {
+      db.AddBlab(blab);
+    }
+  }
+}
+```
+
+Nasza rzeczywista implementacja nosi nazwę BlabDb i implementuje interfejs IBlabDb. Znajduje się w projekcie BlabberCore, a nie w Blabber.Models. Wykorzystuje ona bazę danych SQLite ze względów praktycznych, ponieważ nie wymaga instalacji oprogramowania innych firm, co pozwala na natychmiastowe rozpoczęcie jej używania. SQLite to lekki, bezserwerowy, samowystarczalny silnik baz danych, który jest łatwy w użyciu i idealny dla małych i średnich aplikacji. Nasz projekt BlabberCore korzysta z EF Core do jej implementacji, jak pokazano w **Listing 5.5**.
+
+Możesz nie być zaznajomiony z EF Core, Entity Framework lub ORM (mapowanie obiektowo-relacyjne) ogólnie rzecz biorąc, ale to w porządku - nie musisz być. Jest to dość proste, jak widzisz. Metoda AddBlab po prostu tworzy nowy rekord w bazie danych w pamięci, tworzy oczekujący wpis do tabeli Blabs i wywołuje SaveChanges, aby zapisać zmiany w bazie danych. Podobnie metoda GetAllBlabs po prostu pobiera wszystkie rekordy z bazy danych, uporządkowane według daty malejąco. Zauważ, że musimy przekształcić nasze daty na UTC, aby upewnić się, że informacje o strefie czasowej nie zostaną utracone, ponieważ SQLite nie obsługuje typów DateTimeOffset. Bez względu na to, ile najlepszych praktyk się uczysz, zawsze natkniesz się na przypadki, w których po prostu nie zadziałają. Wtedy będziesz musiał improwizować, przystosowywać się i pokonywać przeszkody.
+
+**Listing 5.5 Wersja EF Core BlabDb**
+
+```csharp
+using Blabber.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Blabber.DB {
+  public class BlabDb : IBlabDb {
+    private readonly BlabberContext db;
+
+    public BlabDb(BlabberContext db) {
+      this.db = db;
+    }
+
+    public void AddBlab(Blab blab) {
+      db.Blabs.Add(new BlabEntity() {
+        Content = blab.Content,
+        CreatedOn = blab.CreatedOn.UtcDateTime,
+      });
+      db.SaveChanges();
+    }
+
+    public IEnumerable<Blab> GetAllBlabs() {
+      return db.Blabs
+        .OrderByDescending(b => b.CreatedOn)
+        .Select(b => new Blab(b.Content, 
+          new DateTimeOffset(b.CreatedOn, TimeSpan.Zero)))
+        .ToList();
+    }
+  }
+}
+```
+
+To jest kod implementacji EF Core wersji BlabDb, który obsługuje dodawanie nowych wpisów do bazy danych oraz pobieranie wszystkich wpisów z bazy danych w porządku malejącym według daty utworzenia. Warto zwrócić uwagę na sposób obsługi daty, aby zachować informacje o strefie czasowej.
+
+Udało nam się wprowadzić backend przechowywania danych w naszym projekcie podczas refaktoryzacji, nie zakłócając przy tym procesu rozwoju. Użyliśmy wstrzykiwania zależności, aby uniknąć bezpośrednich zależności. Co ważniejsze, nasze treści są teraz zachowywane między sesjami i restartami, jak pokazano na rysunku 5.7.
+
+#### 5.2.5 Ostatni etap
+
+Można wyciągnąć wiele komponentów, które mogą być współdzielone między starym a nowym projektem, ale ostatecznie napotkasz fragment kodu, który nie może być współdzielony między dwoma projektami internetowymi. Na przykład nasz kod kontrolera nie musi zmieniać się między ASP.NET a ASP.NET Core, ponieważ składnia jest taka sama, ale niemożliwe jest współdzielenie tego fragmentu kodu między nimi, ponieważ używają one zupełnie innych typów. Kontrolery ASP.NET MVC dziedziczą po System.Web.Mvc.Controller, podczas gdy kontrolery ASP.NET Core dziedziczą po Microsoft.AspNetCore.Mvc.Controller. Istnieją teoretyczne rozwiązania tego problemu, takie jak abstrahowanie implementacji kontrolera za interfejsem i pisanie niestandardowych klas, które korzystają z tego interfejsu zamiast być bezpośrednimi potomkami klasy kontrolera, ale to jest po prostu zbyt dużo pracy. Kiedy wymyślasz jakiekolwiek eleganckie rozwiązanie problemu, zawsze powinieneś zadać sobie pytanie: „Czy warto?”. Elegancja w inżynierii zawsze musi brać pod uwagę koszty.
+
+To oznacza, że w pewnym momencie będziesz musiał podjąć ryzyko konfliktu z innymi deweloperami i przenieść kod do nowego repozytorium. Nazywam to ostatnim etapem, który zajmie krótszy czas dzięki wcześniejszym przygotowaniom podczas refaktoryzacji. Dzięki Twojej pracy przyszłe operacje refaktoryzacji będą trwać krócej, ponieważ ostatecznie uzyskasz zmodularyzowany projekt. To jest dobra inwestycja.
+
+W naszym przykładzie komponent modeli jest niezwykle małą częścią naszego projektu, dlatego oszczędności są niewielkie. Niemniej jednak w przypadku dużych projektów oczekuje się, że istnieje znacząca ilość kodu, który można współdzielić, co może znacząco zmniejszyć nakłady pracy.
+
+W ostatnim etapie musisz przenieść cały kod i zasoby do nowego projektu, a następnie sprawić, żeby wszystko działało. Do moich przykładów kodu dodałem osobny projekt o nazwie BlabberCore, który zawiera nowy kod .NET, dzięki czemu możesz zobaczyć, jak niektóre konstrukcje przekładają się na .NET Core.
+
+#### 5.3 Niezawodna refaktoryzacja
+
+Twoje środowisko programistyczne (IDE) stara się bardzo, abyś nie złamał kodu po prostu losowo wybierając opcje z menu. Jeśli ręcznie zmienisz nazwę, wszelkie inne fragmenty kodu, które odnoszą się do tej nazwy, zostaną uszkodzone. Jeśli użyjesz funkcji zmiany nazwy w swoim IDE, wszystkie odniesienia do nazwy zostaną również zmienione. To nadal nie jest zawsze gwarancją. Istnieje wiele sposobów, aby odwoływać się do nazwy, których kompilator nie wie. Na przykład istnieje możliwość utworzenia instancji klasy za pomocą ciągu znaków. W naszym przykładowym kodzie mikrobloga, Blabber, odwołujemy się do każdego fragmentu treści jako blabów, i mamy klasę, która definiuje treść o nazwie Blab.
+
+**Listing 5.6 Klasa reprezentująca treść**
+
+```csharp
+using System;
+
+namespace Blabber
+{
+    public class Blab
+    {
+        public string Content { get; private set; }
+        public DateTimeOffset CreatedOn { get; private set; }
+        public Blab(string content, DateTimeOffset createdOn) { 
+            if (string.IsNullOrWhiteSpace(content)) {
+                throw new ArgumentException(nameof(content));
+            }
+            Content = content;
+            CreatedOn = createdOn;
+        }
+    }
+}
+```
+
+Zazwyczaj tworzymy instancje klas za pomocą operatora new, ale istnieje również możliwość utworzenia instancji klasy Blab za pomocą refleksji w pewnych celach, takich jak gdy nie wiesz, jaką klasę tworzysz podczas kompilacji:
+
+```csharp
+var blab = Activator.CreateInstance("Blabber.Models", "Blabber", "test content", DateTimeOffset.Now);
+```
+
+Zawsze, gdy odwołujemy się do nazwy za pomocą ciągu znaków, ryzykujemy złamaniem kodu po zmianie nazwy, ponieważ IDE nie może śledzić zawartości ciągów znaków. Mam nadzieję, że ten problem przestanie istnieć, gdy zaczniemy przeprowadzać przeglądy kodu z naszymi nadludzkimi AI. Nie wiem, dlaczego w tej fikcyjnej przyszłości to my wciąż wykonujemy pracę, a AI tylko ocenia naszą pracę. Czy nie mieli oni przejąć nasze prace? Okazuje się, że są o wiele inteligentniejsze, niż im przypisujemy.
+
+Do czasu, gdy AI przejmie kontrolę nad światem, twoje IDE nie może zagwarantować całkowicie niezawodnej refaktoryzacji. Tak, masz trochę luzu, na przykład stosując konstrukcje takie jak nameof(), aby odnosić się do typów zamiast umieszczać je na stałe w ciągach znaków, jak omówiono w rozdziale 4, ale to pomaga tylko w niewielkim stopniu.
+
+
+
+![CH05_F08_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_5-8.png)
+
+Sekretem niezawodnej refaktoryzacji jest testowanie. Jeśli możesz upewnić się, że twój kod ma dobrą pokrycie testami, możesz mieć znacznie większą swobodę w jego zmienianiu. Dlatego zwykle mądrym pomysłem jest rozpoczęcie długotrwałego projektu refaktoryzacji od stworzenia brakujących testów dla odpowiedniego fragmentu kodu. Jeśli weźmiemy nasz przykład zmiany architektury z rozdziału 3, bardziej realistycznym planem byłoby dodanie brakujących testów dla całej architektury. Pominięliśmy ten krok w naszym przykładzie, ponieważ nasza baza kodu była wyjątkowo mała i łatwa do przetestowania ręcznie (np. uruchomienie aplikacji, dodanie wpisu i sprawdzenie, czy się pojawia). Rysunek 5.8 przedstawia zmodyfikowaną wersję naszego planu, która obejmuje fazę dodawania testów do naszego projektu, dzięki czemu refaktoryzacja może być przeprowadzana w sposób niezawodny.
+
+### 5.4 Kiedy nie refaktoryzować
+Dobrą rzeczą w refaktoryzacji jest to, że zmusza cię do myślenia o sposobach poprawy kodu. Złą rzeczą w refaktoryzacji jest to, że w pewnym momencie może stać się celem samym w sobie, podobnie jak Emacs. Dla nieświadomych, Emacs to edytor tekstu, środowisko programistyczne, przeglądarka internetowa, system operacyjny i gra fabularna osadzona w postapokaliptycznym świecie, bo ktoś po prostu nie potrafił powstrzymać swojego entuzjazmu. To samo może się stać z refaktoryzacją. Zaczynasz widzieć każdy fragment kodu jako miejsce potencjalnej poprawy. To staje się tak uzależniające, że wymyślasz wymówki, aby coś zmienić tylko dla samej zmiany, nie zastanawiając się nad jej korzyściami. Nie tylko tracisz swój czas, ale również czas swojego zespołu, ponieważ muszą się oni adaptować do każdej wprowadzonej zmiany.
+
+Powinieneś przede wszystkim zrozumieć, co oznacza dobre wystarczające kodowanie oraz wartość, gdy pracujesz na ulicy. Tak, kod może rdzewieć, gdy pozostaje nietknięty, ale wystarczający kod może z łatwością znieść ten ciężar. Kryteria, które są potrzebne do określenia wystarczającego kodu, to:
+
+- Czy twoim jedynym powodem do refaktoryzacji jest "To jest bardziej eleganckie?" To duży czerwony alarm, ponieważ elegancja jest nie tylko subiektywna, ale także niejasna i dlatego pozbawiona sensu. Staraj się przedstawiać solidne argumenty i korzyści, takie jak "To ułatwi korzystanie z tego komponentu, redukując ilość kodu początkowego, który musimy napisać za każdym razem, gdy go używamy", "To przygotuje nas do migracji do nowej biblioteki", "To usunie naszą zależność od komponentu X" i tak dalej.
+
+- Czy twój docelowy komponent zależy od minimalnego zestawu komponentów? To wskazuje, że może być łatwo przenoszony lub refaktoryzowany w przyszłości. Nasze ćwiczenia z refaktoryzacji mogą nam nie pomóc w zidentyfikowaniu sztywnych części kodu. Możesz to odłożyć, aż opracujesz bardziej solidny plan ulepszenia.
+
+- Czy brakuje mu pokrycia testowego? To jest natychmiastowy sygnał ostrzegawczy, aby unikać refaktoryzacji, zwłaszcza jeśli komponent ma zbyt wiele zależności. Brak testów dla komponentu oznacza, że nie wiesz, co robisz, więc przestań to robić.
+
+- Czy to jest powszechna zależność? Oznacza to, że nawet przy dobrym pokryciu testowym i uzasadnieniu możesz wpływać na ergonomię swojego zespołu, zakłócając ich pracę. Powinieneś rozważyć odłożenie operacji refaktoryzacji, jeśli zamierzone korzyści nie są wystarczające, aby zrekompensować koszty.
+
+
+Jeśli spełnione jest którekolwiek z tych kryteriów, powinieneś rozważyć unikanie refaktoryzacji, lub przynajmniej jej odłożenie. Praca nad priorytetami jest zawsze względna, i zawsze znajdą się inne możliwości.
+
+### Podsumowanie:
+Przyjmuj refaktoryzację z otwartymi ramionami, ponieważ niesie ze sobą więcej korzyści niż tylko te widoczne na pierwszy rzut oka. Można przeprowadzać duże zmiany architektoniczne krok po kroku. Wykorzystaj testowanie, aby zmniejszyć potencjalne problemy przy dużych pracach refaktoryzacyjnych. Oceń nie tylko koszty, ale także ryzyko. Zawsze miej przygotowaną mentalnie lub spisaną mapę drogową dla krokowych działań podczas pracy nad dużymi zmianami architektonicznymi. Używaj wstrzykiwania zależności, aby usuwać przeszkody takie jak ściśle powiązane zależności podczas refaktoryzacji. Zmniejsz sztywność kodu stosując tę samą technikę. Zastanów się nad rezygnacją z refaktoryzacji, jeśli jej koszty przewyższają potencjalne zyski.
+
+1. Etymologia refaktoryzacji, Martin Fowler, https://martinfowler.com/bliki/EtymologyOfRefactoring.html.
+
+## Rozdział 6: Bezpieczeństwo poprzez analizę
+
+Ten rozdział obejmuje:
+- Zrozumienie bezpieczeństwa jako całości
+- Wykorzystanie modeli zagrożeń
+- Unikanie powszechnych pułapek bezpieczeństwa, takich jak wstrzykiwanie SQL, CSRF, XSS i przepełnienia
+- Techniki ograniczania możliwości atakujących
+- Prawidłowe przechowywanie poufnych informacji
+
+Bezpieczeństwo było problemem powszechnie niezrozumianym już od czasów tego nieszczęśliwego incydentu w Troi, starożytnym mieście na terenach dzisiejszej zachodniej Turcji. Trojanie uważali, że ich mury są nie do przebycia i czuli się bezpieczni, ale podobnie jak nowoczesne platformy społecznościowe, bagatelizowali zdolności socjotechniczne swoich przeciwników. Grecy wycofali się z bitwy i zostawili jako prezent wysoką drewnianą konstrukcję w formie konia. Trojanie przyjęli ten gest z entuzjazmem i wniesiono konia do wnętrza murów, aby go pielęgnować. O północy ukryci wewnątrz konstrukcji żołnierze greccy wyszli na zewnątrz, otworzyli bramy, wpuszczając wojska greckie i doprowadzając do upadku miasta. Przynajmniej takie informacje mamy z "post-mortum" blogów Homerosa, być może pierwszego przypadku nieodpowiedzialnego ujawniania informacji w historii.
+
+POST-MORTEM I ODPOWIEDZIALNE UJAWNIANIE
+
+"Post-mortem" to długi artykuł zwykle pisany po haniebnym incydencie związanym z bezpieczeństwem, który ma na celu sprawić, że zarząd wydaje się przejrzystie udzielać jak najwięcej szczegółów, jednocześnie starając się ukryć fakt, że zaniedbał swoje obowiązki.
+
+Odpowiedzialne ujawnianie to praktyka publikowania podatności na bezpieczeństwo po udzieleniu firmie, która nie inwestowała w identyfikację problemu na początku, odpowiedniego czasu na naprawienie go. Firmy wymyśliły ten termin, aby obciążyć akt emocjonalnym ciężarem, aby badacz czuł się winny. Same podatności bezpieczeństwa są zawsze nazywane incydentami, nigdy nieodpowiedzialnymi. Uważam, że odpowiedzialne ujawnianie od samego początku powinno być nazwane czymś w rodzaju ujawniania w określonym czasie.
+
+Bezpieczeństwo jest zarówno szerokim, jak i głębokim pojęciem, jak w przypadku historii z Troi, i obejmuje psychologię ludzką. To pierwsza perspektywa, którą powinieneś przyjąć: bezpieczeństwo nie dotyczy tylko oprogramowania czy informacji – dotyczy również ludzi i otoczenia. Ze względu na obszar tego tematu, ten rozdział sam w sobie nie uczyni cię ekspertem ds. bezpieczeństwa, ale z pewnością uczyni cię lepszym programistą z lepszym zrozumieniem tego zagadnienia.
+
+### 6.1 Poza hakerami
+Zazwyczaj bezpieczeństwo oprogramowania kojarzy się z podatnościami, exploitami, atakami i hakerami. Jednak bezpieczeństwo może być naruszone z powodu innych, pozornie nieistotnych czynników. Na przykład przypadkowo możesz zapisywać nazwy użytkowników i hasła w dziennikach internetowych, które mogą być przechowywane na znacznie mniej bezpiecznych serwerach niż twoja baza danych. To przytrafiło się firmom wartym miliardy dolarów, takim jak Twitter, który dowiedział się, że przechowywał hasła w postaci tekstu jawnego w swoich wewnętrznych dziennikach, a przeciwnik mógł natychmiast zacząć używać uzyskanych haseł, zamiast łamać hasła zahaszowane.
+
+Facebook udostępnił interfejs API dla programistów, pozwalający im przeglądać listy znajomych użytkowników. Pewna firma wykorzystała te informacje, tworząc polityczne profile ludzi, aby wpływać na wybory w USA za pomocą precyzyjnie ukierunkowanych reklam w 2016 roku. Była to funkcja, która działała dokładnie tak, jak zaprojektowano. Nie było błędu, nie było dziury w zabezpieczeniach, nie było tylnych drzwi i nie było hakerów zaangażowanych. Niektórzy ludzie ją stworzyli, inni ją użyli, ale uzyskane dane pozwoliły manipulować ludźmi wbrew ich woli, co spowodowało szkody.
+
+Byłbyś zaskoczony, gdybyś dowiedział się, ile firm pozostawia swoje bazy danych dostępne w Internecie bez hasła. Technologie baz danych takie jak MongoDB i Redis domyślnie nie wymagają uwierzytelniania użytkowników – autoryzację trzeba włączyć ręcznie. Oczywiście wielu programistów tego nie robi, co prowadzi do masowych wycieków danych.
+
+Wśród programistów i specjalistów DevOps funkcjonuje znane hasło: „Nie wdrażaj w piątki”. Logika jest prosta. Jeśli coś schrzanić, nikt nie będzie dostępny, żeby to naprawić w weekend, dlatego ryzykowne czynności warto wykonywać bliżej początku tygodnia. Istnienie weekendów samo w sobie nie jest podatnością na bezpieczeństwo, ale może prowadzić do katastrofalnych wyników.
+
+To przynosi nas do związku między bezpieczeństwem a niezawodnością. Bezpieczeństwo, podobnie jak testowanie, stanowi część niezawodności twoich usług, danych i biznesu. Patrząc na bezpieczeństwo z perspektywy niezawodności, łatwiej podjąć decyzje związane z bezpieczeństwem, ponieważ uczysz się go w miarę jak zajmujesz się innymi aspektami niezawodności, takimi jak testowanie, jak już omówiłem w poprzednich rozdziałach.
+
+Nawet jeśli nie ponosisz żadnej odpowiedzialności za bezpieczeństwo produktów, które rozwijasz, uwzględnianie niezawodności swojego kodu pomaga podejmować decyzje, które pomagają unikać problemów w przyszłości. "Uliczni" programiści optymalizują swoją przyszłość, nie tylko teraźniejszość. Celem jest wykonanie minimalnej pracy, aby osiągnąć wielki sukces w ciągu życia. Patrzenie na decyzje związane z bezpieczeństwem jako na dług techniczny dla niezawodności pomaga optymalizować swoje życie jako całość. Polecam to podejście dla każdego produktu, niezależnie od potencjalnych skutków dla bezpieczeństwa. Na przykład możesz tworzyć wewnętrzną konsolę do przeglądania dzienników dostępu, która będzie używana tylko przez zaufane osoby. Mimo to zalecam stosowanie najlepszych praktyk zabezpieczania oprogramowania, takich jak stosowanie zapytań z parametrami do uruchamiania poleceń SQL, o których omówię szczegółowo później. Może wydawać się, że to trochę więcej pracy, ale pomaga w rozwoju nawyku, który przyniesie korzyści w przyszłości. Skrót nie jest naprawdę skrótem, jeśli uniemożliwia ci rozwijanie się.
+
+Ponieważ już ustaliliśmy, że programiści są ludźmi, musisz zaakceptować, że niosą ze sobą słabości ludzi, przede wszystkim błędne obliczanie prawdopodobieństw. Wiem to jako osoba, która przez wiele lat wczesnych lat 2000-nych używała hasła "password" jako swojego hasła na prawie wszystkich platformach. Myślałem, że nikt nie pomyśli, że jestem na tyle głupi. Okazało się, że miałem rację; nikt nie zauważył, że jestem na tyle głupi. Na szczęście nigdy nie zostałem zhackowany, przynajmniej nie przez skompromitowanie mojego hasła, ale w tamtym czasie nie byłem też celem wielu osób. Oznacza to, że moje zagrożenie było ocenione prawidłowo, lub losowo, i udało mi się uniknąć problemów.
+
+
+
+6.2 Modelowanie zagrożeń
+Model zagrożeń to klarowne zrozumienie tego, co może pójść nie tak w kontekście bezpieczeństwa. Ocena modelu zagrożeń jest często wyrażana jako "Nie, będzie dobrze" lub "Hej, chwileczkę...". Celem posiadania modelu zagrożeń jest ustalenie priorytetów w zakresie środków bezpieczeństwa, optymalizacja kosztów i zwiększenie skuteczności. Sam termin brzmi bardzo technicznie, ponieważ proces może być skomplikowany, ale zrozumienie modelu zagrożeń nie jest trudne.
+
+Model zagrożeń efektywnie określa, co nie stanowi zagrożenia dla bezpieczeństwa lub co nie jest warte ochrony. To podobne do niezmartwiania się katastrofalną suszą w Seattle czy nagłym pojawieniem się przystępnych cen mieszkań w San Francisco, mimo że są to nadal realne możliwości.
+
+W rzeczywistości rozwijamy modele zagrożeń nieświadomie. Na przykład jednym z najczęstszych modeli zagrożeń może być "Nie mam nic do ukrycia!" wobec zagrożeń takich jak hakerstwo, nadzór rządowy czy były partner, który miał stać się dorosły dziesięć lat temu. Oznacza to, że nie zależy nam na tym, czy nasze dane zostaną skompromitowane i wykorzystane w jakimkolwiek celu, głównie dlatego, że brakuje nam wyobraźni, aby pomyśleć, w jaki sposób nasze dane mogą być używane. Prywatność jest podobna do pasów bezpieczeństwa w tym sensie: nie potrzebujesz jej przez 99% czasu, ale kiedy jest potrzebna, może uratować ci życie. Kiedy hakerzy dowiedzą się twojego numeru ubezpieczenia społecznego i złożą wnioski kredytowe w twoim imieniu, odbierając całe twoje pieniądze, pozostawiając ci ogromne długi, zaczynasz powoli zdawać sobie sprawę, że masz coś do ukrycia. Kiedy dane z twojego telefonu komórkowego przypadkowo zostaną dopasowane do czasu i współrzędnych miejsca zbrodni, zaczynasz być największym zwolennikiem prywatności.
+
+Rzeczywiste modelowanie zagrożeń jest nieco bardziej skomplikowane. Obejmuje analizę aktorów, przepływ danych i granice zaufania. Opracowano formalne metody tworzenia modeli zagrożeń, ale chyba że twoim głównym zadaniem jest badanie bezpieczeństwa jako badacz i jesteś odpowiedzialny za bezpieczeństwo instytucji, w której pracujesz, nie potrzebujesz formalnego podejścia do modelowania zagrożeń, ale musisz mieć podstawowe zrozumienie tego: ustalanie priorytetów bezpieczeństwa.
+
+Po pierwsze, musisz zaakceptować zasadę: problemy z bezpieczeństwem kiedyś dotkną twojej aplikacji lub platformy. Nie ma ucieczki od tego. "Ale to tylko wewnętrzna strona internetowa", "Ale jesteśmy za VPN-em", "Ale to tylko aplikacja mobilna na zaszyfrowanym urządzeniu", "Nikt i tak nie wie o mojej stronie", i "Ale używamy PHP" naprawdę nie pomagają twojej sprawie – zwłaszcza to ostatnie.
+
+Nieuchronność problemów z bezpieczeństwem podkreśla też względność wszystkich rzeczy. Nie ma systemu doskonale bezpiecznego. Banki, szpitale, firmy oceny kredytowej, elektrownie jądrowe, instytucje rządowe, giełdy kryptowalut i prawie wszystkie inne instytucje doświadczyły incydentów bezpieczeństwa o różnym stopniu powagi. Można by pomyśleć, że twoja strona internetowa oceniająca najlepsze zdjęcia kotów jest od tego wyłączona, ale problem polega na tym, że twoją stronę można wykorzystać jako dźwignię do zaawansowanych ataków. Jedno z haseł użytkowników, które przechowujesz, może być takie samo jak dane logowania do placówki badawczej jądrowej, w której ta osoba pracuje, ponieważ nie jesteśmy zbyt dobrzy w zapamiętywaniu haseł. Widzisz, jak może to być problematyczne, jak wskazano na rysunku 6.1.
+
+![CH06_F01_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_6-1.png)
