@@ -3558,7 +3558,7 @@ Ponieważ już ustaliliśmy, że programiści są ludźmi, musisz zaakceptować,
 
 
 
-6.2 Modelowanie zagrożeń
+### 6.2 Modelowanie zagrożeń
 Model zagrożeń to klarowne zrozumienie tego, co może pójść nie tak w kontekście bezpieczeństwa. Ocena modelu zagrożeń jest często wyrażana jako "Nie, będzie dobrze" lub "Hej, chwileczkę...". Celem posiadania modelu zagrożeń jest ustalenie priorytetów w zakresie środków bezpieczeństwa, optymalizacja kosztów i zwiększenie skuteczności. Sam termin brzmi bardzo technicznie, ponieważ proces może być skomplikowany, ale zrozumienie modelu zagrożeń nie jest trudne.
 
 Model zagrożeń efektywnie określa, co nie stanowi zagrożenia dla bezpieczeństwa lub co nie jest warte ochrony. To podobne do niezmartwiania się katastrofalną suszą w Seattle czy nagłym pojawieniem się przystępnych cen mieszkań w San Francisco, mimo że są to nadal realne możliwości.
@@ -3572,3 +3572,33 @@ Po pierwsze, musisz zaakceptować zasadę: problemy z bezpieczeństwem kiedyś d
 Nieuchronność problemów z bezpieczeństwem podkreśla też względność wszystkich rzeczy. Nie ma systemu doskonale bezpiecznego. Banki, szpitale, firmy oceny kredytowej, elektrownie jądrowe, instytucje rządowe, giełdy kryptowalut i prawie wszystkie inne instytucje doświadczyły incydentów bezpieczeństwa o różnym stopniu powagi. Można by pomyśleć, że twoja strona internetowa oceniająca najlepsze zdjęcia kotów jest od tego wyłączona, ale problem polega na tym, że twoją stronę można wykorzystać jako dźwignię do zaawansowanych ataków. Jedno z haseł użytkowników, które przechowujesz, może być takie samo jak dane logowania do placówki badawczej jądrowej, w której ta osoba pracuje, ponieważ nie jesteśmy zbyt dobrzy w zapamiętywaniu haseł. Widzisz, jak może to być problematyczne, jak wskazano na rysunku 6.1.
 
 ![CH06_F01_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_6-1.png)
+
+Ale przeważnie hakerzy nawet nie wiedzą, kiedy atakują twoją stronę internetową, ponieważ nie przechodzą indywidualnie przez wszystkie strony na świecie. Używają botów do przeskanowania stron w poszukiwaniu podatności, a potem po prostu zbierają dane. No cóż, w końcu roboty zabierają nasze prace.
+
+#### 6.2.1 Kieszonkowe modele zagrożeń
+Nie musisz być odpowiedzialny za wszystkie modele zagrożeń dla swojej aplikacji. Prawdopodobnie nie dotkną cię również incydenty związane z bezpieczeństwem. Ale oczekuje się od ciebie napisania kodu minimalnie bezpiecznego, co nie jest zbyt trudne, jeśli będziesz stosować pewne zasady. W zasadzie potrzebujesz mini-modelu zagrożeń dla swojej aplikacji. Obejmuje on następujące elementy:
+
+1. Zasoby twojej aplikacji. W zasadzie wszystko, czego nie chcesz stracić lub wycieknie, jest zasobem, w tym twój kod źródłowy, dokumenty projektowe, baza danych, klucze prywatne, tokeny API, konfiguracje serwera i twoja lista filmów na Netflixie.
+2. Serwery, na których znajdują się zasoby. Każdy serwer jest dostępny dla pewnych podmiotów, a każdy serwer ma dostęp do innych serwerów. Ważne jest, abyś znał te zależności, aby zrozumieć potencjalne problemy.
+3. Wrażliwość informacji. Możesz ocenić to, zadając sobie kilka pytań: "Ilu ludzi i instytucji ucierpi, jeśli te informacje staną się publiczne?", "Jak poważne są potencjalne szkody?" i "Czy byłem w tureckim więzieniu?"
+4. Ścieżki dostępu do zasobów. Twoja aplikacja ma dostęp do bazy danych. Czy istnieje inny sposób dostępu do niej? Kto ma dostęp? Jak bezpieczni są? Co się stanie, jeśli ktoś oszuka ich, aby uzyskali dostęp do bazy danych? Czy mogą usunąć produkcję bazy danych, wykonując prosty ████ ████████?2 Czy mają dostęp tylko do kodu źródłowego? W takim przypadku każdy, kto ma dostęp do kodu źródłowego, ma efektywny dostęp do produkcji bazy danych.
+
+Możesz narysować podstawowy model zagrożeń na kartce papieru, używając tych informacji. Może to wyglądać jak na rysunku 6.2 dla każdej osoby, która używa twojej aplikacji lub strony internetowej. Jak widać na rysunku, każdy ma dostęp tylko do aplikacji mobilnej i serwerów internetowych. Z drugiej strony, serwery internetowe mają dostęp do najważniejszych zasobów, takich jak baza danych, i są wystawione na internet. Oznacza to, że twoje serwery internetowe są najbardziej ryzykownymi zasobami, które są narażone na świat zewnętrzny, jak pokazano na rysunku 6.2.
+
+![CH06_F02_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_6-2.png)
+
+
+
+Oprócz zwykłych użytkowników masz także inne typy użytkowników o różnych uprawnieniach dostępu do twoich serwerów i zawartych w nich zasobów. Na rysunku 6.3 widać, jak różne typy ról mają dostęp do różnych serwerów. Ponieważ CEO uwielbia mieć dostęp i kontrolować każdą drobnostkę, najłatwiejszym sposobem na włamanie się na ten serwer jest wysłanie CEO wiadomości e-mail. Spodziewałbyś się, że inne role będą miały ograniczony dostęp tylko do zasobów, do których potrzebują dostępu, ale zazwyczaj nie jest to przypadkiem, jak pokazano na rysunku 6.3.
+
+![CH06_F03_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_6-3.png)
+
+Kiedy patrzysz na ten model z odległości, widać oczywiste, że wysłanie e-maila do CEO, prosząc go o zalogowanie się do VPN w celu sprawdzenia czegoś, a następnie przekierowanie go na swoją stronę phishingową, dałoby złoczyńcy dostęp do wszystkich informacji o firmie. Model zagrożeń uwydatnia takie rzeczy i pomaga zrozumieć czynniki ryzyka.
+
+Jeśli kontrolujący wszystko CEO jest pierwszym kandydatem do wyrządzenia szkód twojej firmie, to kod działający na serwerach internetowych jest drugim – i nie tylko twój kod. Mogłeś mieć opóźnioną aktualizację zabezpieczeń na serwerze, co mogło prowadzić do przejęcia go przez intruza. Ale nic nie jest gorsze niż wpisanie tekstu w formularz na stronie internetowej, aby uzyskać dostęp lub zniszczyć wszystkie dane w bazie danych.
+
+Po CEO twoja aplikacja internetowa lub interfejs API są jednymi z najłatwiejszych punktów wejścia dla hakerów lub botów do osiągnięcia ich celu. Dzieje się tak, ponieważ twoja aplikacja jest unikalna. Istnieje tylko na twoich serwerach. To ty jesteś jedyną osobą, która ją przetestowała. Wszystkie komponenty stron trzecich na twoich serwerach przeszły miliony iteracji testowania, naprawiania błędów i audytów bezpieczeństwa. Nawet gdybyś miał budżet na przeprowadzenie takich testów, nie miałbyś czasu na ich wykonanie w krótkim okresie.
+
+Cel hakerów lub botów może być różnorodny – od po prostu zatrzymania twojej usługi, ponieważ są to wynajęte przez konkurencję Rent-a-DoS (denial of service), ponieważ nie mają innych sposobów na konkurowanie z tobą, przez wydobywanie danych użytkowników, aby zdobyć wartościowy zasób gdzieś indziej przy użyciu tego samego hasła, po uzyskanie dostępu do prywatnych danych na twoich serwerach.
+
+Kiedy masz listę możliwych zagrożeń, możesz zacząć je eliminować, zamykając luki. Ponieważ twoja aplikacja internetowa lub API są popularnymi celami, ważne jest, abyś umiał pisać bezpieczny kod podczas tworzenia aplikacji internetowych.
