@@ -3602,3 +3602,683 @@ Po CEO twoja aplikacja internetowa lub interfejs API są jednymi z najłatwiejsz
 Cel hakerów lub botów może być różnorodny – od po prostu zatrzymania twojej usługi, ponieważ są to wynajęte przez konkurencję Rent-a-DoS (denial of service), ponieważ nie mają innych sposobów na konkurowanie z tobą, przez wydobywanie danych użytkowników, aby zdobyć wartościowy zasób gdzieś indziej przy użyciu tego samego hasła, po uzyskanie dostępu do prywatnych danych na twoich serwerach.
 
 Kiedy masz listę możliwych zagrożeń, możesz zacząć je eliminować, zamykając luki. Ponieważ twoja aplikacja internetowa lub API są popularnymi celami, ważne jest, abyś umiał pisać bezpieczny kod podczas tworzenia aplikacji internetowych.
+
+
+
+### 6.3 Twórz bezpieczne aplikacje internetowe
+Każda aplikacja jest unikalna, ale podczas pisania kodu można zastosować łatwe do wprowadzenia praktyki, które sprawią, że twoja aplikacja będzie bardziej odporna na problemy związane z bezpieczeństwem. Jako programiści, powinniśmy również zastanowić się, kiedy te praktyki są najlepsze i kiedy nie są. Przeanalizujmy popularne ataki na aplikacje internetowe, które możemy zapobiec, zmieniając sposób, w jaki piszemy i projektujemy nasze programy.
+
+#### 6.3.1 Projektuj z myślą o bezpieczeństwie
+Bezpieczeństwo jest trudne do wprowadzenia po fakcie, głównie ze względu na wszystkie decyzje projektowe, które doprowadziły do napisania nepewnego kodu na samym początku. Aby zmienić właściwości bezpieczeństwa aplikacji, być może będziesz musiał przeanalizować swój projekt na nowo. Dlatego tak ważne jest, aby uwzględnić bezpieczeństwo podczas jego projektowania. Przejdź przez te kroki:
+
+1. Przeanalizuj swój model zagrożeń, czy to opisany na piśmie, czy tylko w twojej głowie. Zrozum ryzyko, koszty związane z zabezpieczaniem go teraz oraz koszty zabezpieczania go w przyszłości.
+2. Zdecyduj, gdzie będziesz przechowywać tajemnice (hasła do bazy danych, klucze API) dla swojej aplikacji. Ustal to jako surową zasadę. Załóż, że twój kod źródłowy jest dostępny dla wszystkich. W późniejszych częściach tego rozdziału omówię najlepsze praktyki przechowywania tajemnic.
+3. Projektuj z myślą o zasadzie najmniejszych uprawnień. Kod nie powinien wymagać większych uprawnień, niż jest to konieczne do wykonania swojego zadania. Na przykład nie nadawaj swojej aplikacji uprawnień administratora bazy danych, jeśli nie potrzebuje ona harmonogramu okresowych operacji przywracania bazy danych. Jeśli tylko kilka zadań wymaga wyższych uprawnień, rozważ ich izolację w osobnej, odizolowanej jednostce, na przykład osobnej aplikacji. Uruchamiaj aplikacje internetowe z jak najmniejszymi uprawnieniami.
+4. Zastosuj tę zasadę we wszystkich obszarach swojej organizacji. Pracownicy nie powinni mieć dostępu do zasobów, których nie potrzebują do wykonywania codziennych zadań. Dyrektorzy generalni nie powinni mieć dostępu do bazy danych ani do żadnych serwerów. To nie dlatego, że nikomu nie można ufać, ale dlatego, że ich dostęp może zostać zagrożony przez osoby z zewnątrz.
+Kiedy wykonasz te kroki, zanim napiszesz choćby jedną linijkę kodu dla swojej nowej aplikacji lub nowej funkcji, będziesz znacznie lepiej przygotowany na przyszłość.
+
+W kolejnych sekcjach niektóre tematy dotyczą wyłącznie tworzenia aplikacji internetowych/API, a przykłady są zazwyczaj specyficzne dla jednej biblioteki. Jeśli nie pracujesz nad niczym, co jest zdalnie dostępne, możesz przewinąć do sekcji dotyczącej przechowywania tajemnic użytkownika. W przeciwnym razie, kontynuuj czytanie.
+
+
+
+#### 6.3.2 Przydatność bezpieczeństwa poprzez zaciemnianie kodu(obscurity)
+Bezpieczeństwo oprogramowania to wyścig z czasem. Bez względu na to, jak bezpieczne uważasz swoje oprogramowanie, wszystko zależy od tego, jak bezpieczni są ludzie i jak bezpieczne jest wszystko, co otacza twoje oprogramowanie. Każda środek bezpieczeństwa ostatecznie może być złamany. Kiedyś szacowano, że zajmie to więcej czasu niż wiek wszechświata, aby złamać klucz RSA o długości 4096 bitów, ale okazało się, że wystarczyło do powstania komputera kwantowego. Oznacza to, że jedynym celem każdego środka bezpieczeństwa jest zyskanie czasu, aby utrudnić pracę atakującym.
+
+Eksperci ds. bezpieczeństwa informacji gardzą bezpieczeństwem poprzez obskurantyzm. Jak powiedział Benjamin Franklin: "Ci, którzy próbują osiągnąć bezpieczeństwo poprzez obskurantyzm, nie zasługują ani na bezpieczeństwo, ani na obskurantyzm". Okej, być może nie powiedział tego dokładnie, ale to jest zbliżone. Przeciwnicy bezpieczeństwa poprzez obskurantyzm sprzeciwiają się temu, ponieważ nie daje ono ci czasu, a może tylko marginalnie. To, co eksperci odrzucają, to przekonanie, że obskurantyzm jest wystarczający. Nie jest, i sam w sobie nigdy nie jest skuteczny. Nigdy nie powinieneś mu nadawać priorytetu, i powinieneś go stosować tylko wtedy, gdy masz dostępne zasoby. Ale ostatecznie może ci zapewnić marginalne bezpieczeństwo.
+
+Mając to powiedziane, uściślijmy jedno: marginalne bezpieczeństwo nie jest bezpieczeństwem. To tymczasowy plaster, który może utrzymać twój projekt, dopóki nie osiągnie pewnego poziomu rozwoju. W pierwszym roku istnienia Eksi Sozluk pamiętam, że trzymałem interfejs administracyjny za pomocą obskurnego adresu URL, bez żadnej autentykacji. Pozwól mi to przekształcić w kontekst: były to lata 1999, strona miała maksymalnie 1000 użytkowników, i nie udostępniałem nikomu tego adresu URL. Zamiast inwestować wiele w skomplikowany mechanizm uwierzytelniania i autoryzacji, skupiłem się na dynamice strony, która była istotna dla użytkowników. Wiedziałem jednak z pewnością, że to tylko kwestia czasu, zanim ktoś to odkryje, więc jak najszybciej zmieniłem go na system uwierzytelniania.
+
+Podobnie internet działał przez długi czas na protokole HTTP i używał podstawowego schematu uwierzytelniania, który nie szyfrował haseł, a jedynie kodował je w Base64.3 To było żywym dowodem na bezpieczeństwo poprzez obskurantyzm. Tak, żaden zdroworozsądkowy ekspert ds. bezpieczeństwa tego nie polecał, ale wiele stron go używało, czy programiści zdawali sobie sprawę z ryzyka, czy nie. Jeśli byłeś w tej samej sieci co użytkownik, na przykład na publicznym punkcie dostępu Wi-Fi, łatwo można było wydobyć hasła i ruch sieciowy z sesji tych, którzy go używali. W końcu ataki typu man-in-the-middle (MITM) i aplikacje do skimmingu haseł stały się tak powszechne, że w ostatniej dekadzie pojawiło się ogromne naciski, aby przejść na HTTPS, HTTP/2, TLS 1.3 i bardziej bezpieczne protokoły uwierzytelniania, takie jak OAuth2. Bezpieczeństwo poprzez obskurantyzm działało przez dziesięciolecia, tuż przed naszymi oczami.
+
+To prowadzi nas do istotnego punktu: priorytetyzuj bezpieczeństwo w oparciu o swój model zagrożeń, a jeśli twój model na to pozwala, bezpieczeństwo poprzez obskurantyzm może działać dla ciebie, tak jak umieszczenie na płocie tabliczki "Uważaj na psa" może zmniejszyć ryzyko włamań, nawet jeśli nie masz psa.
+
+Doskonałe bezpieczeństwo jest niemożliwe do osiągnięcia, zawsze napotkasz kompromisy między doświadczeniem użytkownika a bezpieczeństwem, podobnie jak czatowa aplikacja Telegram wybrała gorszy model bezpieczeństwa niż WhatsApp, ale oferuje znacznie lepszą użyteczność, więc ludzie przesiadają się na nią, nawet będąc świadomymi konsekwencji. Ważne jest, abyś miał taką samą świadomość konsekwencji decyzji dotyczących kompromisów, jakie podejmujesz. Po prostu odrzucanie każdej środowiskiem "Hej, bezpieczeństwo poprzez obskurantyzm jest złe" nie pomaga ci.
+
+Mając to powiedziane, prawdziwe bezpieczeństwo staje się tańsze. Kiedyś musiałeś kupić certyfikaty SSL za 500 dolarów, aby uruchomić swoją stronę z protokołem HTTPS, teraz możesz to zrobić całkowicie za darmo, korzystając z certyfikatów z inicjatywy Let’s Encrypt (Let’s Encrypt: https://letsencrypt.org). Posiadanie bezpiecznego systemu uwierzytelniania to teraz tylko kwestia dodania odpowiedniej biblioteki do swojego projektu. Upewnij się, że nie przesadzasz z wymaganiami dotyczącymi uzyskania dobrego bezpieczeństwa i nie szukasz wymówek, aby używać bezpieczeństwa poprzez obskurantyzm i mieć naprawdę słabe zabezpieczenia. Zawsze wybieraj prawdziwe bezpieczeństwo nad bezpieczeństwem poprzez obskurantyzm, gdy różnica w wysiłku jest marginalna, a ryzyka są znaczne. Obskurantyzm nie zapewni ci prawdziwego bezpieczeństwa, ale czasami może ci kupić czas, dopóki nie uporasz się z problemem.
+
+#### 6.3.3 Nie twórz własnych mechanizmów bezpieczeństwa
+Bezpieczeństwo jest złożone. Nigdy nie powinieneś pisać własnych implementacji mechanizmów bezpieczeństwa, czy to chodzi o hashowanie, szyfrowanie czy ograniczanie przepustowości. Oczywiście możesz pisać kod jako eksperyment, ale nie używaj swojego własnego kodu bezpieczeństwa w produkcji. To zalecenie jest często nazywane "Nie twórz własnej kryptografii". Zazwyczaj specyfikacje związane z bezpieczeństwem zakładają, że czytelnik rozumie wymagania dotyczące tworzenia bezpiecznego oprogramowania, a zwykły programista może przeoczyć istotne szczegóły, implementując coś własnego, co w efekcie tworzy zerowe zabezpieczenia.
+
+Weźmy na przykład hashowanie. Nawet zespół ekspertów ds. kryptografii ma trudności z stworzeniem algorytmu haszowania, który będzie kryptograficznie bezpieczny i nie posiada żadnych słabych punktów. Prawie każdy algorytm haszowania przed SHA2 posiada poważne luki w bezpieczeństwie.
+
+Nie oczekuję, że staniesz się na tyle śmiały, by próbować pisać swój własny algorytm haszowania, ale czy zdawałeś sobie sprawę, że nawet nie powinieneś implementować własnej funkcji porównywania ciągów znaków, ponieważ jest to niewłaściwe z punktu widzenia bezpieczeństwa? Przejdę do szczegółów w sekcji 6.3 dotyczącej przechowywania tajemnic.
+
+Mimo to możesz wciąż obronić się przed podatnościami, po prostu zmieniając sposób, w jaki wykonujesz codzienną pracę, bez konieczności implementowania czegokolwiek od zera. Przeanalizuję te powszechne wektory ataku, ale to nie jest wyczerpująca lista, a raczej priorytetowe przykłady, aby pokazać ci, że osiągnięcie przyzwoitego poziomu bezpieczeństwa może nie wymagać ogromnego wysiłku z twojej strony. Możesz być tak samo skuteczny jak dotychczas i pisać znacznie bardziej bezpieczne oprogramowanie.
+
+#### 6.3.4 Ataki SQL Injection
+Ataki SQL Injection są problemem, który został już dawno rozwiązany, ale wciąż stanowią popularny sposób na kompromitację strony internetowej. Powinny one zniknąć z powierzchni ziemi mniej więcej w tym samym czasie co kariera reżysera George'a Lucasa, ale jakoś przetrwały, w przeciwieństwie do George'a Lucasa.
+
+Atak jest dość prosty. Masz zapytanie SQL działające na twojej stronie internetowej. Załóżmy, że chcesz znaleźć identyfikator użytkownika na podstawie nazwy użytkownika, która została podana, aby zobaczyć profil tego użytkownika, co jest powszechnym scenariuszem. Powiedzmy, że zapytanie wygląda tak:
+
+```swift
+SELECT id FROM users WHERE username='<nazwa użytkownika>'
+```
+
+Koncepcyjne podejście do budowania tego zapytania z podaną nazwą użytkownika jako wejściem polega na osadzeniu nazwy użytkownika w zapytaniu za pomocą manipulacji ciągami znaków. Lista 6.1 pokazuje prostą funkcję GetUserId, która przyjmuje nazwę użytkownika jako parametr i buduje rzeczywiste zapytanie poprzez konkatenację ciągów znaków. To zazwyczaj jest początkowy sposób budowania zapytań SQL, ale na pierwszy rzut oka może wydawać się w porządku. Kod tworzy w zasadzie polecenie, ustawia jego zapytanie na nasze zapytanie po podstawieniu podanej nazwy użytkownika i wykonuje je. Zwraca wynik jako wartość nullable integer, ponieważ rekord może w ogóle nie istnieć. Zauważ również, że konkatenujemy ciągi znaków, ale nie robimy tego w pętli, o czym rozmawiałem w rozdziale 2. Ta technika nie ma zbędnego narzutu na alokację pamięci.
+
+
+
+> OPCJONALNE WARTOŚCI ZWRACANE
+>
+> W funkcji GetUserId w przykładzie 6.1 specjalnie używamy typu zwracanego, który może być wartością null, zamiast stosować pseudoidentyfikator oznaczający brak wartości, jak -1 lub 0. Dzieje się tak, ponieważ kompilator może wykryć niezweryfikowane wartości zwracane jako nullable w kodzie wywołującym i znajdować błędy programistyczne. Gdybyśmy użyli standardowej wartości całkowitej, takiej jak 0 lub -1, kompilator nie wiedziałby, czy jest to wartość prawidłowa. W wersjach C# przed 8.0, kompilator nie miał tych udogodnień. Przyszłość jest teraz!
+
+Lista 6.1 Naiwne pobieranie identyfikatora użytkownika z bazy danych
+
+```csharp
+public int? GetUserId(string username) {
+  var cmd = db.CreateCommand();
+  cmd.CommandText = @"
+    SELECT id 
+      FROM users 
+      WHERE name='" + username + "'";
+  return cmd.ExecuteScalar() as int?;
+}
+```
+
+Rozważmy teraz naszą funkcję w naszych umysłach. Wyobraź sobie jej działanie z wartością `placid_turn`. Jeśli usuniemy dodatkowe spacje, wykonane zapytanie SQL wyglądałoby tak:
+
+```sql
+SELECT id FROM users WHERE username='placid_turn'
+```
+
+Teraz załóżmy, że wartość nazwy użytkownika zawiera apostrof, na przykład `hackin'`. Nasze zapytanie wyglądałoby teraz tak:
+
+```sql
+SELECT id FROM users WHERE username='hackin''
+```
+
+Zauważ, co się stało? Wprowadziliśmy błąd składniowy. To zapytanie spowoduje błąd składni, klasa SqlCommand zgłosi wyjątek SqlException, a użytkownik zobaczy stronę z błędem. To nie brzmi tak przerażająco. Nasz haker spowoduje tylko błąd. Nie będzie to miało wpływu na niezawodność naszej usługi ani na bezpieczeństwo naszych danych. Teraz, pomyśl o nazwie użytkownika w postaci `' OR username='one_lame'`. To również spowoduje błąd składniowy, ale będzie wyglądać tak:
+
+```sql
+SELECT id FROM users WHERE username='' OR username='one_lame''
+```
+
+Pierwszy apostrof zamykał cudzysłów, co oznaczało, że mogliśmy kontynuować nasze zapytanie dodając dodatkowe wyrażenia. Zaczyna być to przerażające. Widzisz, możemy manipulować zapytaniem, aby zobaczyć rekordy, których nie powinniśmy widzieć, po prostu eliminując błąd składniowy, dodając podwójny myślnik na końcu nazwy użytkownika:
+
+```sql
+SELECT id FROM users WHERE username='' OR username='one_lame' --'
+```
+
+Podwójne myślniki oznaczają komentarz w linii, co oznacza, że reszta linii jest traktowana jako komentarz w języku SQL. Jest to podobne do podwójnych ukośników (//) w większości języków stylu C, z wyjątkiem samego C—no, przynajmniej w jego wczesnych wersjach. Oznacza to, że zapytanie działa idealnie i zwraca informacje dla one_lame zamiast placid_turn.
+
+Nie jesteśmy ograniczeni do pojedynczego polecenia SQL. Możemy uruchamiać wiele poleceń SQL, oddzielając je średnikiem w większości dialektów SQL. Z odpowiednio długim nazwą użytkownika możesz to zrobić tak:
+
+```sql
+SELECT id FROM users WHERE username='';DROP TABLE users --'
+```
+
+To zapytanie usunęłoby tabelę users wraz ze wszystkimi rekordami w tabeli natychmiast, chyba że wystąpi spór o blokadę lub aktywna transakcja spowoduje przekroczenie limitu czasowego. Pomyśl o tym — możesz to zrobić zdalnie w aplikacji internetowej, po prostu wpisując specjalnie spreparowaną nazwę użytkownika i klikając przycisk. Możesz wyciekać lub tracić swoje dane. Być może będziesz w stanie odzyskać utracone dane z kopii zapasowej, w zależności od twoich umiejętności, ale nie będziesz w stanie z powrotem wsadzić wyciekłych danych do butelki.
+
+
+
+> PAMIĘTAJ O KOPACH ZAPASOWYCH I ZASADZIE KOPÓW ZAPASOWYCH 3-2-1
+>
+> Pamiętasz, że wcześniej omawiałem, że regresje są najgorszym typem błędów, które marnują nasz czas, podobnie jak zburzenie idealnie zbudowanego budynku tylko po to, aby zbudować go od nowa, o czym rozmawiałem we wcześniejszych rozdziałach? Brak kopii zapasowych może być gorszy niż to. Regresja zmusza cię do ponownego naprawiania błędu, podczas gdy utracone dane zmuszają cię do tworzenia danych od nowa. Jeśli to nie twoje dane, twoi użytkownicy nigdy więcej nie będą mieli motywacji, aby je ponownie stworzyć. To jedna z pierwszych lekcji, jakie nauczyłem się w mojej karierze programisty. Byłem osobą bardzo ryzykowną (inaczej mówiąc, głupią) na początku mojej kariery. W 1992 roku napisałem narzędzie do kompresji i przetestowałem je na swoim własnym kodzie źródłowym, zastępując oryginał. Narzędzie przekształciło cały mój kod źródłowy w pojedynczy bajt, którego zawartość wynosiła 255. Mam nadal pewność, że w przyszłości pojawi się algorytm do rozpakowania tych gęsto upakowanych bitów, ale byłem nieostrożny. Wtedy nie było jeszcze systemów kontroli wersji w osobistym rozwoju. Wtedy nauczyłem się, jak ważne są kopie zapasowe.
+>
+> Drugą lekcję na temat kopii zapasowych nauczyłem się na początku lat 2000. Minął rok od czasu, gdy stworzyłem Eksi Sozluk, na szczęście bez żadnych problemów związanych z Y2K. Byłem przekonany o ważności kopii zapasowych, ale robiłem je co godzinę na tym samym serwerze i tylko raz w tygodniu przekopywałem je na zdalny serwer. Pewnego dnia dyski na serwerze spłonęły — dosłownie, doszło do samozapłonu, a dane na nich były całkowicie niemożliwe do odzyskania. Wtedy zrozumiałem, jak ważne są kopie zapasowe na oddzielnych serwerach. Później w mojej karierze dowiedziałem się, że w dzikim internecie istnieje niepisana zasada zwana "zasadą kopii zapasowych 3-2-1", która mówi: "Mieć trzy oddzielne kopie zapasowe, dwie na oddzielnych nośnikach i jedną w oddzielnym miejscu." Oczywiście, opracowanie sensownej strategii kopii zapasowych wymaga więcej myślenia niż to, i może to nigdy nie być twoim zadaniem, ale to jest minimum, które warto rozważyć.
+
+##### Niewłaściwe rozwiązanie problemu z atakiem SQL Injection
+
+Jak byś rozważył naprawę podatności na atak SQL Injection w swojej aplikacji? Pierwsze, co przychodzi do głowy, to ucieczka (ang. escaping): zastąpienie każdego pojedynczego apostrofu (') podwójnymi apostrofami (''), aby haker nie mógł zamknąć cudzysłowia, który otwiera twoje zapytanie SQL, ponieważ podwójne apostrofy są traktowane jako zwykłe znaki, a nie elementy składniowe.
+
+Problem z tym podejściem polega na tym, że w alfabecie Unicode nie istnieje jedyny apostrof. Ten, który zamieniasz, ma wartość punktu Unicode U+0027 (APOSTROF), podczas gdy na przykład U+02BC (MODIFIED LETTER APOSTROPHE) również przedstawia symbol apostrofu, chociaż dla innego celu, i możliwe jest, że technologia bazy danych, której używasz, traktuje go jako zwykły apostrof lub przekształca wszystkie inne symbole przypominające apostrof w znak, który baza danych akceptuje. W związku z tym problem sprowadza się do tego, że nie możesz znać technologii bazodanowej na tyle dobrze, aby prawidłowo wykonać ucieczkę w jej imieniu.
+
+
+
+##### Idealne rozwiązanie problemu z atakiem SQL Injection
+
+Najbezpieczniejszym sposobem na rozwiązanie problemu z atakiem SQL Injection jest użycie zapytań z parametrami. Zamiast modyfikować sam ciąg zapytania, przekazujesz dodatkową listę parametrów, a dostawca bazy danych obsługuje całość. Kod z listingu 6.1 wyglądałby tak, jak w przypadku zastosowania zapytania z parametrami przedstawionego w liście 6.2. Zamiast umieszczać ciąg jako parametr w zapytaniu, określamy parametr za pomocą składni @nazwaParametru i określamy wartość tego parametru w osobnym obiekcie Parameters związanym z danym poleceniem.
+
+Lista 6.2 Użycie zapytań z parametrami
+
+```csharp
+public int? GetUserId(string username) {
+  var cmd = db.CreateCommand();
+  cmd.CommandText = @"
+    SELECT id 
+      FROM users 
+      WHERE username=@username";
+  cmd.Parameters.AddWithValue("username", username);
+  return cmd.ExecuteScalar() as int?;
+}
+```
+
+Voila! Możesz przesyłać dowolny znak w nazwie użytkownika, ale nie ma możliwości zmiany samego zapytania. Już nie ma potrzeby stosowania ucieczek, ponieważ zapytanie i wartość parametrów są przesyłane w osobnych strukturach danych.
+
+
+
+Kolejną zaletą korzystania z zapytań z parametrami jest zmniejszenie zanieczyszczania pamięci podręcznej planów zapytań. Plan zapytania to strategia wykonania, którą bazy danych opracowują podczas pierwszego wykonania zapytania. Baza danych przechowuje ten plan w pamięci podręcznej, i jeśli uruchomisz to samo zapytanie ponownie, baza danych użyje istniejącego już planu zapytania. Wykorzystuje strukturę przypominającą słownik, więc przeszukiwanie jest O(1), czyli bardzo szybkie. Ale, jak wszystko we wszechświecie, pamięć podręczna planu zapytania ma ograniczoną pojemność. Jeśli przesyłasz takie zapytania do bazy danych, każde z nich będzie miało różne wpisy planów zapytań w pamięci podręcznej:
+
+```sql
+SELECT id FROM users WHERE username='oracle'
+SELECT id FROM users WHERE username='neo'
+SELECT id FROM users WHERE username='trinity'
+SELECT id FROM users WHERE username='morpheus'
+SELECT id FROM users WHERE username='apoc'
+SELECT id FROM users WHERE username='cypher'
+SELECT id FROM users WHERE username='tank'
+SELECT id FROM users WHERE username='dozer'
+SELECT id FROM users WHERE username='mouse'
+```
+
+Ponieważ rozmiar pamięci podręcznej planu zapytania jest ograniczony, jeśli uruchomisz to zapytanie z wystarczającą ilością różnych wartości nazwy użytkownika, inne użyteczne wpisy planów zapytań zostaną usunięte z pamięci podręcznej, a zostanie ona zapełniona tymi być może nieprzydatnymi wpisami. To właśnie zanieczyszczanie pamięci podręcznej planów zapytań.
+
+Kiedy używasz zapytań z parametrami, twoje wykonane zapytania wszystkie wyglądają tak samo:
+
+```sql
+SELECT id FROM users WHERE username=@username
+SELECT id FROM users WHERE username=@username
+SELECT id FROM users WHERE username=@username
+SELECT id FROM users WHERE username=@username
+SELECT id FROM users WHERE username=@username
+SELECT id FROM users WHERE username=@username
+SELECT id FROM users WHERE username=@username
+SELECT id FROM users WHERE username=@username
+SELECT id FROM users WHERE username=@username
+SELECT id FROM users WHERE username=@username
+```
+
+Ponieważ wszystkie zapytania mają ten sam tekst, baza danych będzie używać tylko jednego wpisu w pamięci podręcznej planów zapytań dla wszystkich zapytań wykonanych w ten sposób. Twoje inne zapytania będą miały lepsze szanse na znalezienie swojego miejsca, co pozwoli na lepszą wydajność wszystkich zapytań, a przy tym będziesz w pełni chroniony przed atakami SQL Injection. I to wszystko za darmo!
+
+Tak jak każda rekomendacja zawarta w tej książce, musisz pamiętać, że zapytanie z parametrami nie jest złotym środkiem na wszystko. Możesz być kuszony myślą: "Hej, jeśli jest takie dobre, zrobię wszystko za pomocą parametrów!" Niemniej jednak nie powinieneś bezcelowo używać parametrów, na przykład dla stałych wartości, ponieważ optymalizator planu zapytania może znaleźć lepsze plany zapytań dla pewnych wartości. Na przykład możesz chcieć napisać takie zapytanie, mimo że zawsze używasz "active" jako wartości dla statusu:
+
+```sql
+SELECT id FROM users WHERE username=@username AND status=@status
+```
+
+Optymalizator planu zapytania może przypuszczać, że możesz przesłać dowolną wartość jako status i może wybrać plan, który wystarczająco dobrze działa dla wszystkich możliwych wartości @status. To może oznaczać użycie niewłaściwego indeksu dla wartości "active" i prowadzić do gorszej wydajności zapytania. Hmm, może w takim razie potrzebujemy rozdziału o bazach danych?
+
+
+
+Kiedy nie można używać zapytań z parametrami
+
+Zapytania z parametrami są bardzo wszechstronne. Możesz nawet używać zmiennej liczby parametrów, nadając im nazwy @p0, @p1, i @p2 w kodzie oraz dodając wartości parametrów w pętli. Niemniej jednak mogą być sytuacje, kiedy naprawdę nie możesz użyć zapytań z parametrami, albo po prostu nie chcesz tego zrobić, na przykład aby unikać ponownego zanieczyszczania pamięci podręcznej planu zapytań. Albo może być potrzebna określona składnia SQL, taka jak dopasowywanie wzorców (pomyśl o operatorach LIKE i znakach takich jak % i _), które mogą nie być obsługiwane przez zapytania z parametrami. W takim przypadku możesz skorzystać z agresywnej sanacji tekstu, zamiast ucieczek.
+
+Jeśli parametrem jest liczba, sparsuj ją do odpowiedniego typu liczbowego (int, float, double, decimal itp.) i użyj jej w zapytaniu zamiast umieszczać ją bezpośrednio w ciągu znaków, nawet jeśli oznacza to zbędne przekształcanie liczby całkowitej w ciąg znaków więcej niż raz.
+
+Jeśli jest to ciąg znaków, ale nie potrzebujesz żadnych znaków specjalnych lub potrzebujesz tylko podzbioru znaków specjalnych, usuń wszystko z ciągu, co oprócz prawidłowych znaków. Obecnie nazywa się to listą zezwalającą, czyli posiadaniem listy dozwolonych elementów zamiast listy elementów, które są zabronione. Pomaga to uniknąć przypadkowego włączenia złośliwego znaku do zapytań SQL.
+
+Niektóre abstrakcje bazy danych mogą wydawać się nie obsługiwać zapytań z parametrami w typowy sposób. Mogą one mieć alternatywne sposoby przekazywania zapytań z parametrami. Na przykład Entity Framework Core używa interfejsu FormattableString do wykonania tego samego zadania. Zapytanie podobne do tego z listingu 6.2 w EF Core wyglądałoby jak na listingu 6.3. Funkcja FromSqlInterpolated wykonuje sprytne działanie, łącząc interfejs FormattableString i składnię interpolacji ciągów C#. W ten sposób biblioteka może używać szablonu ciągu, zamieniać argumenty na parametry i budować zapytanie z parametrami w tle, bez twej wiedzy i udziału.
+
+
+
+> INTERPOLUJ MNIE, SKOMPLIKUJ MNIE, PODNIEŚ MNIE (DZIĘKI DZIĘKI DZIĘKI ZESPOLE RUSH)
+>
+> Na początku był String.Format(). Pozwalało to na podstawianie ciągów znaków bez zajmowania się niechlujną składnią konkatenacji stringów. Na przykład zamiast pisanie a.ToString() + "+" + b.ToString() + "=" + c.ToString(), można było po prostu napisać String.Format("{0}+{1}={2}", a, b, a + b). Jest łatwiej zrozumieć, jak będzie wyglądał ostateczny ciąg znaków, używając String.Format, ale które wyrażenie odpowiada któremu parametrowi, nie jest takie proste do zrozumienia. Potem pojawiła się składnia interpolacji ciągów znaków wraz z C# 6.0, która pozwalała pisać to samo wyrażenie jako $"{a}+{b}={a+b}". Jest genialne: pozwala zrozumieć, jak będzie wyglądał ostateczny ciąg znaków, a jednocześnie jasno pokazuje, która zmienna odpowiada w szablonie.
+>
+> Rzecz w tym, że "$..." jest praktycznie sytaktycznym cukrem dla składni String.Format(..., ...), która przetwarza ciąg znaków przed wywołaniem funkcji. Jeśli potrzebowaliśmy argumentów interpolacji w naszej funkcji, musieliśmy napisać nowe sygnatury funkcji podobne do tych w String.Format i wywołać formatowanie samodzielnie, co komplikowało naszą pracę.
+>
+> Na szczęście nowa składnia interpolacji ciągów znaków pozwala również na automatyczne rzutowanie do klasy FormattableString, która przechowuje zarówno szablon ciągu znaków, jak i jego argumenty. Twoja funkcja może otrzymać ciąg znaków i argumenty oddzielnie, jeśli zmienisz typ parametru ciągu znaków na FormattableString. To prowadzi do interesujących zastosowań, takich jak opóźnianie przetwarzania tekstu w bibliotekach do logowania lub, jak pokazano w przykładzie w listingu 6.3, do zapytań z parametrami bez przetwarzania ciągu znaków. FormattableString jest praktycznie taki sam jak szablony literałów w języku JavaScript, które pełnią tę samą rolę.
+
+
+
+**Listing 6.3 Zapytanie z parametrami w EF Core**
+
+```csharp
+public int? GetUserId(string username) {
+  return dataContext.Users
+    .FromSqlInterpolated(
+      $@"SELECT * FROM users WHERE username={username}")
+    .Select(u => (int?)u.Id)
+    .FirstOrDefault();
+}
+```
+
+**Podsumowanie**
+
+Nie używaj zbyt często zapytań z parametrami, głównie dla danych wprowadzanych przez użytkownika. Parametryzacja jest potężna; świetnie sprawdza się do utrzymania bezpieczeństwa twojej aplikacji i jednocześnie trzymania w miarę rozsądnego rozmiaru pamięci podręcznej planu zapytań. Niemniej jednak zrozum zagrożenia związane z parametryzacją, takie jak słaba optymalizacja zapytań, i unikaj jej stosowania dla stałych wartości.
+
+#### 6.3.5 Ataki typu Cross-site scripting (XSS)
+
+Osobiście uważam, że ataki typu Cross-site scripting (XSS) powinny być nazywane „Wstrzykiwaniem JavaScript” dla większego dramatycznego efektu. Nazwa „Cross-site scripting” brzmi jak kategoria sportowa w programowaniu, na przykład w narciarstwie biegowym. Jeśli nie wiedziałbym, o co chodzi, łatwo można byłoby mnie przekonać do tego pomysłu. „Wow, cross-site scripting. Brzmi nieźle. Chciałbym, żeby mój skrypt działał na różnych stronach.”
+
+XSS to atak dwuetapowy. Pierwszym etapem jest możliwość wstrzyknięcia kodu JavaScript na stronie, a drugim jest załadowanie większego kodu JavaScript z sieci i wykonanie go na twojej stronie internetowej. Korzyści z tego są liczne. Możesz przechwycić działania użytkownika, informacje, a nawet ich sesję, kradnąc ciasteczka sesji z innej sesji, co nazywane jest przejęciem sesji (session hijacking).
+
+#### Przepraszam, nie mogę wstrzyknąć tego, Dave
+
+Ataki typu Cross-site scripting (XSS) wynikają głównie z niewłaściwie zakodowanego kodu HTML. W tym sensie przypomina ataki typu SQL injection. Zamiast podać apostrof w danych wprowadzanych przez użytkownika, możemy podać nawiasy trójkątne, aby manipulować kodem HTML. Jeśli możemy zmodyfikować kod HTML, możemy manipulować nim, dodając znaczniki <script> i wpisując wewnątrz kod JavaScript.
+
+Prosty przykład to funkcja wyszukiwania na stronach internetowych. Kiedy wyszukujesz coś, wyniki są wyświetlane na stronie wynikowej, ale jeśli nie znajdzie żadnych wyników, zwykle pojawia się komunikat o błędzie, który informuje: „Twoje zapytanie o 'płomienie kondensatorów do sprzedaży' nie zwróciło żadnych wyników”. Co się stanie, jeśli wyszukasz „<script>alert('hello!');</script>”? Jeśli wynik nie jest odpowiednio zakodowany, istnieje szansa, że zobaczysz coś podobnego do rysunku 6.4.
+
+![CH06_F04_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_6-4.png)
+
+Jeśli możesz wstrzyknąć prostą komendę alert, z pewnością możesz wstrzyknąć więcej. Możesz odczytać pliki cookie i przesłać je na inną stronę internetową. Możesz nawet załadować cały kod JavaScript z odległego adresu URL i uruchomić go na stronie. To właśnie tutaj pojawia się termin „cross-site”. Pozwolenie na wysyłanie żądań do stron internetowych z innych domen jest uważane za żądanie cross-site.
+
+##### Zapobieganie atakom XSS
+
+Najprostszym sposobem na obronę przed atakami XSS jest zakodowanie tekstu tak, aby specjalne znaki HTML były unikane. W ten sposób są one reprezentowane jako odpowiednie encje HTML zamiast ich własnych znaków, jak pokazuje tabela 6.1. Zazwyczaj nie powinieneś potrzebować tych tabel i możesz wykonywać kodowanie za pomocą istniejących, dobrze przetestowanych funkcji. Ta tabela jest tylko dla Twojej referencji, abyś mógł rozpoznawać te encje, gdy zobaczysz je w swoim kodzie HTML. Po zastosowaniu encji HTML, dane wprowadzone przez użytkownika nie będą traktowane jako kod HTML i będą wyświetlane jako zwykły tekst, jak pokazano na rysunku 6.5.
+
+Tabela 6.1 Odpowiedniki encji HTML specjalnych znaków 
+
+| Znak | Encja HTML | Alternatywa |
+| ---- | ---------- | ----------- |
+| &    | `&amp;`    | `&#38;`     |
+| <    | `&lt;`     | `&#60;`     |
+| >    | `&gt;`     | `&#62;`     |
+| "    | `&quot;`   | `&#34;`     |
+| '    | `&apos;`   | `&#39;`     |
+
+Rys 6.5
+
+![CH06_F05_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_6-5.png)
+
+Wiele nowoczesnych frameworków domyślnie koduje HTML dla zwykłego tekstu. Rozważ kod szablonu Razor w naszej własnej wyszukiwarce Fooble, przedstawiony poniżej. Jak widać, używamy składni @, aby bezpośrednio umieścić wartość na naszej stronie HTML bez wykonywania jakiegokolwiek kodowania.
+
+Listing 6.4 Fragment strony wyników z naszej wyszukiwarki
+
+```html
+<p>
+  Your search for <em>"@Model.Query"</em>
+  didn't return any results.
+</p>
+```
+
+Nawet jeśli bezpośrednio wyświetlamy ciąg zapytania, nie występuje żadny błąd XSS, jak pokazuje rysunek 6.6. Jeśli zobaczysz źródło wygenerowanej strony internetowej, zauważysz, że jest ono poprawnie zabezpieczone, tak jak w poniższym fragmencie kodu.
+
+Rys 6.6
+
+![CH06_F06_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_6-6.png)
+
+Listing 6.5 Faktyczne źródło HTML wygenerowane
+
+```html
+<p>
+    Your search for 
+    ➥ <em>"&lt;script&gt;alert(&quot;hello!&quot;);&lt;/script&gt;"</em>
+    didn't return any results.
+</p>
+```
+
+Dlaczego w ogóle musimy dbać o XSS? Ponieważ, jak już wspomniałem, programiści są ludźmi. Pomimo pojawienia się eleganckich technologii szablonowania, są sytuacje, w których możesz uważać, że użycie surowego wyjścia HTML jest dobre.
+
+##### Powszechne pułapki związane z XSS
+
+Jedną popularną pułapką jest nieświadomość podziału na obszary odpowiedzialności, takie jak trzymanie kodu HTML w modelu. Możesz być skuszony zwróceniem ciągu znaków z osadzonym w nim kodem HTML, ponieważ łatwiej jest zintegrować logikę w kodzie strony. Na przykład w zależności od tego, czy tekst jest klikalny, możesz chcieć zwrócić zwykły tekst lub link w swojej metodzie GET. Z technologią ASP.NET MVC może to wydawać się łatwiejsze do wpisania:
+
+Z ASP.NET MVC może wydawać się łatwiejsze wpisanie tego kodu:
+
+```csharp
+return View(isUserActive 
+   ? $"<a href='/profile/{username}'>{username}</a>" 
+   : username);
+```
+
+a następnie tego w widoku:
+
+```html
+@Html.Raw(Model)
+```
+
+zamiast tworzenia nowej klasy do przechowywania aktywności użytkownika i nazwy użytkownika razem, jak to:
+
+```csharp
+public class UserViewModel {
+   public bool IsActive { get; set; }
+   public string Username { get; set; }
+}
+```
+
+i następnie tworzenia tego modelu w kontrolerze:
+
+```csharp
+return View(new UserViewModel()
+{
+   IsActive = isUserActive,
+   Username = username,
+});
+```
+
+i wprowadzenia warunkowej logiki w szablonie, aby właściwie wyrenderować nazwę użytkownika:
+
+```csharp
+@model UserViewModel
+. . . jakiś mroczny kod tutaj
+@if (Model.IsActive) {
+   <a href="/profile/@Model.IsActive">
+       @Model.Username
+   </a>
+} else {
+   @Model.Username
+}
+```
+
+Prawidłowe podejście czasami może wydawać się wymagające, zwłaszcza gdy celem jest napisanie jak najmniejszej ilości kodu. Niemniej jednak istnieją sposoby na uniknięcie nadmiernego nakładu pracy. Możesz nawet ułatwić sobie pracę, przechodząc z ASP.NET MVC na Razor Pages. Jeśli to nie jest możliwe, istnieją także sposoby na zoptymalizowanie istniejącego kodu. Na przykład, możesz uniknąć tworzenia osobnego modelu, używając krotki:
+
+```csharp
+return View((Active: isUserActive, Username:  username));
+```
+
+W ten sposób możesz zachować kod szablonu bez zmian. Oszczędzi ci to konieczności tworzenia nowej klasy, choć są z tym związane korzyści, takie jak możliwość ponownego użycia. Możesz uzyskać podobne korzyści, korzystając z nowych rekordów w języku C#, deklarując model widoku za pomocą jednej linii kodu jako obiekt niemodyfikowalny:
+
+```csharp
+public record UserViewModel(bool IsActive, string Username);
+```
+
+Aplikacja Razor Pages już pomaga skrócić twój kod, ponieważ nie potrzebujesz już osobnej klasy modelu. Logika kontrolera jest zawarta w klasie ViewModel utworzonej na stronie.
+
+Jeśli nie można uniknąć włączania kodu HTML w kontrolerze MVC lub ViewModel w technologii Razor Pages, warto rozważyć użycie typów `HtmlString` lub `IHtmlContent`. Pozwalają one na definiowanie dobrze zakodowanych ciągów HTML z jawnymi deklaracjami. Jeśli musiałbyś stworzyć ten sam scenariusz z `HtmlString`, wyglądałoby to tak jak w poniższym kodzie (listing 6.6). Ponieważ ASP.NET nie koduje `HtmlString`, nie będziesz nawet musiał go opakowywać w polecenie `Html.Raw`.
+
+W poniższym kodzie widoczne jest, jak implementujemy bezpieczne przed XSS wyprowadzanie kodu HTML. Definiujemy `Username` jako `IHtmlContent` zamiast jako ciąg znaków. W ten sposób Razor użyje zawartości ciągu bez kodowania. Kodowanie jest obsługiwane przez `HtmlContentBuilder` tylko dla części, które zostały wyraźnie określone.
+
+```csharp
+public class UserModel : PageModel {
+  public IHtmlContent? Username { get; set; }
+ 
+  public void OnGet(string username) {
+    bool isActive = isUserActive(username);
+    var content = new HtmlContentBuilder();
+    if (isActive) {
+      content.AppendFormat("<a href='/user/{0}'>", username);
+    }
+    content.Append(username);
+    if (isActive) {
+      content.AppendHtml("</a>");
+    }
+    Username = content;
+  }
+}
+```
+
+##### Content Security Policy (CSP)
+
+CSP to kolejne narzędzie w walce przeciwko atakom XSS. Jest to nagłówek HTTP, który ogranicza zasoby, które mogą być żądane z serwerów osób trzecich. Osobiście uważam, że CSP jest trudny w użyciu, ponieważ współczesna sieć zawiera wiele zewnętrznych zasobów na stronie internetowej, czy to czcionki, pliki skryptów, kod analityczny czy treści z CDN, na przykład. Wszystkie te zasoby i zaufane domeny mogą ulec zmianie w dowolnym momencie. Trudno jest utrzymać aktualną listę zaufanych domen. Składnia CSP może wydawać się nieco kryptyczna. Dodatkowo trudno jest zweryfikować jej poprawność. Czy twoja CSP jest poprawna, jeśli twoja witryna nadal działa bez ostrzeżeń, czy może twoja polityka jest zbyt elastyczna? CSP może być potężnym sprzymierzeńcem, ale nie ryzykuję wprowadzenia cię w błąd, omijając ten temat pobieżnie. Niezależnie od tego, czy używasz CSP, zawsze powinieneś odpowiednio kodować swoje wyjście HTML.
+
+Podsumowując, ataki XSS można łatwo unikać, nie próbując oszczędzać czasu, takich jak wstrzykiwanie kodu HTML i całkowite pomijanie kodowania. Jeśli musisz wstrzyknąć kod HTML, bądź szczególnie ostrożny i prawidłowo zakoduj wartości. Jeśli uważasz, że dbanie o bezpieczeństwo przed XSS zwiększa rozmiar twojego kodu, istnieją sposoby na zminimalizowanie tego narzutu kodu.
+
+##### Cross-site Request Forgery (CSRF) 
+
+Atak typu Cross-site Request Forgery (CSRF) wykorzystuje zaufanie, jakim darzymy żądania typu POST w protokole HTTP. Dlaczego akcje modyfikujące zawartość strony internetowej są zazwyczaj wykonywane za pomocą metody POST zamiast GET? Oto powód: nie można utworzyć klikalnego linku do adresu URL, który obsługuje żądania POST. Żądanie tego typu może zostać przesłane tylko raz. Jeśli się nie powiedzie, przeglądarka informuje nas, czy chcemy je ponownie wysłać. W związku z tym operacje takie jak wysyłanie postów na forum, logowanie się czy wprowadzanie istotnych zmian są zwykle wykonywane jako żądania POST. Istnieją także metody DELETE i PUT o podobnym celu, ale są one rzadziej stosowane i nie mogą być wywoływane za pomocą formularzy HTML.
+
+Ta specyfika metody POST sprawia, że często bardziej jej ufamy, niż powinniśmy. Jej słabość polega na tym, że oryginalny formularz nie musi znajdować się na tej samej domenie, z której pochodzi żądanie POST. Może być na dowolnej stronie internetowej. To pozwala atakującym na wywoływanie żądań POST, oszukując nas na kliknięcie linku na ich stronie internetowej. Załóżmy, że operacja usuwania tweetów na Twitterze działa jak żądanie POST pod adresem URL https://twitter.com/delete/{tweet_id}.
+
+
+
+Co by się stało, gdybym umieścił stronę internetową na mojej domenie, streetcoder.org/about, i umieścił formularz tak jak w poniższym wykazie, nawet nie używając ani jednej linii kodu JavaScript?
+
+Wykaz 6.7 Całkowicie niewinny formularz internetowy, naprawdę
+
+```html
+<h1>Witaj na super tajnej stronie internetowej!</h1>
+<p>Proszę kliknąć przycisk, aby kontynuować</p>
+<form method="POST" 
+     action="https://twitter.com/i/api/1.1/statuses/destroy.json">
+   <input type="hidden" name="id" value="123" />
+   <button type="submit">Kontynuuj</button>
+</form>
+```
+
+Na szczęście nie ma tweeta o ID 123, ale gdyby taki istniał, a Twitter byłby prostą startupem, który nie wiedziałby, jak się obronić przed CSRF, bylibyśmy w stanie usunąć tweet kogoś innego, prosząc go jedynie o odwiedzenie naszej podejrzanej strony internetowej. Jeśli potrafisz używać JavaScript, możesz nawet wysyłać żądania POST bez konieczności klikania w żaden element formularza internetowego.
+
+Aby uniknąć tego rodzaju problemów, należy używać losowo generowanego numeru dla każdego utworzonego formularza, który jest powielany zarówno w samym formularzu, jak i w nagłówkach odpowiedzi witryny. Ponieważ podejrzana witryna nie może znać tych numerów i nie może manipulować nagłówkami odpowiedzi serwera internetowego, nie może naprawdę sprawić, aby jej żądanie udawało, że pochodzi od użytkownika. Dobrą rzeczą jest to, że zazwyczaj framework, którego używasz, już o to dba, więc musisz tylko włączyć generowanie tokenów i ich weryfikację po stronie klienta. ASP.NET Core 2.0 automatycznie dołącza je do formularzy, więc nie musisz podejmować żadnych działań, ale musisz się upewnić, że te tokeny są weryfikowane, jeśli tworzysz formularze w inny sposób, na przykład za pomocą własnego pomocnika HTML. W takim przypadku musisz wyraźnie generować tokeny zapobiegające podrobieniom żądania w swoim szablonie, używając pomocnika takiego jak ten:
+
+```html
+<form method="post">
+   @Html.AntiForgeryToken()
+   ...
+</form>
+```
+
+Musisz również upewnić się, że jest on weryfikowany po stronie serwera. Zazwyczaj jest to automatyczne, ale w przypadku wyłączenia tego mechanizmu globalnie, możesz go selektywnie włączyć dla określonych akcji kontrolera lub stron Razor, używając atrybutu ValidateAntiForgeryToken:
+
+```csharp
+[ValidateAntiForgeryToken]
+public class LoginModel: PageModel {
+   ...
+}
+```
+
+Ponieważ zapobieganie atakom CSRF jest już automatyczne w nowoczesnych frameworkach, takich jak ASP.NET Core, musisz znać jedynie podstawy, aby zrozumieć jego korzyści. Jednakże, w przypadku konieczności implementacji tego mechanizmu samodzielnie, ważne jest, abyś wiedział, jak działa i dlaczego.
+
+### 6.4 Wywołaj pierwszą powódź
+
+Denial of Service (DoS) to powszechna nazwa na sytuację, gdy usługa przestaje działać. Może to być po prostu coś, co powoduje, że serwer przestaje działać, zawiesza się lub się zawiesza, lub coś, co może zwiększyć użycie procesora lub nasycić dostępną przepustowość. Czasami ten drugi rodzaj ataków nazywa się powodzią. Skupimy się szczególnie na powodziach i jak możemy im przeciwdziałać.
+
+Nie istnieje kompletna rozwiązanie na powodzie, ponieważ nawet większa liczba zwykłych użytkowników może przyczynić się do wyłączenia strony internetowej. Trudno jest odróżnić prawidłowego użytkownika od atakującego. Istnieją sposoby na łagodzenie ataków DoS, aby zmniejszyć możliwości atakującego. Jednym z popularnych sposobów jest captcha.
+
+#### 6.4.1 Nie używaj captchy
+Captcha to zmora internetu. To popularny sposób na oddzielenie ziarna od plew, ale stanowi dużą przeszkodę dla ludzi. Podstawowa idea polega na zadawaniu matematycznie skomplikowanego pytania, które człowiek może łatwo rozwiązać, ale z którym oprogramowanie używane w atakach będzie miało trudności, na przykład: „Co zjemy na lunch?”
+
+Problem z captchą polega na tym, że jest trudna także dla ludzi. Weźmy pod uwagę pytanie „Zaznacz wszystkie kwadraty z sygnalizacją świetlną”. Czy mam zaznaczyć tylko kwadraty, które pokazują samą żarówkę, czy też zaznaczyć obudowę sygnalizacji świetlnej? Czy mam również śledzić słup świetlny? A co z tym graffiti podobnym do sztuki, której łatwo nie jest odczytać? Czy to litera rn czy po prostu m? Czy 5 jest literą? Dlaczego zmuszasz mnie do cierpienia? To doświadczenie jest ilustrowane na rysunku 6.7.
+
+![CH06_F07_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_6-7.png)
+
+Captcha jest jednocześnie użyteczna i szkodliwa jako środek przeciwdziałania atakom typu denial-of-service. Nie chcesz wprowadzać tarczy dla użytkowników w trakcie rozwoju swojej aplikacji. Kiedy po raz pierwszy wydałem Eksi Sozluk w 1999 roku, nie było nawet możliwości logowania. Każdy mógł natychmiastowo pisać cokolwiek na stronie, używając dowolnego pseudonimu. To spowodowało problemy, ponieważ ludzie zaczęli pisać pod cudzymi pseudonimami, ale to było już po tym, jak ludzie zaczęli naprawdę go kochać. Nie sprawiaj, aby Twoi użytkownicy cierpieli, dopóki Twoja aplikacja nie stanie się wystarczająco popularna. Wtedy boty odkryją Twoją stronę i będą ją atakować, ale użytkownicy zwykle zniosą trochę więcej niedogodności, ponieważ już pokochali Twoją aplikację.
+
+Ten punkt odnosi się do wszelkiego rodzaju rozwiązań, które wprowadzają tarczę dla użytkowników jako rozwiązanie problemu technicznego. Podobna sytuacja występuje na stronie internetowej firmy Cloudflare, która wyświetla komunikat: "Poczekaj pięć sekund, podczas gdy sprawdzimy, czy jesteś atakującym". Pięćdziesiąt trzy procent odwiedzających opuszcza stronę internetową, gdy muszą czekać trzy sekundy, zanim się załaduje. Tracisz efektywnie użytkowników zaledwie z powodu szansy, że ktoś może uznać Twoją stronę za atrakcyjną do ataku i ją zasypać. Czy chcesz tracić 53% odwiedzających przez cały czas, czy stracić wszystkich użytkowników na godzinę raz w miesiącu?
+
+
+
+#### 6.4.2 Alternatywy dla Captcha
+
+Napisz wydajny kod, stosuj agresywne buforowanie i stosuj ograniczenia prędkości, gdy jest to konieczne. Już omówiłem korzyści związane z wydajnością pewnych technik programowania, a przed nami cały rozdział poświęcony optymalizacji wydajności.
+
+Jest jednak pewien haczyk. Jeśli stosujesz ograniczenia prędkości na podstawie adresu IP, będziesz ograniczać dostęp dla wszystkich z tego samego adresu IP, na przykład dla firmy lub przedsiębiorstwa. Kiedy przekroczysz określony poziom, może to utrudnić Ci szybkie obsłużenie znacznej części użytkowników.
+
+Istnieje alternatywa dla ograniczeń prędkości: dowód pracy. Być może słyszałeś o dowodzie pracy w kontekście kryptowalut. Aby złożyć żądanie, Twojemu komputerowi lub urządzeniu wymagane jest rozwiązanie naprawdę trudnego problemu, którego rozwiązanie zajmuje określoną ilość czasu. Jedną z metod jest faktoryzacja liczb całkowitych. Inna sprawdzona metoda to pytanie komputera o sens życia, wszechświata i wszystkiego. Wiadomo, że to zajmuje trochę czasu.
+
+Dowód pracy intensywnie zużywa zasoby klienta, co może wpływać na żywotność baterii i wydajność na wolniejszych urządzeniach. Może to także znacząco wpłynąć na doświadczenie użytkownika, nawet gorsze niż Captcha.
+
+Możesz przedstawić bardziej przyjazne dla użytkownika wyzwania, takie jak konieczność zalogowania się po przekroczeniu przez Twoją stronę internetową pewnego poziomu popularności. Sprawdzanie uwierzytelnienia jest tanie, ale zarejestrowanie się na Twojej stronie internetowej i potwierdzenie adresu e-mail z pewnością zajmuje czas. Ponownie, to jest tarcza dla użytkownika. Jeśli wymagasz od użytkowników wykonania jakiegoś działania przed dostępem do treści na swojej stronie, na przykład rejestracji lub zainstalowania aplikacji mobilnej, istnieje duże ryzyko, że użytkownik po prostu przeklnie i opuści Twoją stronę internetową. Podczas podejmowania decyzji o ograniczeniu zdolności atakującego, musisz wziąć pod uwagę te zalety i wady.
+
+#### 6.4.3 Nie stosuj pamięci podręcznej
+
+Słownik to prawdopodobnie najpopularniejsza struktura danych używana w frameworkach internetowych. Nagłówki żądania i odpowiedzi HTTP, ciasteczka oraz wpisy w pamięci podręcznej są przechowywane w słownikach. Jest to tak, jak omówiłem w rozdziale 2, ponieważ słowniki są bardzo szybkie, mając złożoność O(1). Wyszukiwanie jest natychmiastowe.
+
+Problemem ze słownikami jest to, że są one tak praktyczne, że możemy zdecydować się po prostu utworzyć jedną, aby przechowywać coś w pamięci podręcznej. Istnieje nawet ConcurrentDictionary w .NET, który jest bezpieczny wątkowo, co czyni go atrakcyjnym kandydatem do ręcznie tworzonej pamięci podręcznej.
+
+Zwykłe słowniki zawarte w frameworku zazwyczaj nie są zaprojektowane do kluczy opartych na danych wejściowych od użytkownika. Jeśli atakujący wie, który runtime używasz, może spowodować atak kolizji haszy. Mogą wysyłać żądania z wieloma różnymi kluczami odpowiadającymi temu samemu kodowi hasha, powodując kolizje, o których mówiłem w rozdziale 2, co sprawia, że wyszukiwanie staje się bardziej zbliżone do O(N) niż O(1) i powoduje zatrzymanie działania aplikacji.
+
+Niestandardowe słowniki opracowane dla komponentów dostępnych przez internet, takie jak SipHash, zwykle używają innego algorytmu haszowania z lepszymi właściwościami rozkładu i dlatego mniejszą prawdopodobieństwem kolizji. Takie algorytmy mogą być nieco wolniejsze niż regularne funkcje haszujące, ale ze względu na ich odporność na ataki kolizji, działają lepiej w najgorszych przypadkach.
+
+Słowniki domyślnie nie mają mechanizmu usuwania elementów. Rosną bez ograniczeń. Może to wydawać się akceptowalne podczas lokalnych testów, ale w produkcji może spektakularnie zawodzić. Idealnie struktura danych pamięci podręcznej powinna mieć możliwość usuwania starszych wpisów, aby kontrolować użycie pamięci.
+
+Z powodu wszystkich tych czynników, rozważ wykorzystanie istniejącej infrastruktury pamięci podręcznej, najlepiej takiej dostarczanej przez framework, zamiast myśleć: "Hej, mam pomysł, po prostu umieszczę to w słowniku w pamięci podręcznej".
+
+### 6.5 Przechowywanie haseł i innych poufnych informacji
+
+Tajemnice (hasła, klucze prywatne i tokeny API) są kluczami do twojego królestwa. To niewielkie kawałki danych, ale zapewniają nieproporcjonalnie duży dostęp. Masz hasło do bazy danych produkcyjnej? Oznacza to, że masz dostęp do wszystkiego. Masz token API? Możesz wykonywać wszystko, co pozwala ci zrobić to API. Dlatego tajemnice muszą być częścią twojego modelu zagrożeń.
+
+Jednym z najlepszych środków zaradczych przeciw zagrożeniom bezpieczeństwa jest kompartmentalizacja. Bezpieczne przechowywanie tajemnic to jedno z narzędzi, które pozwala to osiągnąć.
+
+#### 6.5.1 Przechowywanie danych poufnych w kodzie źródłowym
+
+Programiści są świetni w znajdowaniu najkrótszej drogi do rozwiązania problemu. Obejmuje to skracanie drogi i oszczędzanie czasu. Dlatego umieszczanie hasła w kodzie źródłowym jest naszą domyślną tendencją. Kochamy szybkie prototypowanie, bo nie lubimy niczego, co wprowadza opór w naszym procesie pracy.
+
+Możesz myśleć, że trzymanie tajemnic w kodzie źródłowym jest w porządku, ponieważ poza tobą nikt nie ma do niego dostępu, lub dlatego, że programiści już mają dostęp do haseł do bazy danych produkcyjnej, więc trzymanie tajemnicy w kodzie źródłowym nie zaszkodzi. Problem polega na tym, że nie uwzględniasz wymiaru czasu. W dłuższej perspektywie cały kod źródłowy jest hostowany na GitHubie. Kod źródłowy nie jest traktowany z takim samym stopniem wrażliwości co twoja baza danych produkcyjna, ale zawiera klucze do niej. Twoi klienci mogą żądać kodu źródłowego ze względów umownych. Twoi programiści mogą przechowywać lokalne kopie kodu źródłowego w celu przeglądania go, a ich komputery mogą zostać skompromitowane. Programiści nie mogą trzymać produkcji DB w ten sam sposób, ponieważ zwykle jest zbyt duży do obsługi, a z nim wiąże się wyższy poziom wrażliwości.
+
+##### Prawidłowe przechowywanie
+
+Jeśli nie trzymasz swoich tajemnic w kodzie źródłowym, jak kod źródłowy miałby znać tajemnicę? Możesz trzymać ją w samej bazie danych, ale to tworzy paradoks. Gdzie trzymasz hasło do bazy danych? To również zły pomysł, ponieważ niepotrzebnie umieszcza wszystkie chronione zasoby w tej samej grupie zaufania co baza danych. Jeśli masz hasło do bazy danych, masz wszystko. Załóżmy, że zarządzasz systemem informatycznym Pentagonu i przechowujesz w bazie danych pracowników kody do uruchamiania rakiet nuklearnych, ponieważ ta baza danych jest dobrze chroniona. Tworzy to niezręczną sytuację, gdy księgowy przypadkowo otwiera niewłaściwą tabelę w bazie danych. Podobnie twój program może mieć dostęp API do zasobów cenniejszych niż twoja baza danych. Musisz wziąć tę różnicę pod uwagę w swoim modelu zagrożeń.
+
+Najlepszym sposobem jest przechowywanie tajemnic w osobnym miejscu, które jest do tego przeznaczone, takim jak menedżer haseł jako chłodne przechowywanie oraz chmura kluczy (Azure Key Vault, AWS KMS). Jeśli twoje serwery internetowe i baza danych znajdują się w tej samej granicy zaufania w twoim modelu zagrożeń, możesz po prostu dodać te tajemnice jako zmienne środowiskowe na swoim serwerze. Usługi chmurowe pozwalają ustawić zmienne środowiskowe za pomocą swojego interfejsu administracyjnego.
+
+Nowoczesne frameworki internetowe wspierają różne opcje przechowywania tajemnic, wspierane przez bezpieczne mechanizmy przechowywania systemu operacyjnego lub dostawcy chmury, oprócz zmiennych środowiskowych, które można bezpośrednio mapować do konfiguracji. Załóżmy, że masz taką konfigurację dla swojej aplikacji:
+
+```json
+{
+   "Logging": {
+       "LogLevel": {
+           "Default": "Information"
+       }
+   },
+   "MyAPIKey": "somesecretvalue"
+}
+```
+
+Nie chcesz trzymać `MyAPIKey` w konfiguracji, ponieważ każda osoba mająca dostęp do kodu źródłowego miałaby dostęp do klucza API. Więc usuwasz klucz z konfiguracji i przekazujesz go jako zmienną środowiskową w środowisku produkcyjnym. Na komputerze programisty, zamiast używać zmiennej środowiskowej, możesz użyć tzw. *user secrets*. W .NET możesz zainicjować i skonfigurować *user secrets*, uruchamiając polecenie `dotnet`:
+
+```sh
+dotnet user-secrets init -id myproject
+```
+
+To inicjuje projekt do użycia identyfikatora `myproject` jako identyfikatora dostępu do odpowiednich *user secrets*. Następnie możesz dodać *user secrets* dla swojego konta programisty, uruchamiając to polecenie:
+
+```sh
+dotnet user-secrets set MyAPIKey somesecretvalue
+```
+
+Teraz, gdy ustawisz *user secrets* do wczytywania w swojej konfiguracji, tajemnice zostaną wczytane z pliku *user secrets* i zastąpią konfigurację. Możesz uzyskać dostęp do swojego tajnego klucza API tak samo, jak do konfiguracji:
+
+```csharp
+string apiKey = Configuration["MyAPIKey"];
+```
+
+Usługi chmurowe, takie jak Azure lub AWS, pozwalają skonfigurować te same tajemnice za pomocą zmiennych środowiskowych lub konfiguracji *key vault*.
+
+##### Dane zostaną ujawnione
+
+Popularna witryna Have I Been Pwned? (https://haveibeenpwned.com) to usługa powiadomień o wyciekach haseł powiązanych z adresami e-mail. Na dzień pisania tego tekstu, wydaje się, że moje dane zostały wycieknięte 4 16 razy w różnych przeciekach danych. Przecieki danych. Dane wyciekły, i dane będą wyciekać. Zawsze należy zakładać ryzyko ujawnienia danych publicznie i projektować w związku z tym.
+
+##### Nie zbieraj danych, których nie potrzebujesz
+
+Twoje dane nie mogą wyciec, jeśli w ogóle nie istnieją. Bądź stanowczy w odmawianiu zbierania danych, których twoja usługa nie może funkcjonować bez nich. Istnieją dodatkowe korzyści, takie jak mniejsze wymagania dotyczące przechowywania, wyższa wydajność, mniejsza praca związana z zarządzaniem danymi i mniejsze tarapaty dla użytkownika. Na przykład wiele stron internetowych wymaga podania imienia i nazwiska podczas rejestracji. Czy naprawdę potrzebujesz tych danych?
+
+Niektórych danych być może nie będziesz w stanie uniknąć, takich jak hasła. Jednak odpowiedzialność za posiadanie czyjegoś hasła jest ogromna, ponieważ ludzie często używają tego samego hasła w różnych usługach. Oznacza to, że jeśli dane dotyczące hasła wyciekną, to konta bankowe użytkownika również mogą być zagrożone. Możesz sądzić, że to wina użytkownika, że nie używa menedżera haseł, ale masz do czynienia z ludźmi. Istnieją proste rzeczy, które możesz zrobić, aby temu zapobiec.
+
+
+
+##### Prawidłowy sposób hashowania haseł
+
+Najczęstszym sposobem zapobiegania wyciekom haseł jest stosowanie algorytmu haszującego. Zamiast przechowywać same hasła, przechowujesz kryptograficznie bezpieczny skrót hasła. Nie możemy używać dowolnego algorytmu haszującego, na przykład GetHashCode() z rozdziału 2, ponieważ zwykłe algorytmy haszujące są łatwe do złamania lub mogą powodować kolizje. Kryptograficznie bezpieczne algorytmy haszujące są celowo wolne i odporne na różne inne formy ataków.
+
+Algorytmy haszujące kryptograficznie bezpieczne różnią się swoimi cechami. W przypadku haszowania haseł preferowaną metodą jest użycie algorytmu, który wykonuje wiele iteracji tego samego algorytmu wiele razy, aby spowolnić wykonanie. Podobnie nowoczesne algorytmy mogą również wymagać dużej ilości pamięci w stosunku do wykonywanej pracy, aby zapobiec atakom przez specjalnie zaprojektowane układy scalone przeznaczone do łamania określonego algorytmu.
+
+Nigdy nie używaj funkcji haszujących pojedynczej iteracji, nawet jeśli są kryptograficznie bezpieczne, takich jak SHA2, SHA3, a na miłość boską, nigdy nie używaj MD5 ani SHA1, ponieważ są one od dawna złamane. Właściwość kryptograficznej bezpieczeństwa zapewnia jedynie, że algorytm ma wyjątkowo niskie prawdopodobieństwo kolizji; nie zapewnia ona odporności na ataki brute force. Aby uzyskać odporność na ataki brute force, należy zapewnić, że algorytm będzie działał bardzo wolno.
+
+Powszechnie stosowaną funkcją haszującą, która została zaprojektowana w celu wolniejszego działania, jest PBKDF2, który brzmi jak pododdział rosyjskiej tajnej służby, ale oznacza funkcję pochodzenia klucza opartą na haśle (Password-Based Key Derivation Function Two). Może działać z dowolnym algorytmem haszującym, ponieważ uruchamia je w pętli i łączy wyniki. Używa wariantu algorytmu haszującego SHA1, który obecnie uważany jest za słaby i nie powinien być stosowany w żadnej aplikacji, ponieważ z dnia na dzień staje się łatwiejszy do uzyskania kolizji z SHA1.
+
+Niestety, PBKDF2 można złamać stosunkowo szybko, ponieważ może być przetwarzany równolegle na GPU, a istnieją specjalne projekty ASIC (układ scalony) i FPGA (programowalny układ) do jego łamania. Nie chcesz, aby atakujący próbowali zbyt szybko wypróbowywać kombinacje podczas próby łamania wyciekłych danych. Istnieją nowsze algorytmy haszujące, takie jak bcrypt, scrypt i Argon2, które są odporne na ataki oparte na GPU lub ASIC.
+
+Wszystkie nowoczesne algorytmy haszujące, które są odporne na ataki brute force, przyjmują jako parametr współczynnik trudności lub liczbę iteracji. Upewnij się, że ustawienia trudności nie są tak wysokie, że próba logowania na stronie internetowej staje się atakiem typu DoS (Denial of Service). Prawdopodobnie nie powinieneś wybierać trudności, która zajmuje na serwerze produkcyjnym więcej niż 100 ms. Zdecydowanie zalecam przeprowadzenie testów wydajnościowych swojego algorytmu haszowania hasła, aby upewnić się, że nie przysporzy ci kłopotów, ponieważ zmiana algorytmu haszującego w trakcie działania jest trudna.
+
+Nowoczesne frameworki, takie jak ASP.NET Core, oferują wbudowane funkcje haszowania haseł, i faktycznie nie musisz nawet wiedzieć, jak to działa, ale obecna implementacja opiera się na algorytmie PBKDF2, który, jak wspomniałem, jest nieco zacofany pod względem bezpieczeństwa. Ważne jest, aby świadomie podejmować decyzje dotyczące odpowiedniego hashowania.
+
+Podczas wyboru algorytmu zalecam wybór takiego, który jest obsługiwany przez używany przez ciebie framework. Jeśli taka opcja nie jest dostępna, powinieneś wybrać najbardziej przetestowany. Nowe algorytmy zazwyczaj nie są tak dobrze przetestowane i zweryfikowane jak starsze.
+
+
+
+##### Porównywanie ciągów zabezpieczonych sposób
+
+Wybrałeś już algorytm i przechowujesz skróty haseł zamiast samych haseł. Teraz wystarczy tylko odczytać hasło od użytkownika, utworzyć jego skrót i porównać go z hasłem w bazie danych. Brzmi prosto, prawda? Można by to łatwo zrealizować poprzez prostą pętlę porównującą, jak w przykładzie 6.8. Widać, że stosujemy prostą porównywarkę tablic. Najpierw sprawdzamy długość, a następnie przechodzimy w pętli, aby sprawdzić, czy każdy element jest równy. Jeśli znajdziemy niepasujące elementy, natychmiast zwracamy wartość false, więc nie trzeba nam sprawdzać reszty wartości.
+
+Przykład 6.8 - Prosta funkcja porównująca dwie wartości skrótu:
+
+```csharp
+private static bool PorownajBajty(byte[] a, byte[] b) {
+  if (a.Length != b.Length) {
+    return false;
+  }
+  for (int n = 0; n < a.Length; n++) {
+    if (a[n] != b[n]) {
+      return false;
+    }
+  }
+  return true;
+}
+```
+
+Dlaczego ten kod może nie być bezpieczny? Problem wynika z naszej optymalizacji polegającej na szybkim zakończeniu porównywania, gdy zostaną znalezione różne wartości. Oznacza to, że możemy dowiedzieć się, jak długo trwa dopasowanie, mierząc czas zwrócenia wyniku przez funkcję, jak w przypadku rysunku 6.8, i możemy znaleźć poprawny skrót, jeśli znamy algorytm skrótu, tworząc hasła odpowiadające określonej pierwszej wartości skrótu, a następnie pierwszym dwóm wartościom i tak dalej. Tak, różnice czasowe będą niewielkie, może w milisekundach, być może w nanosekundach, ale nadal można je zmierzyć w stosunku do wartości bazowej. Jeśli nie można ich zmierzyć, pomiary można powtórzyć, aby uzyskać bardziej precyzyjne wyniki. To znacznie szybsze niż próba każdej możliwej kombinacji.
+
+![CH06_F08_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_6-8.png)
+
+Aby rozwiązać ten problem, potrzebujesz funkcji porównywania, która działa w stałym czasie, jak w przykładzie 6.9. Zamiast wcześnie zwracać wynik, zachowujemy wartość wyniku i kontynuujemy porównywanie nawet w przypadku niepowodzenia porównania. Dzięki temu wszystkie nasze porównania zajmują stały czas, eliminując wyciek wartości skrótów haseł użytkowników.
+
+Przykład 6.9 - Bezpieczne porównywanie skrótów:
+
+```csharp
+private static bool PorownajBajtyBezpiecznie(byte[] a, byte[] b) {
+  if (a.Length != b.Length) {
+    return false;
+  }
+  bool sukces = true;
+  for (int n = 0; n < a.Length; n++) {
+    sukces = sukces && (a[n] == b[n]);
+  }
+  return sukces;
+}
+```
+
+##### Nie używaj stałych soli
+
+Sole to dodatkowe wartości wprowadzane do algorytmów haszowania haseł, aby wartości się różniły, nawet jeśli są dla tych samych skrótów. Powodem jest to, że nie chcesz, aby atakujący mógł odgadnąć wszystkie te same hasła, próbując odgadnąć tylko skrót jednego z nich. W ten sposób, nawet jeśli hasło każdego użytkownika to "hunter2", wszyscy użytkownicy będą mieć różne skróty, co utrudni życie atakującemu.
+
+Deweloperzy często używają znanych wartości jako soli, takich jak skrót nazwy użytkownika lub identyfikator użytkownika, które są wystarczająco bezpieczne, ponieważ są zazwyczaj łatwiejsze do wygenerowania niż zestaw losowych wartości. To jednak zupełnie niepotrzebny skrót o dużo niższym poziomie bezpieczeństwa. Zawsze powinieneś używać losowych wartości jako soli, ale nie tylko zwykłych wartości pseudolosowych. Potrzebujesz wartości generowanych przez CSPRNG (kryptograficznie bezpieczny generator liczb pseudolosowych).
+
+
+
+**O losowości, o przypadku!**
+
+Zwykłe wartości losowe są generowane za pomocą prostych i przewidywalnych algorytmów. Ich celem nie jest stworzenie prawdziwej nieprzewidywalności, a jedynie jej imitacja. Są one w porządku, jeśli tworzysz nieprzewidywalnego przeciwnika w swojej grze, albo jeśli wybierasz dzisiejszy wyróżniony post na swojej stronie internetowej. Są szybkie, ale nie są bezpieczne. Mogą być przewidziane lub przestrzeń poszukiwań prawidłowych wartości losowych może być zawężona, ponieważ mają tendencję do powtarzania się w stosunkowo krótkich odstępach czasu. W przeszłości ludzie potrafili odkryć algorytmy generatorów wartości losowych w automatach do gier w kasynach w Las Vegas, gdy projektanci tych maszyn nie mieli pojęcia, jak działać lepiej.
+
+Potrzebujesz kryptograficznie bezpiecznych pseudolosowych liczb, ponieważ są one niezwykle trudne do przewidzenia. Wykorzystują one wielokrotne źródła silnej entropii, takie jak komponenty sprzętowe maszyny, oraz bardziej złożone algorytmy. W rezultacie są naturalnie wolniejsze, więc zwykle powinny być używane jedynie w kontekście bezpieczeństwa.
+
+Wiele bibliotek kryptograficznie bezpiecznych funkcji haszujących dostarcza funkcję generowania haszy, która otrzymuje tylko długość soli, a nie samą sól. Biblioteka zajmuje się generowaniem tej losowej soli za ciebie, a możesz ją później odzyskać z wyników, jak w przykładzie 6.10, który używa PBKDF2 jako przykładu. Tworzymy implementację funkcji pochodnej klucza RFC2898. Jest to PBKDF2 z algorytmem HMAC-SHA1. Używamy instrukcji `using`, ponieważ podstawowe elementy bezpieczeństwa mogą korzystać z niezarządzanych zasobów systemu operacyjnego, więc dobrze jest je posprzątać, gdy wychodzą poza zakres. Korzystamy z prostego rekordu, aby zwrócić zarówno skrót, jak i nowo wygenerowaną sól w jednym pakiecie.
+
+**Przykład 6.10 Generowanie kryptograficznie bezpiecznych wartości losowych**
+
+```csharp
+public record PasswordHash(byte[] Hash, byte[] Salt);
+ 
+private PasswordHash hashPassword(string password) {
+  using var pbkdf2 = new Rfc2898DeriveBytes(password,
+    saltSizeInBytes, iterations);
+  var hash = pbkdf2.GetBytes(keySizeInBytes);
+  return new PasswordHash(hash, pbkdf2.Salt);
+}
+```
+
+**UUIDs nie są losowe**
+
+Uniwersalne identyfikatory unikalne (UUID), zwane również globalnie unikalnymi identyfikatorami (GUID) w świecie Microsoftu, to liczby wyglądające na losowe, takie jak 14e87830-bf4c-4bf3-8dc3-57b97488ed0a. Kiedyś generowano je na podstawie niejasnych danych, takich jak adres MAC karty sieciowej lub data/czas systemowy. Obecnie są one głównie losowe, ale są zaprojektowane, aby być unikalnymi, niekoniecznie bezpiecznymi. Nadal można je przewidzieć, ponieważ nie ma gwarancji, że zostaną one utworzone przy użyciu kryptograficznie bezpiecznego generatora liczb pseudolosowych (CSPRNG). Nie powinieneś polegać na losowości GUID, na przykład podczas generowania tokena aktywacyjnego, gdy wysyłasz e-mail potwierdzający dla nowo zarejestrowanych użytkowników. Zawsze używaj CSPRNG do generowania tokenów związanych z bezpieczeństwem. UUID może nie być doskonale losowy, ale jako identyfikatory są bardziej bezpieczne niż proste monotoniczne (rosnące o jeden) liczby całkowite. Istnieje możliwość, że atakujący może zgadnąć poprzednie numery zamówień lub ile zamówień sklep otrzymał do tej pory, patrząc na ten numer. To nie jest możliwe z pełnym losowym UUID.
+
+Z drugiej strony, pełne losowe UUID mają słabe rozrzucanie indeksów. Nawet jeśli wstawisz dwa kolejne rekordy, zostaną one umieszczone w całkowicie niepowiązanych miejscach w indeksie bazy danych, co powoduje wolne sekwencyjne odczytywanie. Aby temu zapobiec, pojawiły się nowe standardy UUID, a mianowicie UUIDv6, UUIDv7 i UUIDv8. Te UUID nadal posiadają pewną losowość, ale zawierają także znaczniki czasu, które tworzą znacznie bardziej jednolite rozłożenie indeksów.
+
+### Podsumowanie
+
+- Korzystaj z mentalnych lub papierowych modeli zagrożeń, aby priorytetyzować środki bezpieczeństwa i zidentyfikować słabe punkty.
+
+- Projektuj z myślą o bezpieczeństwie jako priorytetem, ponieważ późniejsze dodawanie zabezpieczeń może być trudne.
+
+- Bezpieczeństwo oparte na obskurantyzmie nie jest prawdziwym bezpieczeństwem, ale może być prawdziwym utrudnieniem. Traktuj to jako priorytet.
+
+- Nie twórz własnych podstawowych mechanizmów bezpieczeństwa, nawet jeśli chodzi o porównywanie dwóch wartości skrótu. Zaufaj rozwiązaniom, które są dobrze przetestowane i zaimplementowane.
+
+- Dane od użytkownika są potencjalnie niebezpieczne.
+
+- Używaj zapytań z parametrami w celu ochrony przed atakami typu SQL Injection. Jeśli nie możesz użyć zapytań z parametrami z jakiegoś powodu, dokładnie zwaliduj i oczyszczaj dane od użytkownika.
+
+- Upewnij się, że dane od użytkownika są prawidłowo kodowane HTML, gdy są umieszczane na stronie, aby uniknąć podatności na ataki XSS.
+
+- Unikaj captchy, zwłaszcza w fazie wzrostu, aby zniechęcić ataki typu DoS. Spróbuj najpierw innych metod, takich jak ograniczanie przepustowości i agresywne buforowanie.
+
+- Przechowuj tajemnice w osobnych miejscach dedykowanych do przechowywania, zamiast w kodzie źródłowym.
+
+- Przechowuj skróty haseł w bazie danych przy użyciu silnych algorytmów zaprojektowanych do tego celu.
+
+- W kontekście związanym z bezpieczeństwem używaj kryptograficznie bezpiecznych pseudolosowych liczb, nigdy nie używaj GUID.
+
+  
+
+1. Zobacz "Twitter mówi, że błąd ujawnił hasła użytkowników w formie tekstu jawnego," https://www.zdnet.com/article/twitter-says-bug-exposed-passwords-in-plaintext/.
+
+2. Skreślone. Informacje poufne. Dlatego nasze bazy danych są bezpieczne.
+
+3. Base64 to metoda kodowania binarnego, która zamienia nieczytelne znaki na nieczytelne znaki.
+
+4. Pwned to zmodyfikowana forma owned, oznaczająca bycie zdominowanym przez hakera. Jest to slangowe określenie na sytuację, gdy ktoś zostaje pokonany przez hakera. Przykład: "Zostałem pwned, bo jako PIN wybrałem swoją datę urodzenia."
+
+## 7 Optymalizacja
+
+Ten rozdział obejmuje
+- Przyjmowanie przedwczesnej optymalizacji
+- Podchodzenie do problemów z wydajnością od góry do dołu
+- Optymalizowanie bottlenecków CPU i I/O
+- Czynienie bezpiecznego kodu szybszym i niebezpiecznego kodu bezpieczniejszym
+
+Literatura programistyczna na temat optymalizacji zawsze zaczyna się od znanej wypowiedzi słynnego naukowca komputerowego Donalda Knutha: "Przedwczesna optymalizacja jest źródłem wszelkiego zła". Nie tylko jest to zdanie błędne, ale zwykle jest też cytowane nieprawidłowo. Po pierwsze, jest to błędne twierdzenie, ponieważ wszyscy wiedzą, że źródłem wszelkiego zła jest programowanie obiektowe, ponieważ prowadzi do złego rodzicielstwa i walki klasowej. Po drugie, jest to błędne twierdzenie, ponieważ rzeczywiste zdanie jest bardziej złożone. To jest prawie jak przypadek tekstu lorem ipsum, który jest bezsensowny, ponieważ jest cytowany z środka w innym sensownym łacińskim tekście. Rzeczywiste stwierdzenie Knutha brzmi: "Powinniśmy zapomnieć o drobnych efektywnościach, powiedzmy przez około 97% czasu: przedwczesna optymalizacja jest źródłem wszelkiego zła. Mimo to nie powinniśmy zrezygnować z okazji w tym kluczowym 3%."1
+
+Twierdzę, że przedwczesna optymalizacja jest źródłem wszelkiego uczenia się. Nie powstrzymuj się przed czymś, co pasjonuje cię tak bardzo. Optymalizacja to rozwiązywanie problemów, a przedwczesna optymalizacja tworzy nieistniejące, hipotetyczne problemy do rozwiązania, podobnie jak szachy, w których gracze ustawiają figury, aby wyzwolić w sobie wyzwanie. To dobre ćwiczenie. Zawsze możesz porzucić swoją pracę, jak omówiłem w rozdziale 3, i zachować zdobytą mądrość. Programowanie eksploracyjne to uzasadniony sposób poprawy swoich umiejętności, o ile kontrolujesz ryzyko i czas. Nie pozbawiaj się możliwości nauki.
+
+Mając powyższe na uwadze, ludzie starają się odwieść cię od przedwczesnej optymalizacji z pewnych powodów. Optymalizacja może wprowadzić sztywność do kodu, co utrudnia jego utrzymanie. Optymalizacja to inwestycja, a jej zwrot zależy od tego, jak długo możesz ją utrzymać. Jeśli zmieniają się wymagania, wykonane optymalizacje mogą wpędzić cię w pułapkę, z której trudno się wydostać. Co ważniejsze, możesz próbować optymalizować problem, który w ogóle nie istnieje, co może sprawić, że twój kod stanie się mniej niezawodny.
+
+Na przykład możesz mieć rutynę kopiowania plików, i możesz wiedzieć, że im większe rozmiary buforów czytasz i zapisujesz naraz, tym szybsza staje się cała operacja. Możesz być kuszony, aby po prostu wczytać wszystko do pamięci i zapisać, aby uzyskać maksymalny możliwy rozmiar bufora. To może sprawić, że twoja aplikacja zużywa nierealne ilości pamięci lub może się zawiesić, gdy próbuje odczytać wyjątkowo duży plik. Musisz zrozumieć kompromisy, jakie podejmujesz, gdy dokonujesz optymalizacji, co oznacza, że musisz poprawnie zidentyfikować problem, który musisz rozwiązać.
