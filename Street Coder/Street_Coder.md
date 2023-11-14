@@ -4282,3 +4282,776 @@ Twierdzę, że przedwczesna optymalizacja jest źródłem wszelkiego uczenia si�
 Mając powyższe na uwadze, ludzie starają się odwieść cię od przedwczesnej optymalizacji z pewnych powodów. Optymalizacja może wprowadzić sztywność do kodu, co utrudnia jego utrzymanie. Optymalizacja to inwestycja, a jej zwrot zależy od tego, jak długo możesz ją utrzymać. Jeśli zmieniają się wymagania, wykonane optymalizacje mogą wpędzić cię w pułapkę, z której trudno się wydostać. Co ważniejsze, możesz próbować optymalizować problem, który w ogóle nie istnieje, co może sprawić, że twój kod stanie się mniej niezawodny.
 
 Na przykład możesz mieć rutynę kopiowania plików, i możesz wiedzieć, że im większe rozmiary buforów czytasz i zapisujesz naraz, tym szybsza staje się cała operacja. Możesz być kuszony, aby po prostu wczytać wszystko do pamięci i zapisać, aby uzyskać maksymalny możliwy rozmiar bufora. To może sprawić, że twoja aplikacja zużywa nierealne ilości pamięci lub może się zawiesić, gdy próbuje odczytać wyjątkowo duży plik. Musisz zrozumieć kompromisy, jakie podejmujesz, gdy dokonujesz optymalizacji, co oznacza, że musisz poprawnie zidentyfikować problem, który musisz rozwiązać.
+
+### 7.1 Rozwiązywanie właściwego problemu
+Wydajność można poprawić na wiele sposobów, a w zależności od dokładnej natury problemu, skuteczność rozwiązania oraz czas poświęcony na jego wdrożenie mogą drastycznie się różnić. Pierwszym krokiem w zrozumieniu prawdziwej natury problemu wydajnościowego jest ustalenie, czy w ogóle istnieje taki problem z wydajnością.
+
+#### 7.1.1 Proste testowanie wydajności
+Testowanie wydajności to porównywanie metryk wydajności. Może to nie pomóc w identyfikacji korzeni problemu wydajnościowego, ale może pomóc stwierdzić jego istnienie. Biblioteki takie jak BenchmarkDotNet (https://github.com/dotnet/BenchmarkDotNet) sprawiają, że implementacja testów wydajnościowych z zachowaniem środków ostrożności w celu uniknięcia błędów statystycznych jest niezwykle łatwa. Nawet jeśli nie używasz żadnej biblioteki, możesz skorzystać z timera, aby zrozumieć czas wykonania fragmentów kodu.
+
+Zawsze zastanawiałem się, jak dużo szybsza może być funkcja Math.DivRem() w porównaniu z zwykłą operacją dzielenia i reszty. Zaleca się używanie DivRem, jeśli potrzebujesz jednocześnie wyniku dzielenia i reszty, ale nigdy nie miałem okazji sprawdzić, czy to twierdzenie się potwierdza:
+
+```csharp
+int dzielenie = a / b;
+int reszta = a % b;
+```
+
+Ten kod wygląda bardzo prymitywnie, dlatego łatwo założyć, że kompilator może go odpowiednio zoptymalizować, podczas gdy wersja z Math.DivRem() wygląda jak zaawansowane wywołanie funkcji:
+
+```csharp
+int dzielenie = Math.DivRem(a, b, out int reszta);
+```
+
+> PORADA
+>
+> Możesz być skłonny nazwać operator % operatorem modulo, ale to nieprawda. To operator reszty w języku C lub C#. Dla wartości dodatnich nie ma różnicy między nimi, ale dla wartości ujemnych wyniki są różne. Na przykład -7 % 3 to -1 w C#, podczas gdy w Pythonie to 2.
+
+Możesz natychmiast utworzyć zestaw benchmarków przy użyciu BenchmarkDotNet, co jest doskonałe do mikrotestowania, rodzaju testowania, w którym mierzysz wydajność małych i szybkich funkcji, ponieważ albo nie masz innych opcji, albo twój szef jest na urlopie. BenchmarkDotNet może wyeliminować błędy pomiarowe związane z fluktuacjami lub nakładem wywołań funkcji. W listingu 7.1 można zobaczyć kod, który używa BenchmarkDotNet do przetestowania prędkości funkcji DivRem w porównaniu do ręcznych operacji dzielenia i reszty. W zasadzie tworzymy nową klasę opisującą zestaw benchmarków, a operacje poddane testowaniu oznaczone są atrybutami [Benchmark]. BenchmarkDotNet sam określa, ile razy musi wywołać te funkcje, aby uzyskać dokładne wyniki, ponieważ jednorazowy pomiar lub wykonanie tylko kilku iteracji testów może być podatne na błędy. Używamy systemów operacyjnych obsługujących wielozadaniowość, a inne zadania działające w tle mogą wpływać na wydajność kodu, który testujemy na tych systemach. Zmienne używane w obliczeniach oznaczamy atrybutem [Params], aby uniemożliwić kompilatorowi eliminowanie operacji, które uznaje za zbędne. Kompilatory są łatwo rozpraszane, ale są inteligentne.
+
+Listing 7.1 Przykładowy kod BenchmarkDotNet
+
+```csharp
+public class PrzykladowyZestawBenchmarkow {
+  [Params(1000)]
+  public int A;
+ 
+  [Params(35)]
+  public int B;
+ 
+  [Benchmark]
+  public int ManualnaOperacja() {
+    int dzielenie = A / B;
+    int reszta = A % B;
+    return dzielenie + reszta;
+  }
+ 
+  [Benchmark]
+  public int DivRem() {
+    int dzielenie = Math.DivRem(A, B, out int reszta);
+    return dzielenie + reszta;
+  }
+}
+```
+
+Możesz uruchomić te testy benchmarków, tworząc prostą aplikację konsolową i dodając linijkę `using` oraz wywołanie `Run` w metodzie `Main`:
+
+```csharp
+using System;
+using BenchmarkDotNet.Running;
+
+namespace ProstyBenchmarkRunner {
+ public class Program {
+   public static void Main(string[] args) {
+     BenchmarkRunner.Run<PrzykladowyZestawBenchmarkow>();
+   }
+ }
+}
+```
+
+Jeśli uruchomisz swoją aplikację, wyniki benchmarków zostaną wyświetlone po minucie działania:
+
+```
+| Method |    a |  b |     Mean |     Error |    StdDev |
+|------- |----- |--- |---------:|----------:|----------:|
+| Manual | 1000 | 35 | 2.575 ns | 0.0353 ns | 0.0330 ns |
+| DivRem | 1000 | 35 | 1.163 ns | 0.0105 ns | 0.0093 ns |
+```
+
+Okazuje się, że Math.DivRem() jest dwa razy szybszy niż wykonywanie operacji dzielenia i reszty osobno. Nie martw się o kolumnę Error, ponieważ to tylko właściwość statystyczna, która pomaga czytelnikowi ocenić dokładność, gdy BenchmarkDotNet nie ma wystarczającej pewności co do wyników. To nie jest błąd standardowy, a połowa przedziału ufności 99,9%.
+
+Chociaż BenchmarkDotNet jest bardzo prosty i posiada funkcje redukujące błędy statystyczne, możesz nie chcieć korzystać z zewnętrznej biblioteki do prostego testowania wydajności. W takim przypadku możesz napisać własnego wykonawcę testów benchmarkowych, używając `Stopwatch`, jak w listingu 7.2. Po prostu możesz iterować w pętli wystarczająco długo, aby uzyskać przybliżony pomysł na różnice w wydajności różnych funkcji. Ponownie używamy tej samej klasy zestawu, którą stworzyliśmy dla BenchmarkDotNet, ale używamy własnych pętli i pomiarów dla wyników.
+
+Listing 7.2 Samodzielne testowanie wydajności
+
+```csharp
+private const int iteracje = 1_000_000_000;
+ 
+private static void uruchomTesty() {
+  var zestaw = new PrzykladowyZestawBenchmarkow {
+    A = 1000,
+    B = 35
+  };
+ 
+  long czasManualny = uruchomTest(() => zestaw.ManualnaOperacja());
+  long czasDivRem = uruchomTest(() => zestaw.DivRem());
+ 
+  raportujWynik("Manualna", czasManualny);
+  raportujWynik("DivRem", czasDivRem);
+}
+ 
+private static long uruchomTest(Func<int> akcja) {
+  var zegar = Stopwatch.StartNew();
+  for (int n = 0; n < iteracje; n++) {
+    akcja();
+  }
+  zegar.Stop();
+  return zegar.ElapsedMilliseconds;
+}
+ 
+private static void raportujWynik(string nazwa, long milisekundy) {
+  double nanosekundy = milisekundy * 1_000_000;
+  Console.WriteLine("{0} = {1}ns / operacja",
+    nazwa,
+    nanosekundy / iteracje);
+}
+```
+
+Po uruchomieniu wynik jest stosunkowo taki sam:
+
+```
+Manualna = 4.611ns / operacja
+DivRem = 2.896ns / operacja
+```
+
+Zauważ, że nasze testy benchmarkowe nie próbują eliminować nakładu związanego z wywołaniem funkcji ani samej pętli for, więc wydają się trwać dłużej. Niemniej jednak udaje się nam skutecznie zaobserwować, że DivRem jest nadal dwa razy szybszy niż manualne operacje dzielenia i reszty.
+
+#### 7.1.2 Wydajność kontra responsywność
+Testy benchmarkowe mogą raportować jedynie liczby względne. Nie są w stanie powiedzieć ci, czy twój kod jest szybki czy wolny, ale mogą powiedzieć ci, czy jest wolniejszy czy szybszy niż jakiś inny kod. Ogólna zasada dotycząca wolności z perspektywy użytkownika jest taka, że każda akcja, która trwa dłużej niż 100 ms, wydaje się opóźniona, a każda akcja, która trwa dłużej niż 300 ms, uważana jest za ociężałą. Nie myśl nawet o całej sekundzie. Większość użytkowników opuści stronę internetową lub aplikację, jeśli będą musieli czekać dłużej niż trzy sekundy. Jeśli reakcja na działanie użytkownika zajmuje więcej niż pięć sekund, równie dobrze może trwać wieczność wszechświata - w tym punkcie to już nie ma znaczenia. Rysunek 7.1 ilustruje to.
+
+
+
+![CH07_F01_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_7-1.png)
+
+
+
+Oczywiście, wydajność nie zawsze oznacza responsywność. Faktycznie, bycie responsywną aplikacją może wymagać wykonania operacji wolniej. Na przykład, możesz mieć aplikację, która zamienia twarze w wideo na twoją twarz za pomocą uczenia maszynowego. Ponieważ taka operacja jest intensywna obliczeniowo, najszybszym sposobem jej obliczenia jest zrobienie niczego innego, dopóki praca nie zostanie zakończona. Ale to oznaczałoby zatrzymanie interfejsu użytkownika, co sprawiłoby, że użytkownik pomyśli, że coś jest nie tak, i skłoniłoby go do zakończenia działania aplikacji. Zamiast więc przyspieszać obliczenia tak szybko, jak to możliwe, zamiast tego rezerwujesz część cykli obliczeniowych, aby pokazać pasek postępu, być może obliczyć szacowany pozostały czas i pokazać ładną animację, która może zająć uwagę użytkowników podczas oczekiwania. W rezultacie kod jest wolniejszy, ale efekt końcowy jest bardziej udany.
+
+To oznacza, że nawet jeśli testy benchmarkowe są względne, wciąż możesz mieć pewne zrozumienie, co oznacza wolność. Peter Norvig wpadł na pomysł w swoim blogu2 umieszczania liczby opóźnień, aby mieć kontekst, jak różne rzeczy mogą być wolniejsze o rzędy wielkości w różnych kontekstach. Tworzę podobną tabelę na podstawie własnych przybliżonych obliczeń w tabeli 7.1. Możesz samodzielnie ustalić swoje liczby, patrząc na to.
+
+##### Table 7.1 Latency numbers in various contexts[ (view table figure)](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/table_7-1.png)
+
+| Read a byte from                      | Time           |
+| ------------------------------------- | -------------- |
+| A CPU register                        | 1 ns           |
+| CPU’s L1 cache                        | 2 ns           |
+| RAM                                   | 50 ns          |
+| NVMe disk                             | 250,000 ns     |
+| Local network                         | 1,000,000 ns   |
+| Server on the other side of the world | 150,000,000 ns |
+
+
+
+Opóźnienie wpływa również na wydajność, nie tylko na doświadczenie użytkownika. Twoja baza danych znajduje się na dysku, a serwer bazy danych znajduje się w sieci. Oznacza to, że nawet jeśli piszesz najszybsze zapytania SQL i definiujesz najbardziej wydajne indeksy w swojej bazie danych, wciąż ogranicza cię fizyka, i nie możesz uzyskać wyniku szybszego niż milisekunda. Każda milisekunda, którą zużywasz, wpływa na cały budżet czasu, który idealnie powinien być mniejszy niż 300 ms.
+
+### 7.2 Anatomia ociężałości
+Aby zrozumieć, jak poprawić wydajność, najpierw musisz zrozumieć, jak wydajność może ulec pogorszeniu. Jak widzieliśmy, nie wszystkie problemy z wydajnością dotyczą prędkości - niektóre z nich dotyczą responsywności. Jednak część związana z prędkością jest związana z ogólnym działaniem komputerów, dlatego warto zapoznać się z pewnymi pojęciami na niskim poziomie. Pomoże to zrozumieć techniki optymalizacji, o których będę mówił później w tym rozdziale.
+
+CPU to układy, które przetwarzają instrukcje odczytane z pamięci RAM i wykonują je w sposób powtarzalny w nieskończonym cyklu. Możesz to sobie wyobrazić jak obracającą się koło, a każda rotacja koła zazwyczaj wykonuje inną instrukcję, jak przedstawiono na rysunku 7.2. Niektóre operacje mogą wymagać wielu obrotów, ale podstawową jednostką jest pojedynczy obrót, popularnie znany jako cykl zegarowy, lub po prostu cykl.
+
+
+
+![CH07_F02_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_7-2.png)
+
+Szybkość procesora, zazwyczaj wyrażana w hertzach, określa, ile cykli zegarowych może przetworzyć w ciągu sekundy. Pierwszy elektroniczny komputer, ENIAC, mógł przetwarzać 100 000 cykli na sekundę, skrócone do 100 kHz. Staroświecki procesor Z80 o częstotliwości 4 MHz w moim 8-bitowym komputerze domowym z lat 80. mógł przetwarzać tylko 4 miliony cykli na sekundę. Współczesny procesor AMD Ryzen 5950X o częstotliwości 3,4 GHz może przetwarzać 3,4 miliarda cykli na sekundę na każdym ze swoich rdzeni. To nie oznacza, że procesory mogą przetwarzać taką ilość instrukcji, ponieważ po pierwsze, niektóre instrukcje wymagają więcej niż jednego cyklu zegarowego do zakończenia, a po drugie, nowoczesne procesory mogą przetwarzać kilka instrukcji jednocześnie na jednym rdzeniu. Czasami procesory mogą nawet wykonywać więcej instrukcji niż pozwala na to ich szybkość zegarowa.
+
+Niektóre instrukcje procesora mogą również zajmować dowolną ilość czasu w zależności od swoich argumentów, takich jak instrukcje kopiowania bloku pamięci. Te operacje zajmują czas O(N), w zależności od rozmiaru bloku.
+
+W zasadzie każdy problem z wydajnością związany z prędkością kodu redukuje się do tego, ile instrukcji jest wykonywanych i ile razy. Kiedy optymalizujesz kod, próbujesz albo zredukować liczbę wykonywanych instrukcji, albo użyć szybszej wersji instrukcji. Funkcja DivRem działa szybciej niż operacje dzielenia i reszty, ponieważ zostaje przekształcona w instrukcje, które wymagają mniejszej liczby cykli zegarowych.
+
+### 7.3 Zacznij od góry
+
+Drugi najlepszy sposób na zredukowanie liczby wykonywanych instrukcji to wybór szybszego algorytmu. Oczywisty najlepszy sposób to oczywiście usunięcie kodu w ogóle. Mówię poważnie: usuń kod, którego nie potrzebujesz. Nie trzymaj nieużywanego kodu w bazie kodu. Nawet jeśli nie pogarsza wydajności kodu, obniża wydajność programistów, co ostatecznie wpływa na wydajność kodu. Nie zatrzymuj nawet zakomentowanego kodu. Skorzystaj z funkcji historii swojego ulubionego systemu kontroli wersji, takiego jak Git lub Mercurial, aby przywrócić stary kod. Jeśli potrzebujesz funkcji od czasu do czasu, umieść ją za konfiguracją zamiast ją zakomentować. W ten sposób nie będziesz zaskoczony, gdy w końcu odkurzysz kod i nie skompiluje się w ogóle, ponieważ wszystko się zmieniło. Pozostanie aktualny i sprawny.
+
+Jak wskazałem w rozdziale 2, szybszy algorytm może zrobić ogromną różnicę, nawet jeśli jest źle zoptymalizowany. Więc najpierw zapytaj siebie, "Czy to jest najlepszy sposób na to?". Istnieją sposoby na przyspieszenie źle zaimplementowanego kodu, ale nic nie przebija rozwiązania problemu na samym szczycie, czyli na najszerszym poziomie, scenariuszu samym w sobie, i wnikać głębiej, aż odkryjesz rzeczywiste miejsce problemu. Ten sposób jest zazwyczaj szybszy, a wynik jest znacznie łatwiejszy do utrzymania.
+
+
+
+Rozważmy przykład, w którym użytkownicy skarżą się, że przeglądanie ich profilu w aplikacji jest wolne, i samodzielnie potrafisz odtworzyć ten problem. Problem wydajności może wynikać zarówno z klienta, jak i z serwera. Dlatego zaczynasz od góry: najpierw identyfikujesz, w którym głównym warstwie występuje problem, eliminując jedną z dwóch warstw, w której problem może ewentualnie występować. Jeśli bezpośrednie wywołanie interfejsu API nie ma tego samego problemu, problem musi być po stronie klienta, lub w przeciwnym razie po stronie serwera. Kontynuujesz tę ścieżkę, aż zidentyfikujesz rzeczywisty problem. W pewnym sensie przeprowadzasz binarny przegląd, jak pokazano na rysunku 7.3.
+
+![CH07_F03_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_7-3.png)
+
+
+
+Kiedy stosujesz podejście odgórne, masz gwarancję skutecznego zidentyfikowania korzenia problemu zamiast polegać na domysłach. W tym kontekście, gdy przeprowadzasz ręczne przeszukiwanie binarne, efektywnie stosujesz algorytmy w rzeczywistych sytuacjach, co ułatwia życie. Dobra robota! Po ustaleniu, gdzie występuje problem, sprawdź wszelkie sygnały ostrzegawcze dotyczące oczywistej złożoności kodu. Identyfikowanie wzorców, które przyczyniają się do zbędnej złożoności kodu, może pomóc w zoptymalizowaniu i uproszczeniu struktury kodu. Przejdźmy przez kilka z nich.
+
+### 7.3.1 Zagnieżdżone pętle
+
+Jednym z najłatwiejszych sposobów spowolnienia kodu jest umieszczenie go wewnątrz innej pętli. Podczas pisania kodu w zagnieżdżonych pętlach, często nie doceniamy efektów mnożenia. Zagnieżdżone pętle nie zawsze są widoczne na pierwszy rzut oka. Aby rozwinięć nasz przykład dotyczący wolnych profili użytkowników, załóżmy, że znalazłeś problem w kodzie backendu generującym dane profilu. Istnieje funkcja, która zwraca odznaki, które użytkownik posiada, i pokazuje je na ich profilu. Przykładowy kod może wyglądać tak:
+
+```csharp
+
+public IEnumerable<string> GetBadgeNames() {
+ var badges = db.GetBadges();
+ foreach (var badge in badges) {
+   if (badge.IsVisible) {
+     yield return badge.Name;
+   }
+ }
+}
+```
+
+W tym przypadku nie ma widocznych zagnieżdżonych pętli. Faktycznie, można napisać tę samą funkcję z użyciem LINQ, bez żadnych pętli, ale z tym samym problemem wydajności:
+
+```csharp
+public IEnumerable<string> GetBadgeNames() {
+ var badges = db.GetBadges();
+ return badges
+   .Where(b => b.IsVisible)
+   .Select(b => b.Name);
+}
+```
+
+Gdzie jest zagnieżdżona pętla? To pytanie, które będziesz musiał sobie zadawać w trakcie swojej kariery programistycznej. Sprawcą jest tutaj właściwość `IsVisible`, ponieważ po prostu nie wiemy, co się dzieje pod nią.
+
+Właściwości (properties) w C# zostały wprowadzone, ponieważ twórcy języka byli zmęczeni dodawaniem `get` przed nazwą każdej funkcji, bez względu na to, jak prosta mogłaby być. Faktycznie, kod właściwości jest konwertowany na funkcje podczas kompilacji, z dodanymi prefiksami `get_` i `set_` do ich nazwy. Zaletą korzystania z właściwości jest to, że pozwalają one na zmianę funkcji wyglądającej jak pole w klasie bez niszczenia kompatybilności. Wadą właściwości jest to, że ukrywają potencjalną złożoność. Wyglądają jak proste pola, podstawowe operacje dostępu do pamięci, co może sprawić, że założysz, że wywołanie właściwości może być całkowicie niedrogie. Idealnie rzecz biorąc, nie powinieneś umieszczać kosztownego obliczeniowo kodu wewnątrz właściwości, ale niestety nie zawsze jesteś w stanie wiedzieć, czy ktoś inny tego nie zrobił, przynajmniej nie bez sprawdzenia.
+
+Kiedy spojrzymy na kod źródłowy właściwości `IsVisible` klasy `Badge`, widzimy, że jest ona bardziej kosztowna niż mogłoby się wydawać:
+
+```csharp
+public bool IsVisible {
+ get {
+   var visibleBadgeNames = db.GetVisibleBadgeNames();
+   foreach (var name in visibleBadgeNames) {
+     if (this.Name == name) {
+       return true;
+     }
+   }
+   return false;
+ }
+}
+```
+
+Ta właściwość, bez wstydu, odważa się wywołać bazę danych, aby pobrać listę widocznych nazw odznak i porównuje je w pętli, aby sprawdzić, czy nasza domniemana odznaka jest jedną z widocznych. Jest zbyt wiele grzechów w tym kodzie, aby to wyjaśnić, ale twoja pierwsza lekcja brzmi: uważaj na właściwości. Zawierają one logikę, a ich logika nie zawsze musi być prosta.
+
+Istnieje wiele możliwości optymalizacji w właściwości IsVisible, ale pierwszą i najważniejszą z nich jest nie pobieranie listy widocznych nazw odznak za każdym razem, gdy właściwość jest wywoływana. Możesz przechowywać je w statycznej liście, która jest pobierana tylko raz, zakładając, że lista rzadko się zmienia i możesz pozwolić sobie na restart, gdy to się zdarzy. Możesz również używać mechanizmu buforowania, ale do tego dojdziemy później. W ten sposób możesz zredukować kod właściwości do tego:
+
+```csharp
+private static List<string> visibleBadgeNames = GetVisibleBadgeNames();
+
+public bool IsVisible {
+ get {
+   foreach (var name in visibleBadgeNames) {
+     if (this.Name == name) {
+       return true;
+     }
+   }
+   return false;
+ }
+}
+```
+
+Dobrą rzeczą w przechowywaniu listy jest to, że już posiada ona metodę Contains, dzięki czemu możesz wyeliminować pętlę w IsVisible:
+
+```csharp
+public bool IsVisible {
+ get => visibleBadgeNames.Contains(this.Name);
+}
+```
+
+Wewnętrzna pętla w końcu zniknęła, ale wciąż nie zniszczyliśmy jej ducha. Musimy posolić i spalić jej kości. Listy w C# są zasadniczo tablicami i mają złożoność wyszukiwania O(N). To oznacza, że nasza pętla nie zniknęła, ale tylko przeniosła się do środka innej funkcji, w tym przypadku List<T>.Contains(). Nie możemy zredukować złożoności, eliminując pętlę - musimy również zmienić nasz algorytm wyszukiwania.
+
+Możemy posortować listę i przeprowadzić wyszukiwanie binarne, aby zredukować wydajność wyszukiwania do O(logN), ale na szczęście przeczytaliśmy rozdział 2, i wiemy, jak struktura danych HashSet<T> może zapewnić znacznie lepszą wydajność wyszukiwania O(1), dzięki wyszukiwaniu lokalizacji elementu za pomocą jego hasha. Nasz kod właściwości wreszcie zaczął wyglądać zdrowo:
+
+```csharp
+private static HashSet<string> visibleBadgeNames = GetVisibleBadgeNames();
+
+public bool IsVisible {
+ get => visibleBadgeNames.Contains(this.Name);
+}
+```
+
+Nie przeprowadziliśmy żadnych testów wydajnościowych na tym kodzie, ale analiza punktów bólu złożoności obliczeniowej może dostarczyć cennych wskazówek, jak to widać w tym przykładzie. Mimo to zawsze powinieneś sprawdzić, czy twoje poprawki działają lepiej, ponieważ kod zawsze będzie zawierał niespodzianki i ciemne zakamarki, które mogą cię zaskoczyć.
+
+Historia metody GetBadgeNames() nie kończy się tutaj. Są inne pytania, które można postawić, na przykład dlaczego programista przechowuje oddzielną listę widocznych nazw odznak zamiast pojedynczego bitowego flagi w rekordzie Badge w bazie danych, albo dlaczego nie przechowuje ich po prostu w osobnej tabeli i nie łączy ich podczas zapytania do bazy danych. Ale jeśli chodzi o zagnieżdżone pętle, prawdopodobnie stały się teraz o rzędy wielkości szybsze.
+
+
+
+#### 7.3.2 Programowanie zorientowane na ciągi znaków
+Ciągi znaków są niezwykle praktyczne. Są czytelne, mogą przechowywać dowolny rodzaj tekstu i łatwo nimi manipulować. Już wcześniej omówiłem, jak używanie odpowiedniego typu może przynieść lepszą wydajność niż korzystanie ze stringa, ale istnieją subtelne sposoby, w jakie ciągi znaków mogą przedostać się do twojego kodu.
+
+Jednym z powszechnych sposobów niepotrzebnego używania ciągów znaków jest zakładanie, że każda kolekcja to kolekcja stringów. Na przykład, jeśli chcesz przechować flagę w kontenerze HttpContext.Items lub ViewData, często znajdziesz kogoś, kto pisze coś takiego:
+
+```csharp
+HttpContext.Items["Bozo"] = "true";
+```
+
+Później natrafisz na sprawdzanie tej samej flagi w ten sposób:
+
+```csharp
+if ((string)HttpContext.Items["Bozo"] == "true") {
+    // ...
+}
+```
+
+Rzutowanie na typ string zazwyczaj jest dodawane po tym, jak kompilator ostrzega cię: "Hej, czy na pewno chcesz to zrobić? To nie jest kolekcja stringów". Jednak zazwyczaj pomija się cały kontekst, że kolekcja ta jest faktycznie kolekcją obiektów. Faktycznie, możesz naprawić kod, używając po prostu zmiennej typu Boolean:
+
+```csharp
+HttpContext.Items["Bozo"] = true;
+```
+
+Sprawdź wartość za pomocą:
+
+```csharp
+if ((bool?)HttpContext.Items["Bozo"] == true) {
+    // ...
+}
+```
+
+W ten sposób unikasz nadmiernego obciążenia związanego z przechowywaniem, analizowaniem oraz ewentualnymi błędami pisowni, takimi jak napisanie True zamiast true.
+
+Rzeczywiste obciążenie tych prostych błędów jest znikome, ale gdy stają się nawykiem, mogą znacząco się akumulować. Niemożliwe jest naprawienie gwoździ na cieknącym statku, ale gdy wbijasz je właściwie podczas jego budowy, może to pomóc ci utrzymać się na powierzchni.
+
+#### 7.3.3 Ocena wyrażenia 2b || !2b
+Wyrażenia logiczne w instrukcjach if są oceniane w kolejności, w jakiej są napisane. Kompilator C# generuje inteligentny kod oceny, aby unikać zbędnej oceny przypadków. Na przykład, przypomnij sobie naszą straszliwie drogą właściwość IsVisible? Rozważ takie sprawdzenie:
+
+```csharp
+if (badge.IsVisible && credits > 150_000) {
+    // ...
+}
+```
+
+Kosztowna właściwość jest oceniana przed prostym sprawdzeniem wartości. Jeśli najczęściej wywołujesz tę funkcję z wartościami x mniejszymi niż 150 000, to IsVisible nie byłoby często wywoływane. Możesz po prostu zamienić miejscami wyrażenia:
+
+```csharp
+if (credits > 150_000 && badge.IsVisible) {
+    // ...
+}
+```
+
+W ten sposób nie uruchamiałbyś kosztowej operacji niepotrzebnie. Możesz także zastosować to samo podejście do operacji logicznego OR (||). W tym przypadku pierwsze wyrażenie, które zwraca true, uniemożliwi ocenę reszty wyrażenia. Oczywiście w życiu rzeczywistym posiadanie takiej kosztownej właściwości jest rzadkie, ale zalecam sortowanie wyrażeń na podstawie typów operandów:
+
+1. Zmienne
+2. Pola
+3. Właściwości
+4. Wywołania metod
+
+Nie każde wyrażenie logiczne można bezpiecznie przenosić wokół operatorów. Rozważmy to:
+
+```csharp
+if (badge.IsVisible && credits > 150_000 || isAdmin) {
+    // ...
+}
+```
+
+Nie możesz po prostu przenieść `isAdmin` na początek, ponieważ to zmieniłoby ocenę. Upewnij się, że nie przypadkiem nie zepsujesz logiki w instrukcji if podczas optymalizacji oceny logicznej.
+
+### 7.4 Likwiduj wąskie gardła
+Istnieją trzy rodzaje opóźnień w oprogramowaniu: CPU, I/O i ludzkie. Możesz zoptymalizować każdą z tych kategorii, znajdując szybszą alternatywę, równoległując zadania lub usuwając je z równania.
+
+Gdy jesteś pewien, że używasz algorytmu lub metody odpowiedniej do zadania, ostatecznie sprowadza się to do tego, jak zoptymalizować sam kod. Aby ocenić opcje optymalizacji, musisz być świadomy luksusów, jakie oferują ci jednostki centralne.
+
+#### 7.4.1 Nie pakuj danych w mniejsze typy 
+
+Odczytanie z adresu pamięci, na przykład 1023, może zająć więcej czasu niż odczytanie z adresu pamięci 1024, ponieważ jednostki centralne mogą ponieść karę za odczytanie z niedopasowanych (niezalignowanych ) adresów pamięci. W tym sensie "zalignowanie" oznacza lokalizację pamięci na wielokrotnościach 4, 8, 16 i tak dalej, co najmniej rozmiaru słowa jednostki centralnej, jak to widoczne na rysunku 7.4. Na niektórych starszych procesorach kara za dostęp do niezalignowanej pamięci to śmierć przez tysiąc małych porażeń elektrycznych. Serio, niektóre jednostki centralne w ogóle nie pozwalają na dostęp do niezalignowanej pamięci, takie jak Motorola 68000 używana w Amiga i niektóre procesory oparte na architekturze ARM.
+
+![CH07_F04_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_7-4.png)
+
+> ROZMIAR SŁOWA PROCESORA
+>
+> Rozmiar słowa jest zazwyczaj określany przez liczbę bitów danych, które jednostka centralna może przetwarzać jednocześnie. Pojęcie to jest ściśle związane z tym, czy CPU jest określane jako 32-bitowe czy 64-bitowe. Rozmiar słowa głównie odzwierciedla wielkość rejestru akumulatora jednostki centralnej. Rejestry są jak zmienne na poziomie CPU, a akumulator to najczęściej używany rejestr. Weźmy na przykład CPU Z80. Posiada on rejestry 16-bitowe i może adresować pamięć 16-bitową, ale uważany jest za procesor 8-bitowy, ponieważ ma 8-bitowy rejestr akumulatora.
+
+Na szczęście mamy kompilatory, i zazwyczaj zajmują się one kwestiami związanymi z wyrównywaniem. Ale możliwe jest zastąpienie zachowania kompilatora, a i tak może się wydawać, że nic złego się nie dzieje: przechowujesz więcej informacji w małej przestrzeni, jest mniej pamięci do odczytu, więc powinno być szybciej. Rozważ strukturę danych przedstawioną w listingu 7.4. Ponieważ jest to struktura, w C# wyrównanie będzie stosowane tylko na podstawie pewnych heurystyk, co może oznaczać brak wyrównania. Możesz być skuszony przechowywaniem wartości w bajtach, aby stała się to niewielkim pakietem do przesyłania.
+
+Listing 7.3 Struktura danych bez wyrównywania
+
+```csharp
+struct UserPreferences {
+  public byte ItemsPerPage;
+  public byte NumberOfItemsOnTheHomepage;
+  public byte NumberOfAdClicksICanStomach;
+  public byte MaxNumberOfTrollsInADay;
+  public byte NumberOfCookiesIAmWillingToAccept;
+  public byte NumberOfSpamEmailILoveToGetPerDay;
+}
+```
+
+Jednakże, ponieważ dostępy do pamięci o niezalignowanych granicach są wolniejsze, oszczędności w zużyciu pamięci są równoważone karą dostępu do każdego elementu w strukturze. Jeśli zmienisz typy danych w strukturze z bajtów na inty i utworzysz benchmark, aby przetestować różnicę, zauważysz, że dostęp do bajtów jest prawie dwa razy wolniejszy, nawet jeśli zajmuje tylko jedną czwartą pamięci, jak pokazano w tabeli 7.2.
+
+Tabela 7.2 Różnica między dostępem do wyrównanej a niewyrównanej części 
+
+| Metoda           | Średnia   |
+| ---------------- | --------- |
+| ByteMemberAccess | 0.2475 ns |
+| IntMemberAccess  | 0.1359 ns |
+
+Morał z tej historii to unikanie niepotrzebnej optymalizacji przechowywania pamięci. Są korzyści z takiego postępowania w pewnych przypadkach, na przykład, gdy chcesz utworzyć tablicę miliarda liczb, różnica między bajtem a intem może wynieść trzy gigabajty. Mniejsze rozmiary mogą być również preferowane dla operacji wejścia/wyjścia (I/O), ale zasadniczo warto zaufać wyrównywaniu pamięci. Niezmienne prawo testowania wydajności brzmi: "Mierz dwa razy, tnij raz, a potem zmierz jeszcze raz, i wiesz co, może pozwólmy sobie na lekkie tnące przez jakiś czas."
+
+#### 7.4.2 Pobieraj lokalnie
+
+Buforowanie (caching) polega na przechowywaniu często używanych danych w lokalizacji, do której można uzyskać szybszy dostęp niż do miejsca, w którym zwykle się znajdują. Procesory posiadają własne pamięci podręczne o różnych prędkościach, ale wszystkie są szybsze niż sama pamięć RAM. Nie będę zagłębiać się w techniczne szczegóły struktury pamięci podręcznej, ale w zasadzie procesory mogą odczytywać pamięć w swojej pamięci podręcznej znacznie szybciej niż w zwykłej pamięci RAM. Oznacza to, na przykład, że odczytywanie tablicy sekwencyjnie może być szybsze niż odczytywanie listy połączonej sekwencyjnie, chociaż obie operacje zajmują czas O(N) na odczytanie od początku do końca, a tablice mogą działać lepiej niż listy połączone. Powodem jest większa szansa na to, że następny element znajduje się w obszarze pamięci podręcznej. Elementy list połączonych są natomiast rozproszone w pamięci, ponieważ są one alokowane osobno.
+
+Załóżmy, że masz CPU z pamięcią podręczną o wielkości 16 bajtów i masz zarówno tablicę trzech liczb całkowitych, jak i listę połączoną z trzema liczbami całkowitymi. Na rysunku 7.5 możesz zobaczyć, że odczytanie pierwszego elementu tablicy spowoduje również załadowanie reszty elementów do pamięci podręcznej CPU, podczas gdy przeglądanie listy połączonej spowoduje brak pamięci podręcznej i zmusi do załadowania nowego obszaru do pamięci podręcznej.
+
+
+
+![CH07_F05_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_7-5.png)
+
+
+
+Procesory zakładają zazwyczaj, że odczytujesz dane sekwencyjnie. To nie oznacza, że listy połączone nie mają swojego zastosowania. Mają doskonałą wydajność przy wstawianiu/usuwaniu i mniejsze obciążenie pamięcią, gdy rosną. Listy oparte na tablicach muszą realokować i kopiować bufory podczas wzrostu, co jest strasznie wolne, więc przydzielają więcej, niż jest im potrzebne, co może prowadzić do niewspółmiernego zużycia pamięci w przypadku dużych list. W większości przypadków jednak lista może ci służyć dobrze, a nawet być szybsza w odczycie.
+
+### 7.4.3 Trzymaj zależne prace oddzielone
+
+Pojedyncza instrukcja procesora jest przetwarzana przez osobne jednostki na procesorze. Na przykład jedna jednostka odpowiada za dekodowanie instrukcji, podczas gdy inna jest odpowiedzialna za dostęp do pamięci. Ale ponieważ jednostka dekodująca musi poczekać, aż instrukcja zostanie zakończona, może wykonywać inne prace dekodujące dla następnej instrukcji, podczas gdy dostęp do pamięci jest uruchomiony. Ta technika nazywana jest potokiem i oznacza, że CPU może wykonywać równolegle wiele instrukcji na jednym rdzeniu, o ile następna instrukcja nie zależy od wyniku poprzedniej.
+
+Przykład: musisz obliczyć sumę kontrolną, w której po prostu dodajesz wartości tablicy bajtów, aby uzyskać wynik, jak w poniższym kodzie. Zazwyczaj sumy kontrolne są używane do wykrywania błędów, a dodawanie liczb może być najgorszą implementacją, ale załóżmy, że to był kontrakt rządowy. Gdy spojrzysz na kod, stale aktualizuje wartość wyniku. Oznacza to, że każde obliczenie zależy od i i wyniku. To oznacza, że CPU nie może zrównoleglać żadnej pracy, ponieważ zależy to od operacji.
+
+Listing 7.4 Prosta suma kontrolna
+
+```csharp
+public int CalculateChecksum(byte[] array) {
+  int result = 0;
+  for (int i = 0; i < array.Length; i++) {
+    result = result + array[i];
+  }
+  return result;
+}
+```
+
+Istnieją sposoby na zredukowanie zależności lub przynajmniej zminimalizowanie blokującego wpływu przepływu instrukcji. Jednym z nich jest ponowne uporządkowanie instrukcji, aby zwiększyć odstęp między zależnymi kodami, dzięki czemu jedna instrukcja nie blokuje następnej w potoku ze względu na zależność od wyniku pierwszej operacji.
+
+Ponieważ dodawanie można wykonać w dowolnej kolejności, możemy podzielić dodawanie na cztery części w tym samym kodzie i pozwolić CPU zrównoleglać pracę. Możemy zaimplementować zadanie tak, jak to mam w poniższym kodzie. Ten kod zawiera więcej instrukcji, ale cztery różne akumulatory wyniku mogą teraz ukończyć sumę kontrolną osobno, a następnie zostać zsumowane. Następnie sumujemy pozostałe bajty w osobnej pętli.
+
+Listing 7.5 Zrównoleglanie pracy na jednym rdzeniu
+
+```csharp
+public static int CalculateChecksumParallel(byte[] array) {
+  int r0 = 0, r1 = 0, r2 = 0, r3 = 0;
+  int len = array.Length;
+  int i = 0;
+  for (; i < len - 4; i += 4) {
+    r0 += array[i + 0];
+    r1 += array[i + 1];
+    r2 += array[i + 2];
+    r3 += array[i + 3];
+  }
+  int remainingSum = 0;
+  for (; i < len; i++) {
+    remainingSum += i;
+  }
+  return r0 + r1 + r2 + r3 + remainingSum;
+}
+```
+
+Robimy znacznie więcej pracy niż w prostszym kodzie z listingu 7.4, a mimo to ten proces okazuje się być o 15% szybszy na moim komputerze. Nie oczekuj cudów po takiej mikrooptymalizacji, ale pokochasz ją, gdy pomoże Ci w radzeniu sobie z kodem intensywnym dla CPU. Główny wniosek to ten, że ponowne uporządkowanie kodu - a nawet usuwanie zależności w kodzie - może poprawić prędkość kodu, ponieważ zależny kod może blokować potok.
+
+
+
+#### 7.4.4 Bądź przewidywalny
+Najbardziej laskowane, najpopularniejsze pytanie w historii Stack Overflow brzmi: „Dlaczego przetwarzanie posortowanego ciągu jest szybsze niż przetwarzanie nieposortowanego ciągu?”3 Aby zoptymalizować czas wykonania, procesory starają się działać prewencyjnie przed uruchomionym kodem, przygotowując się przed pojawieniem się potrzeby. Jedną z technik, które stosują procesory, jest tzw. przewidywanie skoków. Kod taki to jedynie upiększona wersja porównań i skoków:
+
+```csharp
+if (x == 5) {
+ Console.WriteLine("X is five!");
+} else {
+ Console.WriteLine("X is something else");
+}
+```
+
+Instrukcja warunkowa i nawiasy klamrowe są elementami programowania strukturalnego. To jedynie upiększona wersja tego, co przetwarza CPU. W rzeczywistości kod jest konwertowany na niskopoziomowy kod podczas fazy kompilacji:
+
+```assembly
+compare x with 5
+ branch to ELSE if not equal
+ write "X is five"
+ branch to SKIP_ELSE
+ELSE:
+ write "X is something else"
+SKIP_ELSE:
+```
+
+Idea polega na tym, że CPU przewiduje, która gałąź kodu zostanie wybrana, i zaczyna jej wykonanie jeszcze przed zakończeniem porównania. Jeśli przewidywanie jest poprawne, CPU uzyskuje znaczną przewagę w prędkości. Jednak jeśli przewidywanie jest błędne, ponoszony jest pewien koszt, ponieważ CPU musi odrzucić nieprawidłowe wykonanie spekulatywne i zacząć od nowa z właściwą gałęzią.
+
+W realnych scenariuszach, zwłaszcza w kodzie krytycznym pod względem wydajności, rozważanie przewidywalności wykonania kodu może być istotnym aspektem optymalizacji.
+
+Tutaj tylko parafrazuję, ponieważ rzeczywisty kod maszynowy jest bardziej enigmatyczny, ale ogólnie rzecz biorąc, nie jest to całkowicie nieprecyzyjne. Bez względu na to, jak elegancki jest twój kod, ostatecznie staje się to zestawem operacji porównań, dodawania i skoków. Listing 7.6 przedstawia rzeczywisty kod asemblerowy dla architektury x86 tego samego kodu. Po przeczytaniu pseudokodu może to sprawiać wrażenie bardziej znajome. Na stronie sharplab.io dostępne jest doskonałe narzędzie online, które pozwala zobaczyć kod asemblerowy programu C#. Mam nadzieję, że przetrwa ono dłużej niż ta książka.
+
+Listing 7.6 Rzeczywisty kod asemblerowy dla naszego porównania
+
+```assembly
+cmp ecx, 5
+        jne ELSE
+        mov ecx, [0xf59d8cc]
+        call System.Console.WriteLine(System.String)
+        ret
+ELSE:   mov ecx, [0xf59d8d0]
+        call System.Console.WriteLine(System.String)
+        ret
+```
+
+> Przestań się martwić i naucz się kochać asembler
+>
+> Kod maszynowy, rodzimy język CPU, to po prostu seria liczb. Asembler to zrozumiała dla człowieka składnia kodu maszynowego. Składnia asemblera różni się wśród architektur CPU, więc polecam zapoznanie się przynajmniej z jednym z nich. To doświadczenie może być pokorne, ale zredukuje strach przed tym, co dzieje się pod maską. Może się wydawać skomplikowane, ale jest prostsze niż języki, w których piszemy programy, wręcz prymitywne. Listing asemblerowy to seria etykiet i instrukcji, na przykład:
+>
+> ```assembly
+> let a, 42
+> some_label:
+>    decrement a
+>    compare a, 0
+>    jump_if_not_equal some_label
+> ```
+>
+> To podstawowa pętla dekrementacji licząca od 42 do 0 napisana w pseudoskładni asemblera. W prawdziwym asemblerze instrukcje są krótsze, aby były łatwiejsze do napisania, ale uciążliwe do czytania. Na przykład ta sama pętla na procesorze x86 wyglądałaby tak:
+>
+> ```assembly
+> mov al, 42
+> some_label:
+>    dec al
+>    cmp al, 0
+>    jne some_label
+> ```
+>
+> Na architekturze procesora ARM może wyglądać to tak:
+>
+> ```assembly
+> mov r0, #42
+> some_label:
+>    sub r0, r0, #1
+>    cmp r0, #0
+>    bne some_label
+> ```
+>
+> Można to napisać bardziej zwięźle przy użyciu innych instrukcji, ale o ile znasz strukturę asemblera, możesz rzucić okiem na to, jaki kod maszynowy generuje kompilator JIT, i zrozumieć jego rzeczywiste zachowanie. Szczególnie dobrze się sprawdza, gdy musisz zrozumieć zadania intensywne dla CPU.
+
+Procesor nie może z góry wiedzieć, czy porównanie będzie udane, zanim zostanie wykonane, ale dzięki przewidywaniu skoków, może dokonać silnej prognozy na podstawie obserwacji. W oparciu o swoje przypuszczenia, procesor stawia zakłady i zaczyna przetwarzać instrukcje z tego skoku, który przewidział, a jeśli jest udane w swojej prognozie, wszystko jest już gotowe, co zwiększa wydajność.
+
+Dlatego przetwarzanie tablicy z losowymi wartościami może być wolniejsze, jeśli obejmuje porównania wartości: przewidywanie skoków spektakularnie zawodzi w tym przypadku. Posortowana tablica sprawuje się lepiej, ponieważ procesor może właściwie przewidzieć porządek i poprawnie przewidzieć skoki.
+
+Pamiętaj o tym, gdy przetwarzasz dane. Im mniej niespodzianek dostarczysz procesorowi, tym lepiej się wykona.
+
+
+
+7.4.5 SIMD
+Procesory obsługują również specjalizowane instrukcje, które mogą wykonywać obliczenia na wielu danych jednocześnie za pomocą pojedynczej instrukcji. Ta technika nazywana jest instrukcją pojedynczej instrukcji, wielokrotnych danych (SIMD). Jeśli chcesz wykonać tę samą operację na wielu zmiennych, SIMD może znacznie zwiększyć jej wydajność na obsługiwanych architekturach.
+
+SIMD działa praktycznie tak samo jak kilka połączonych razem długopisów. Możesz rysować cokolwiek, ale długopisy będą wszystkie wykonywać tę samą operację na różnych współrzędnych papieru. Instrukcja SIMD wykona obliczenia arytmetyczne na wielu wartościach, ale operacja pozostanie stała.
+
+W języku C# funkcję SIMD zapewniają typy wektorowe w przestrzeni nazw System.Numerics. Ponieważ wsparcie SIMD różni się w zależności od każdego procesora, a niektóre procesory w ogóle nie obsługują SIMD, najpierw musisz sprawdzić, czy jest dostępne na danym procesorze:
+
+```csharp
+if (!Vector.IsHardwareAccelerated) {
+    // ... implementacja bez wektorów ...
+}
+```
+
+Następnie musisz dowiedzieć się, ile danego typu procesor może przetwarzać jednocześnie. To zależy od procesora do procesora, więc najpierw musisz to sprawdzić:
+
+```csharp
+int chunkSize = Vector<int>.Count;
+```
+
+W tym przypadku chcemy przetworzyć wartości typu int. Liczba elementów, które procesor może przetworzyć jednocześnie, może się zmieniać w zależności od typu danych. Gdy znasz liczbę elementów, które możesz przetwarzać jednocześnie, możesz przystąpić do przetwarzania bufora fragmentami.
+
+Załóżmy, że chcielibyśmy pomnożyć wartości w tablicy. Mnożenie serii wartości to powszechny problem w przetwarzaniu danych, czy to zmiana głośności nagrania dźwiękowego, czy dostosowywanie jasności obrazu. Na przykład, jeśli pomnóżmy wartości pikseli w obrazie przez 2, stanie się ono dwukrotnie jaśniejsze. Podobnie, jeśli pomnóżmy dane dźwiękowe przez 2, stanie się ono dwukrotnie głośniejsze. Naiwne podejście wyglądałoby tak, jak w poniższym zestawieniu. Po prostu iterujemy po elementach i zamieniamy wartość na miejscu wynikiem mnożenia.
+
+```csharp
+public static void MultiplyEachClassic(int[] buffer, int value) {
+    for (int n = 0; n < buffer.Length; n++) {
+        buffer[n] *= value;
+    }
+}
+```
+
+Kiedy używamy typu Vector do wykonania tych obliczeń, nasz kod staje się bardziej skomplikowany i szczerze mówiąc, wydaje się wolniejszy. Możesz zobaczyć kod w poniższym zestawieniu. W zasadzie sprawdzamy, czy istnieje wsparcie SIMD i zapytujemy o rozmiar fragmentu dla wartości całkowitych. Następnie przechodzimy przez bufor przy danym rozmiarze fragmentu i kopiujemy wartości do rejestrów wektorowych, tworząc instancje Vector<T>. Ten typ obsługuje standardowe operatory arytmetyczne, więc po prostu mnożymy typ wektorowy przez podaną liczbę. Automatycznie pomnoży wszystkie elementy w fragmencie za jednym razem. Zauważ, że zmienną n deklarujemy poza pętlą for, ponieważ zaczynamy od jej ostatniej wartości w drugiej pętli.
+
+```csharp
+public static void MultiplyEachSIMD(int[] buffer, int value) {
+    if (!Vector.IsHardwareAccelerated) {
+        MultiplyEachClassic(buffer, value);
+    }
+
+    int chunkSize = Vector<int>.Count;
+    int n = 0;
+    for (; n < buffer.Length - chunkSize; n += chunkSize) {
+        var vector = new Vector<int>(buffer, n);
+        vector *= value;
+        vector.CopyTo(buffer, n);
+    }
+
+    for (; n < buffer.Length; n++) {
+        buffer[n] *= value;
+    }
+}
+```
+
+To wygląda na zbyt dużo pracy, prawda? Jednak wyniki testów są imponujące, jak pokazano w tabeli 7.3. W tym przypadku nasz kod oparty na SIMD jest dwa razy szybszy niż zwykły kod. W zależności od typów danych, które przetwarzasz, i operacji, które wykonujesz na danych, różnica może być znacznie większa.
+
+Tabela 7.3 Różnice w SIMD 
+
+| Metoda              | Średni czas |
+| ------------------- | ----------- |
+| MultiplyEachClassic | 5.641 ms    |
+| MultiplyEachSIMD    | 2.648 ms    |
+
+Możesz rozważyć użycie SIMD, gdy masz zadanie obliczeniowo intensywne i musisz wykonać tę samą operację na wielu elementach jednocześnie.
+
+
+
+### 7.5 Jedynki i zera wejścia/wyjścia
+I/O obejmuje wszystko, co CPU komunikuje się z peryferyjnym sprzętem, czy to dyskiem, kartą sieciową, czy nawet GPU. Wejście/wyjście jest zazwyczaj najwolniejszym ogniwem w łańcuchu wydajności. Pomyśl o tym: dysk twardy to właściwie obracający się dysk z wrzecionem przemieszczającym się po danych. To po prostu ruchoma ręka, ciągle w ruchu. Pakiet sieciowy może poruszać się z prędkością światła, a mimo to zajmie mu ponad 100 milisekund, aby obrócić się dookoła Ziemi. Drukarki są specjalnie zaprojektowane, aby były wolne, niewydajne i wprowadzały wściekłość.
+
+Nie zawsze można przyspieszyć samo wejście/wyjście, ponieważ jego powolność wynika z ograniczeń fizycznych, ale sprzęt może działać niezależnie od CPU, więc może pracować, podczas gdy CPU wykonuje inne zadania. To oznacza, że można nakładać pracę CPU na pracę wejścia/wyjścia i ukończyć ogólną operację w krótszym czasie.
+
+#### 7.5.1 Przyspieszanie wejścia/wyjścia
+Tak, wejście/wyjście jest wolne z powodu inherentnych ograniczeń sprzętu, ale można je przyspieszyć. Na przykład każde odczytywanie z dysku wiąże się z dodatkowym obciążeniem systemowym. Rozważ kod kopiowania pliku przedstawiony poniżej. Jest dość prosty. Kopiuje każty bajt odczytany z pliku źródłowego i zapisuje te bajty do pliku docelowego.
+
+Listing 7.9 Proste kopiowanie pliku
+
+```csharp
+public static void Copy(string sourceFileName,
+  string destinationFileName) {
+ 
+  using var inputStream = File.OpenRead(sourceFileName);
+  using var outputStream = File.Create(destinationFileName);
+  while (true) {
+    int b = inputStream.ReadByte();
+    if (b < 0) {
+      break;
+    }
+    outputStream.WriteByte((byte)b);
+  }
+}
+```
+
+Problemem jest to, że każde wywołanie systemowe obejmuje rozbudowaną procedurę. Funkcja `ReadByte()` tutaj wywołuje funkcję odczytu systemu operacyjnego. System operacyjny przechodzi w tryb jądra (kernel mode). Oznacza to, że CPU zmienia swój tryb wykonania. Rutyna systemu operacyjnego przeszukuje uchwyt pliku i niezbędne struktury danych. Sprawdza, czy wynik wejścia/wyjścia jest już w pamięci podręcznej. Jeśli nie, wywołuje odpowiednie sterowniki urządzeń, aby wykonać rzeczywistą operację wejścia/wyjścia na dysku. Część pamięci przeznaczona na odczyt zostaje skopiowana do bufora w przestrzeni adresowej procesu. Te operacje zachodzą ekspresowo szybko, co może stać się istotne, gdy czytasz tylko jeden bajt.
+
+Wiele urządzeń wejścia/wyjścia odczytuje/zapisuje w blokach zwanych urządzeniami blokowymi. Sieciowe i pamięciowe urządzenia są zazwyczaj urządzeniami blokowymi. Klawiatura to urządzenie znakowe, ponieważ wysyła jeden znak na raz. Urządzenia blokowe nie mogą czytać mniej niż rozmiar bloku, więc nie ma sensu czytać czegokolwiek mniejszego niż typowy rozmiar bloku. Na przykład dysk twardy może mieć rozmiar sektora wynoszący 512 bajtów, co czyni go typowym rozmiarem bloku dla dysków. Nowoczesne dyski mogą mieć większe rozmiary bloków, ale zobaczmy, jak można poprawić wydajność, po prostu czytając 512 bajtów. Poniższy listing przedstawia tę samą operację kopiowania, która przyjmuje rozmiar bufora jako parametr i czyta i zapisuje przy użyciu tego rozmiaru fragmentu.
+
+Listing 7.10 Kopiowanie pliku za pomocą większych buforów
+
+```csharp
+public static void CopyBuffered(string sourceFileName,
+  string destinationFileName, int bufferSize) {
+ 
+  using var inputStream = File.OpenRead(sourceFileName);
+  using var outputStream = File.Create(destinationFileName);
+  var buffer = new byte[bufferSize];
+  while (true) {
+    int readBytes = inputStream.Read(buffer, 0, bufferSize);
+    if (readBytes == 0) {
+      break;
+    }
+    outputStream.Write(buffer, 0, readBytes);
+  }
+}
+```
+
+Jeśli napiszemy szybki benchmark testujący funkcję kopiowania opartą na bajtach i wariant buforowany z różnymi rozmiarami buforów, możemy zobaczyć różnicę, jaką czyni czytanie dużych fragmentów na raz. Wyniki można zobaczyć w tabeli 7.4.
+
+Tabela 7.4 Wpływ rozmiaru bufora na wydajność I/O (zobacz tabelę)
+
+| Method       | Buffer size | Mean        |
+| ------------ | ----------- | ----------- |
+| Copy         | 1           | 1,351.27 ms |
+| CopyBuffered | 512         | 217.80 ms   |
+| CopyBuffered | 1024        | 214.93 ms   |
+| CopyBuffered | 16384       | 84.53 ms    |
+| CopyBuffered | 262144      | 45.56 ms    |
+| CopyBuffered | 1048576     | 43.81 ms    |
+| CopyBuffered | 2097152     | 44.10 ms    |
+
+Nawet użycie bufora o rozmiarze 512 bajtów robi ogromną różnicę - operacja kopiowania staje się sześć razy szybsza. Jednak zwiększenie go do 256 KB robi największą różnicę, a zrobienie go większym daje tylko marginalną poprawę. Uruchomiłem te testy wydajności na maszynie z systemem Windows, a system Windows używa 256 KB jako domyślnego rozmiaru bufora dla swoich operacji wejścia/wyjścia i zarządzania pamięcią podręczną. Dlatego zwroty stają się nagle marginalne po 256 KB. Podobnie jak etykiety na opakowaniach z jedzeniem mówią „rzeczywista zawartość może się różnić”, twoje rzeczywiste doświadczenie na twoim systemie operacyjnym może się różnić. Rozważ znalezienie idealnego rozmiaru bufora, gdy pracujesz z operacjami wejścia/wyjścia, i unikaj alokowania więcej pamięci, niż jest to konieczne.
+
+
+
+7.5.2 Ustawienie wejścia/wyjścia w tryb nieblokujący
+Jednym z najczęściej niezrozumianych koncepcji w programowaniu jest asynchroniczne wejście/wyjście. Często mylone jest z wielowątkowością, która jest modelem równoległym umożliwiającym przyspieszenie dowolnej operacji poprzez uruchomienie zadania na osobnych rdzeniach. Asynchroniczne wejście/wyjście (lub skrótowo: async I/O) to model równoległy przeznaczony wyłącznie do operacji obciążających wejście/wyjście i może działać na jednym rdzeniu. Wielowątkowość i async I/O mogą być również używane razem, ponieważ adresują różne przypadki użycia.
+
+Wejście/wyjście jest naturalnie asynchroniczne, ponieważ zewnętrzny sprzęt jest prawie zawsze wolniejszy niż CPU, a CPU nie lubi czekać i bezczynnie spoczywać. Mechanizmy takie jak przerwania (interrupts) i bezpośredni dostęp do pamięci (DMA) zostały wynalezione, aby umożliwić sprzętowi sygnalizowanie CPU, kiedy operacja wejścia/wyjścia zostanie zakończona, dzięki czemu CPU może przekazać wyniki. Oznacza to, że gdy operacja wejścia/wyjścia jest przekazywana do sprzętu, CPU może kontynuować wykonywanie innych czynności, podczas gdy sprzęt wykonuje swoją pracę, a CPU może sprawdzić, czy operacja wejścia/wyjścia została zakończona. Ten mechanizm stanowi podstawę asynchronicznego wejścia/wyjścia.
+
+Rysunek 7.6 daje pojęcie, jak oba rodzaje równoległości działają. W obu ilustracjach drugi kod obliczeniowy (CPU Op #2) zależy od wyniku pierwszego kodu wejścia/wyjścia (I/O Op #1). Ponieważ kod obliczeniowy nie może być równoległy na tym samym wątku, wykonują się równolegle i dlatego zajmują więcej czasu niż wielowątkowość na czterordzeniowej maszynie. Z drugiej strony wciąż uzyskujesz znaczne korzyści z równoległości bez zużywania wątków ani zajmowania rdzeni.
+
+![CH07_F06_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_7-6.png)
+
+Korzyści wydajnościowe wynikające z async I/O polegają na zapewnieniu naturalnej równoległości kodu bez konieczności dodatkowej pracy. Nawet nie trzeba tworzyć dodatkowego wątku. Możliwe jest uruchamianie wielu operacji wejścia/wyjścia równolegle i zbieranie wyników, nie doświadczając problemów związanym z wielowątkowością, takich jak warunki ścigowe (race conditions). Jest to praktyczne i skalowalne.
+
+Asynchroniczny kod może również pomóc w responsywności w mechanizmach opartych na zdarzeniach, zwłaszcza interfejsach użytkownika, bez konieczności zużywania wątków. Może się wydawać, że interfejsy użytkownika nie mają nic wspólnego z wejściem/wyjściem, ale dane wejściowe użytkownika również pochodzą z urządzeń wejścia/wyjścia, takich jak ekran dotykowy, klawiatura czy mysz, a interfejsy użytkownika są wywoływane przez te zdarzenia. Stanowią one doskonałe kandydatki do użycia async I/O i ogólnie programowania asynchronicznego. Nawet animacje oparte na czasie, sterowane sprzętowo poprzez działanie zegara na urządzeniu, są idealnymi kandydatami do użycia async I/O.
+
+#### 7.5.3 Archaiczne metody dostępu
+Do początków lat 2010. asynchroniczne wejście/wyjście było obsługiwane za pomocą funkcji zwrotnych (callback functions). Asynchroniczne funkcje operacyjne systemu wymagały przekazania im funkcji zwrotnej, a system operacyjny wykonywał tę funkcję zwrotną po zakończeniu operacji wejścia/wyjścia. W międzyczasie można było wykonywać inne zadania. Gdybyśmy napisali naszą operację kopiowania pliku w starym semantyce asynchronicznej, wyglądałaby mniej więcej tak jak w liście 7.11. Zauważ, że jest to bardzo tajemniczy i brzydki kod, i to prawdopodobnie dlatego baby boomersowie nie przepadają za async I/O. Tak naprawdę, miałem dużo kłopotów z napisaniem tego kodu samodzielnie, dlatego musiałem sięgnąć po nowoczesne konstrukcje, takie jak Task, aby go ukończyć. Pokazuję to tylko po to, abyś polubił i docenił nowoczesne konstrukcje oraz to, ile czasu nam oszczędzają.
+
+Najciekawszą rzeczą w tym starożytnym kodzie jest to, że zwraca on natychmiast, co jest wręcz magiczne. Oznacza to, że operacja wejścia/wyjścia działa w tle, operacja kontynuuje się, a ty możesz wykonywać inne prace podczas jej przetwarzania. Nadal jesteś na tym samym wątku. Nie zachodzi wielowątkowość. Właśnie to jest jedną z największych zalet async I/O, ponieważ oszczędza wątki systemu operacyjnego, co sprawia, że staje się bardziej skalowalne, o czym będę rozmawiał w rozdziale 8. Jeśli nie masz nic innego do zrobienia, zawsze możesz poczekać, aż operacja zostanie zakończona, ale to zależy od preferencji.
+
+Na liście 7.11 definiujemy dwie funkcje obsługujące. Jedna z nich to asynchroniczne zadanie (Task) o nazwie `onComplete()`, które chcemy uruchomić, gdy całe wykonanie się zakończy, ale nie od razu. Druga to lokalna funkcja o nazwie onRead(), która jest wywoływana za każdym razem, gdy operacja odczytu zostanie zakończona. Przekazujemy tę funkcję obsługującą do funkcji `BeginRead` strumienia, dzięki czemu inicjuje ona asynchroniczną operację wejścia/wyjścia i rejestruje onRead jako funkcję zwrotną do wywołania, gdy blok zostanie odczytany. W funkcji obsługującej onRead rozpoczynamy operację zapisu bufora, który właśnie odczytaliśmy, i upewniamy się, że kolejna runda odczytu zostanie wywołana z tą samą funkcją obsługującą onRead ustawioną jako funkcja zwrotna. Proces ten trwa, aż kod osiągnie koniec pliku, a wtedy uruchamiane jest zadanie onComplete. To bardzo zawiły sposób wyrażania operacji asynchronicznych.
+
+```csharp
+public static Task CopyAsyncOld(string sourceFilename,
+  string destinationFilename, int bufferSize) {
+ 
+  var inputStream = File.OpenRead(sourceFilename);
+  var outputStream = File.Create(destinationFilename);
+ 
+  var buffer = new byte[bufferSize];
+  var onComplete = new Task(() => {
+    inputStream.Dispose();
+    outputStream.Dispose();
+  });
+ 
+  void onRead(IAsyncResult readResult) {
+    int bytesRead = inputStream.EndRead(readResult);
+    if (bytesRead == 0) {
+      onComplete.Start();
+      return;
+    }
+    outputStream.BeginWrite(buffer, 0, bytesRead,
+      writeResult => {
+        outputStream.EndWrite(writeResult);
+        inputStream.BeginRead(buffer, 0, bufferSize, onRead,
+          null);
+      }, null);
+  }
+ 
+  var result = inputStream.BeginRead(buffer, 0, bufferSize,
+    onRead, null);
+  return Task.WhenAll(onComplete);
+}
+```
+
+Problemem tego podejścia jest to, że im więcej operacji asynchronicznych rozpoczynasz, tym łatwiej jest stracić kontrolę nad nimi. Wszystko może łatwo przekształcić się w tzw. "callback hell" (piekło zwrotek), termin zawdzięczamy programistom Node.js.
+
+#### 7.5.4 Nowoczesne async/await
+Na szczęście genialni projektanci w Microsoft znaleźli świetny sposób na pisanie kodu asynchronicznego I/O przy użyciu semantyki async/await. Mechanizm ten, wprowadzony po raz pierwszy w języku C#, stał się tak popularny i udowodnił swoją praktyczność, że został przyjęty przez wiele innych popularnych języków programowania, takich jak C++, Rust, JavaScript i Python.
+
+Wersję kodu z użyciem async/await możesz zobaczyć w liście 7.12. Co za oddech świeżego powietrza! Deklarujemy funkcję przy użyciu słowa kluczowego async, dzięki czemu możemy używać await w funkcji. Instrukcje await definiują punkty zakotwiczenia, ale naprawdę nie czekają na wykonanie wyrażenia, które za nimi występuje. Oznaczają jedynie punkty powrotu, gdy oczekiwana operacja I/O zostanie zakończona w przyszłości, dzięki czemu nie musimy definiować nowej zwrotki dla każdego ciągu operacji. Możemy pisać kod jak w przypadku zwykłego, synchronicznego kodu. Z tego powodu funkcja i tak zwraca natychmiast, podobnie jak w przypadku listy 7.11. Zarówno funkcje ReadAsync, jak i WriteAsync są funkcjami zwracającymi obiekt Task, podobnie jak sama funkcja CopyAsync. Nawiasem mówiąc, klasa Stream już zawiera funkcję CopyToAsync, aby ułatwić scenariusze kopiowania, ale tutaj trzymamy operacje odczytu i zapisu oddzielnie, aby dopasować źródło do oryginalnego kodu. 
+
+```csharp
+public async static Task CopyAsyncNew(string sourceFilename,
+  string destinationFilename, int bufferSize) {
+ 
+  using var inputStream = File.OpenRead(sourceFilename);
+  using var outputStream = File.Create(destinationFilename);
+  var buffer = new byte[bufferSize];
+  
+  while (true) {
+    int readBytes = await inputStream.ReadAsync(buffer, 0, bufferSize);
+    
+    if (readBytes == 0) {
+      break;
+    }
+    
+    await outputStream.WriteAsync(buffer, 0, readBytes);
+  }
+}
+
+```
+
+Przy korzystaniu ze słów kluczowych async/await, kod za kulisami zostaje przekształcony podczas kompilacji w coś podobnego do tego przedstawionego w liście 7.11, z użyciem zwrotek i innych elementów. Słowa kluczowe async/await znacznie ułatwiają pracę.
+
+#### 7.5.5 Pułapki asynchronicznego wejścia/wyjścia
+Języki programowania nie wymagają od Ciebie używania mechanizmów asynchronicznych tylko do operacji wejścia/wyjścia. Możesz deklarować funkcję asynchroniczną, nie wywołując w ogóle żadnych operacji związanych z wejściem/wyjściem i wykonywać na nich jedynie pracę procesora. W takim przypadku stworzysz niepotrzebny poziom złożoności bez żadnych korzyści. Kompilator zazwyczaj ostrzega przed taką sytuacją, ale zdarza się, że ostrzeżenia kompilatora są ignorowane w środowisku korporacyjnym, ponieważ nikt nie chce zajmować się konsekwencjami, jakie poprawki mogłyby spowodować. Problemy wydajnościowe będą się kumulować, a następnie zostaniesz zobowiązany do naprawienia wszystkich tych problemów naraz, co niesie za sobą większe konsekwencje. Podnieś ten temat podczas przeglądów kodu, daj o nim znać i wyraź swoje zdanie.
+
+Jedną z ważnych zasad, której powinieneś przestrzegać, korzystając z async/await, jest to, że await nie czeka. Tak, await sprawia, że następna linia kodu jest wykonywana po zakończeniu jego wykonania, ale robi to bez oczekiwania lub blokowania, dzięki asynchronicznym zwrotkom za kulisami. Jeśli twój kod asynchroniczny czeka na zakończenie czegoś, robisz to źle.
+
+### 7.6 W razie niepowodzenia, stosuj cache
+Caching (buforowanie) to jedna z najbardziej niezawodnych metod poprawy wydajności natychmiastowo. Unieważnianie pamięci podręcznej może być trudnym problemem, ale nie stanowi problemu, jeśli buforujesz tylko te rzeczy, o których nie martwisz się unieważnianiem. Nie potrzebujesz też rozbudowanej warstwy pamięci podręcznej mieszczącej się na osobnym serwerze, takiej jak Redis czy Memcached. Możesz używać pamięci podręcznej w pamięci, takiej jak ta dostarczana przez klasę MemoryCache w pakiecie System.Runtime.Caching. Prawda, nie może ona skalować się poza pewien punkt, ale skalowanie może nie być tym, czego szukasz na początku projektu. Ekşi Sözlük obsługuje 10 milionów żądań dziennie na jednym serwerze DB i czterech serwerach internetowych, ale wciąż używa pamięci podręcznej w pamięci.
+
+Unikaj używania struktur danych, które nie są przeznaczone do buforowania. Zazwyczaj nie posiadają one mechanizmu usuwania lub wygaszania, stając się źródłem wycieków pamięci i, ostatecznie, awarii. Używaj rzeczy, które są zaprojektowane do buforowania. Twoja baza danych może także być doskonałym trwałym buforem.
+
+Nie obawiaj się nieskończonego wygaszania w pamięci podręcznej, ponieważ albo unieważnienie pamięci podręcznej, albo ponowne uruchomienie aplikacji nadejdzie przed końcem wszechświata.
+
+### Podsumowanie
+
+- Wykorzystuj wczesne optymalizacje jako ćwiczenia i ucz się z nich.
+- Unikaj wprowadzania niepotrzebnych optymalizacji, które mogą skomplikować kod.
+- Zawsze zweryfikuj efekty optymalizacji za pomocą testów wydajnościowych.
+- Utrzymuj równowagę między optymalizacją a responsywnością.
+- Nawykowo identyfikuj problematyczny kod, takie jak zagnieżdżone pętle, kod obciążony ciągami znaków i nieefektywne wyrażenia logiczne.
+- Podczas budowy struktur danych rozważ korzyści płynące z dostosowania pamięci dla uzyskania lepszej wydajności.
+- W przypadku mikrooptymalizacji zrozum, jak działa procesor (CPU), korzystaj z lokalności w pamięci podręcznej (cache locality), potokowości (pipelining) i SIMD.
+- Zwiększ wydajność operacji wejścia/wyjścia (I/O), stosując odpowiednie mechanizmy buforowania.
+- Używaj programowania asynchronicznego, aby uruchamiać kod i operacje I/O równolegle, bez marnowania wątków.
+- W razie potrzeby, złam zasadę buforowania (cache).
+
+
+
+Donald Knuth poinformował mnie, że jego cytat w oryginalnym artykule został zrewidowany i ponownie wydrukowany w jego książce "Literate Programming". Otrzymanie osobistej odpowiedzi od niego było jednym z największych punktów mojego procesu pisania.
