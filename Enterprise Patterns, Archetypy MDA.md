@@ -377,13 +377,13 @@ Ostatni punkt jest istotny. Ogólnie rzecz biorąc, to bardzo zła koncepcja kod
 - Możesz nie znać wymaganych informacji o Jednostce w momencie, w którym obiekt Jednostki jest zapisywany w trwałym magazynie.
 - Możesz błędnie zgromadzić informacje o Jednostce (co jest dość powszechne, szczególnie gdy informacje są zbierane przez telefon).
 - Dowolne informacje o Jednostce mogą się zmieniać z czasem (z powodu rzeczywistych zmian w danych Jednostki lub poprawiania błędów), ale ważne jest, aby unikalny identyfikator nie ulegał zmianie.
-Archeotyp PartyIdentifier może przynieść wielkie korzyści twojej firmie. Posiadanie jednego, unikalnego identyfikatora dla Jednostki pomoże poprawić jakość danych o Jednostce. W szczególności możliwe będzie zidentyfikowanie i uporządkowanie zduplikowanych oraz niezgodnych danych, a zarządzanie relacjami z Jednostkami stanie się znacznie łatwiejsze.
+Archetyp PartyIdentifier może przynieść wielkie korzyści twojej firmie. Posiadanie jednego, unikalnego identyfikatora dla Jednostki pomoże poprawić jakość danych o Jednostce. W szczególności możliwe będzie zidentyfikowanie i uporządkowanie zduplikowanych oraz niezgodnych danych, a zarządzanie relacjami z Jednostkami stanie się znacznie łatwiejsze.
 
 ### 4.7 RegisteredIdentifier
 
-*Archeotyp RegisteredIdentifier reprezentuje identyfikator dla Strony (Party), który został nadany przez uznane ciało lub organ statutowy.*
+*Archetyp RegisteredIdentifier reprezentuje identyfikator dla Strony (Party), który został nadany przez uznane ciało lub organ statutowy.*
 
-Archeotyp RegisteredIdentifier jest przedstawiony na rysunku 4.5. Zauważ, że RegisteredIdentifier nie jest UniqueIdentifier. Dzieje się tak, ponieważ RegisteredIdentifier nie musi być koniecznie unikalny.
+Archetyp RegisteredIdentifier jest przedstawiony na rysunku 4.5. Zauważ, że RegisteredIdentifier nie jest UniqueIdentifier. Dzieje się tak, ponieważ RegisteredIdentifier nie musi być koniecznie unikalny.
 Każdy RegisteredIdentifier może zawierać następujące informacje:
 
 - Sam identyfikator
@@ -402,9 +402,9 @@ Zarejestrowane Identyfikatory są rozważane dla Osób w sekcji 4.11.1, dla Firm
 
 Czasami w systemach biznesowych istotne jest zidentyfikowanie, że działanie lub decyzja zostały zatwierdzone przez odpowiednią Stronę/Podmiot, lub aby formalnie określić, który Podmiot podjął konkretne działanie lub decyzję.
 
-***Archeotyp Podpisu Podmiotu reprezentuje znak identyfikacyjny Podmiotu/Strony.***
+***Archetyp Podpisu Podmiotu reprezentuje znak identyfikacyjny Podmiotu/Strony.***
 
-Archeotyp Podpisu Strony jest przedstawiony na Rysunku 4.5. Określa, kiedy został utworzony podpis wraz z opcjonalnym powodem dla Podpisu Strony. Na przykład, Podpis Strony może być skojarzony z Przydzieloną Odpowiedzialnością (patrz Sekcja 5.8), aby wskazać, kto dokonał przydzielenia.
+Archetyp Podpisu Strony jest przedstawiony na Rysunku 4.5. Określa, kiedy został utworzony podpis wraz z opcjonalnym powodem dla Podpisu Strony. Na przykład, Podpis Strony może być skojarzony z Przydzieloną Odpowiedzialnością (patrz Sekcja 5.8), aby wskazać, kto dokonał przydzielenia.
 Podpis Strony może opcjonalnie odnosić się do Autentykacji Strony, która potwierdza autentyczność Podpisu Strony. Omówimy to w następnej sekcji.
 
 ### 4.9 Autentykacja Podmiotu
@@ -413,7 +413,7 @@ Autentykacja Strony to ważny element systemów informatycznych, szczególnie w 
 
 ***Archetyp autentykacji Podmiotu reprezentuje uzgodniony i zaufany sposób potwierdzania tożsamości Strony.***
 
-Archeotyp Autentykacji Podmiotu przedstawiony jest na Rysunku 4.5. Określa on, kiedy autentykacja została utworzona, wraz z opcjonalnym powodem Autentykacji Strony. Autentykacja Strony może być wykorzystywana w różnych kontekstach, na przykład do weryfikacji tożsamości Strony w celu dostępu do określonych zasobów lub potwierdzenia, że Strona potwierdziła konkretne informacje lub podjęła konkretne działania.
+Archetyp Autentykacji Podmiotu przedstawiony jest na Rysunku 4.5. Określa on, kiedy autentykacja została utworzona, wraz z opcjonalnym powodem Autentykacji Strony. Autentykacja Strony może być wykorzystywana w różnych kontekstach, na przykład do weryfikacji tożsamości Strony w celu dostępu do określonych zasobów lub potwierdzenia, że Strona potwierdziła konkretne informacje lub podjęła konkretne działania.
 
 Możesz modelować autentykację, łącząc każdy Podmiot z zerem lub więcej Autentykacjami Strony (patrz Rysunek 4.5).
 
@@ -509,3 +509,471 @@ Międzynarodowy Związek Telekomunikacyjny (www.itu.int) ustala standardy dla ad
 ![image-20231114234248683](image-20231114234248683.png)
 
 Każda część numeru, z wyjątkiem IDD, jest reprezentowana przez atrybut w archetypie TelecomAddress, zgodnie z opisem w Tabeli 4.3. IDD nie jest częścią TelecomAddress, ponieważ jest to numer, który trzeba dodać do adresu telekomunikacyjnego, aby korzystać z międzynarodowego wybierania bezpośredniego. Numer ten zależy od kraju, w którym znajdujesz się podczas próby wybierania bezpośredniego, dlatego zazwyczaj jest reprezentowany przez znak plusa. Na przykład w Wielkiej Brytanii IDD to 00, w Stanach Zjednoczonych to 011, a we Francji i kilku innych krajach różni się w zależności od dostawcy telekomunikacyjnego, którego chcesz użyć do swojego międzynarodowego połączenia. (Zobacz www.kropla.com, aby uzyskać szczegółowe listy kodów krajów, IDD i NDD.)
+
+Table 4.3 (Continued):
+
+| Attribute                   | Semantics                                                    |
+| --------------------------- | ------------------------------------------------------------ |
+| countryCode                 | Kod kraju; prefiks kierunkowy do danego kraju — nie jest to tożsame z kodem kraju ISO 3166, który jest kodem alfanumerycznym |
+| nationalDirectDialingPrefix | Prefiks używany do wybierania numeru wewnątrz kraju między różnymi miastami lub obszarami — zazwyczaj pomijany podczas wybierania z zewnątrz kraju (wyjątki obejmują Włochy, gdzie prefiks kierunkowy krajowy jest uwzględniany podczas wybierania z zewnątrz; i Hiszpania, która obecnie nie używa prefiksu kierunkowego krajowego) |
+| areaCode                    | Kod obszaru lub miasta                                       |
+| number                      | Numer telefonu — może być dowolnie podzielony na jedną lub więcej sekwencji cyfr, w zależności od miejscowych standardów |
+| extension                   | Rozszerzenie dostępne za pośrednictwem numeru                |
+| physicalType                | Typ urządzenia dostępnego za pomocą TelecomAddress           |
+
+TelecomAddresses mogą łączyć się z różnymi fizycznymi urządzeniami, dlatego każdy TelecomAddress ma physicalType opisujący urządzenie, do którego jest podłączony (nie jest to jednak logiczny typ, taki jak numer domowy, numer służbowy itp. — ten typ jest reprezentowany przez atrybut użycia (use) w powiązanych AddressProperties).
+
+Niektóre możliwe wartości dla physicalType to:
+
+- "phone" (telefon)
+- "fax" (fax)
+- "mobile" (telefon komórkowy)
+- "pager" (pager)
+
+Oczekuje się, że w przyszłości pojawią się dodatkowe wartości, a niektóre znikną!
+
+
+
+##### 4.10.3 Adres e-mail
+
+***Archetyp EmailAddress określa sposób kontaktowania się z jednostką za pomocą wiadomości e-mail.***
+
+Adresy e-mail (patrz Rysunek 4.7) mają następującą postać: nazwaUżytkownika@nazwaDomeny
+Zazwyczaj są reprezentowane jako ciąg tekstowy, ponieważ zazwyczaj nie ma korzyści z oddzielania obu części adresu. Bardzo łatwo jest wyodrębnić nazwę domeny, jeśli jest to konieczne - to po prostu część po symbolu @.
+
+##### 4.10.4 WebPageAddress
+
+***Archetyp WebPageAddress reprezentuje adres URL strony internetowej związanej z daną stroną.***
+
+Adres WebPageAddress składa się z Jednolitego Lokalizatora Zasobów (URL), który lokalizuje stronę w World Wide Web. Format URL ma postać: `www.domainName/resourceName`, gdzie resourceName jest opcjonalne. Adresy WebPageAddress są zazwyczaj reprezentowane jako ciągi tekstowe. Ponownie, nie ma rzeczywistej korzyści z przechowywania części osobno.
+
+### 4.11 Osoba
+
+***Archetyp Osoba reprezentuje informacje dotyczące istoty ludzkiej.***
+
+Wzorzec archetypu Osoba jest przedstawiony na rysunku 4.9. Każda Osoba ma opcjonalną datę urodzenia. Chociaż każda jednostka urodziła się w określonym dniu, modelujemy to jako atrybut opcjonalny w archetypie Osoba, ponieważ ta informacja nie jest istotna dla każdego systemu biznesowego.
+
+Omówimy inne archetypy związane z Osobą w kolejnych sekcjach.
+
+##### 4.11.1 Identyfikatory dla osób
+
+Nie istnieje międzynarodowo uznawany, powszechnie stosowany, pojedynczy unikalny identyfikator dla ludzi. Każdy kraj może opcjonalnie przyjąć własny schemat identyfikacji, a niektóre kraje, takie jak Stany Zjednoczone i Wielka Brytania, nie mają żadnego schematu w ogóle. Wynika z tego, że najlepszym podejściem do identyfikacji osób jest przypisanie każdej osobie unikalnego identyfikatora strony, który generujesz samodzielnie.
+
+Jednak istnieje różnorodność Zarejestrowanych Identyfikatorów, o których mowa w sekcji 4.7, które istnieją poza twoim przedsiębiorstwem (i są niezależne od niego). Możesz także potrzebować ich do celów prawnych lub biznesowych lub w celu ułatwienia wymiany informacji z innymi organizacjami. Niektóre przykłady dla osób to
+- Numer paszportu
+- Numer ubezpieczenia społecznego
+- Numer dowodu tożsamości
+
+
+
+Przyjrzymy się każdemu z tych przypadków poniżej i omówimy, dlaczego najlepiej traktować je jako RegisteredIdentifiers niż jako unikalne PartyIdentifiers.
+
+**Numer paszportu:** Jeśli osoba ma paszport, numer paszportu może pełnić funkcję identyfikatora. Jednak może to nie być odpowiednie ogólnie z następujących powodów.
+● Osoba może nie mieć paszportu.
+● Osoba może mieć więcej niż jeden paszport (np. posiada kilka obywatelstw).
+● W niektórych krajach jeden paszport może obejmować więcej niż jedną osobę (co staje się coraz rzadsze).
+
+**Numer ubezpieczenia społecznego:** Wiele firm używa numeru ubezpieczenia społecznego wydanego przez rząd jako unikalnego identyfikatora. W Stanach Zjednoczonych ten numer jest znany jako SSN (Numer Ubezpieczenia Społecznego); w Wielkiej Brytanii jego odpowiednikiem jest numer NI (Numer Ubezpieczenia Narodowego).
+
+Jednakże ta strategia ma problemy i może być bardzo złą koncepcją. Problemy z tym podejściem zostały ładnie podsumowane w [Garfinkel 1995], który zauważył, że powszechne zastosowania numeru ubezpieczenia społecznego w biznesie - uwierzytelnianie i identyfikacja - są właściwie sprzeczne ze sobą.
+
+Podstawowy problem polega na tym, że aby numer ubezpieczenia społecznego był używany jako unikalny identyfikator, musi być powszechnie znany, ale aby był używany do uwierzytelniania, musi być tajny! W rzeczywistości zarówno rządy Stanów Zjednoczonych, jak i Wielkiej Brytanii wyraźnie stwierdzają, że SSN i numer NI nie powinny być używane do celów identyfikacyjnych. Raczej są one przeznaczone jako numery kont, które umożliwiają osobom dostęp do określonych informacji i usług.
+
+Na przykład, w Wielkiej Brytanii numer NI może być używany w tym duchu przez:
+● Urząd Skarbowy
+● Pracodawców, do potrącania podatku i składek na ubezpieczenie społeczne
+● Służby Zatrudnienia, do administrowania zasiłkami dla osób poszukujących pracy
+● Władze lokalne, do administrowania świadczeniami mieszkaniowymi
+
+Ponieważ numery ubezpieczenia społecznego mogą być używane przez rządy do udzielenia dostępu do konkretnych informacji o danej osobie, posiadając dostęp do czyjegoś SSN lub numeru NI, można uzyskać dostęp do wrażliwych informacji, które osoba ta może uważać za prywatne.
+
+Chociaż nie ma prawa w Wielkiej Brytanii ani Stanach Zjednoczonych, które zabraniałoby firmom używania numerów ubezpieczenia społecznego do celów, jakie tylko chcą, nasze zdanie jest takie, że SSN, numer NI i podobne numery nie powinny być używane jako unikalny identyfikator osoby w systemach biznesowych.
+
+**Numer dowodu tożsamości:** Niektóre rządy wydają dowody tożsamości, które posiadają numery, które mogą być używane jako unikalne identyfikatory dla osób w danym kraju. Jednak nie istnieje międzynarodowy standard w tej dziedzinie, a implementacja różni się znacznie od kraju do kraju. Niektóre kraje nigdy nie wydają tych kart, niektóre kraje oferują takie karty opcjonalnie na żądanie, a niektóre kraje uczyniły karty obowiązkowymi.
+
+#### 4.12 ISOGender
+
+***Archetyp ISOGender reprezentuje klasyfikację osoby według płci zgodnie ze standardem ISO 5218.***
+
+Każda osoba posiada ISOGender (patrz Rysunek 4.9). Bazujemy na normie ISO 5218 (zobacz www.iso.org), która określa cztery możliwe wartości dla płci:
+● MALE (MĘŻCZYZNA)
+● FEMALE (KOBIETA)
+● NOTKNOWN (NIEZNANE) — płeć nie jest znana
+● NOTSPECIFIED (NIEOKREŚLONE) — osoba zdecydowała się nie określić swojej płci
+
+Istnieje istotna różnica biznesowa między NOTKNOWN a NOTSPECIFIED. NOTKNOWN oznacza po prostu, że informacje o płci nie zostały zebrane, podczas gdy NOTSPECIFIED oznacza, że osoba zdecydowanie postanowiła nie określić swojej płci.
+
+4.13 Etniczność
+
+***Archetyp Etniczność reprezentuje klasyfikację jednej lub wielu osób zgodnie z wspólnym pochodzeniem rasowym, narodowym, plemiennym, religijnym, językowym lub kulturowym.***
+
+Każda osoba może mieć zero lub więcej etniczności (patrz Rysunek 4.9). Może być przydatne rejestrowanie tych informacji ze względów zarządzania relacjami z klientem (CRM) i celów marketingowych, za zgodą danej osoby. Na przykład niektóre grupy etniczne mogą mieć określone potrzeby produktów, wymagania dotyczące usług lub preferencje - na przykład Jainowie są ścisłymi wegetarianami.
+
+Zauważ, że modelujemy Etniczność jedynie jako nazwę i opis. Możesz zdecydować się dodać więcej informacji do Etniczności, w tym zasady biznesowe i preferencje, zgodnie z wymaganiami twojej aplikacji.
+
+### 4.14 BodyMetrics
+
+Nie przedstawiamy szczegółów dotyczących tego w naszym modelu (patrz Rysunek 4.9), przede wszystkim dlatego, że istnieje bardzo szeroki zakres BodyMetrics, które mogą być uchwycone, a po drugie, ponieważ BodyMetrics są zazwyczaj potrzebne tylko w bardzo specjalistycznych zastosowaniach. Aby uzyskać więcej informacji na temat pomiarów ciała i standardu BodyXML do przechwytywania tych informacji, odwiedź stronę www.bodymetrics.com.
+
+### 4.15 PersonName
+
+***Archetyp PersonName reprezentuje nazwę dla osoby.***
+
+
+
+![image-20231115062214729](image-20231115062214729.png)
+
+Archetyp PersonName został przedstawiony na Rysunku 4.9. Podczas modelowania nazw dla osób ważne jest, aby być jak najbardziej międzynarodowym i kulturowo neutralnym. Na przykład, należy unikać kulturowo naładowanych terminów, takich jak "imię z bierzmowania". Każde imię, w każdej części świata, można rozłożyć na składniki wymienione w Tabeli 4.4.
+
+**Tabela 4.4**
+**Archetyp PersonName**
+
+| Atrybut          | Wielkość wystąpień | Semantyka                                                    |
+| ---------------- | ------------------ | ------------------------------------------------------------ |
+| «o»prefix        | Zero lub więcej    | Tytuł honorowy, taki jak Pan, Pani, Dr, Ks. itp.             |
+| «o»givenName     | Zero lub jedno     | Imię w krajach zachodnich - może obejmować nazwiska z łącznikiem (np. Jean-Paul) oraz imiona składające się z więcej niż jednego słowa (np. Kwai Lin) |
+| «o»middleName    | Zero lub więcej    | Każde inne imię niż imię i nazwisko                          |
+| familyName       | Jeden              | Nazwisko w krajach zachodnich - to jest jedyny obowiązkowy składnik nazwy i jedyny używany, jeśli osoba ma tylko jedno imię |
+| «o»preferredName | Zero lub jedno     | Imię, które jest powszechnie znane dla danej osoby - często jest to skrócona wersja jednego z innych imion (np. "Jim" to skrót od "James", "Bill" to skrót od "William") |
+| «o»suffix        | Zero lub więcej    | Każdy przyrostek może być: • Oznaczeniem pokoleniowym (np. Jr., III) • Kwalifikacją (np. BSc., licencjat nauk przyrodniczych; Ph.D., doktor nauk filozoficznych) • Tytułem (np. FRSC, Członek Królewskiego Towarzystwa Chemii; Bart, Baronet; KG, Kawaler Orderu Podwiązki) |
+| «o»use           | Zero lub więcej    | Krótki opis do czego używane jest to imię (np. artystyczne lub prawne imię) |
+| «o»validFrom     | Jeden              | Data, od której imię osoby jest ważne                        |
+| «o»validTo       | Jeden              | Data, do której imię osoby jest ważne                        |
+
+**Uwaga:**
+- "«o»" oznacza opcjonalne atrybuty.
+- "Zero lub więcej" oznacza, że atrybut może mieć zero lub więcej wystąpień.
+- "Zero lub jedno" oznacza, że atrybut może mieć zero lub jedno wystąpienie.
+- "Jeden" oznacza, że atrybut musi mieć dokładnie jedno wystąpienie.
+
+Jedynym obowiązkowym atrybutem jest familyName. Pozostałe elementy mogą być potrzebne lub nie, w zależności od informacji, które są potrzebne dla Twojej działalności i informacji, które możesz zbierać.
+
+Każda osoba ma jedną legalną nazwę własną (personName) w danym momencie. Niemniej jednak osoba może mieć wiele innych nazw własnych (otherPersonNames). Mogą to być nazwy, które już nie są ważne (historyczne nazwy) lub różnego rodzaju aliasy.
+
+Systemy policyjne z pewnością muszą rejestrować aliasy i ich użycie. Jednakże przedsiębiorstwo może także znaleźć przydatne rejestrowanie aliasów i ich użycia, aby móc zwracać się do osoby w najbardziej odpowiedni sposób. Na przykład czasami ludzie używają zupełnie innej nazwy niż ich prawdziwe imię z powodów religijnych, podczas gdy niektórzy ludzie z imionami pochodzącymi z krajów spoza zachodniego świata mogą używać zanglicyzowanych wersji swoich imion w określonych okolicznościach.
+
+W komunikacji z osobą powinno się używać zasad biznesowych, które uwzględniają kontekst i kulturę, aby określić, które nazwy są używane i w jakiej kolejności. Choć nie omawiamy tego bezpośrednio tutaj, to jednak dostarczamy prosty silnik reguł w Rozdziale 12.
+
+### 4.16 Organization
+
+***Archetyp Organization reprezentuje strukturę administracyjną i funkcjonalną.***
+
+
+***Archetyp OrganizationName reprezentuje nazwę dla Organizacji.***
+
+***Archetyp OrganizationUnit reprezentuje Organizację będącą częścią innej Organizacji.***
+
+Podczas gdy istnieje tylko jeden rodzaj Osoby, istnieje wiele różnych rodzajów Organizacji. Możesz zobaczyć kilka przykładów w Rysunku 4.10, chociaż prawdopodobnie znajdziesz inne przykłady w swojej własnej działalności.
+
+Zauważ, że nie wszystko na Rysunku 4.10 to Archetyp. Uważamy, że pojęcia CompanyGroup, Company i OrganizationUnit są z pewnością archetypalne, ale różne rodzaje OrganizationUnit, takie jak Divisions (Działy) i Departments (Działy), nie są. Dzieje się tak dlatego, że Firma może nazwać swoje części dowolnie - zobacz Rozdział 4.20, aby uzyskać dalsze omówienie struktury firmy.
+
+W kolejnych sekcjach przyjrzymy się Firmom.
+
+![image-20231115063314934](image-20231115063314934.png)
+
+### 4.17 Firma
+
+Archeotyp Firma reprezentuje Organizację utworzoną w celu osiągania zysków poprzez sprzedaż towarów lub usług, posiadającą odrębną tożsamość prawną od swoich właścicieli.
+
+**CompanyGroup**
+Archeotyp CompanyGroup reprezentuje Organizację składającą się z grupy Firm, które mają ze sobą relacje prawne.
+
+
+
+Różne kraje uznają różne rodzaje firm. Na przykład w Stanach Zjednoczonych obecnie istnieje cztery rodzaje firm, chociaż nie wszystkie z nich są dostępne we wszystkich stanach. Mimo że Firma jest archeotypem, rodzaje amerykańskich firm przedstawione na Rysunku 4.11 nim nie są. Dzieje się tak, ponieważ są one uzależnione od federalnego i stanowego prawa amerykańskiego, nie są uniwersalne i podlegają zmianom.
+
+![image-20231115064222044](image-20231115064222044.png)
+
+
+
+Przypadek dla USA
+
+- **GeneralCorporation:** Firma, która może emitować więcej niż jedną klasę akcji i może mieć nieograniczoną liczbę akcjonariuszy. Odpowiedzialność akcjonariuszy zazwyczaj jest ograniczona do ich inwestycji w akcje. Płaci podatek dochodowy federalny od korporacji przed dokonywaniem wypłat dywidendy akcjonariuszom. Jest to struktura korporacyjna najczęściej wybierana przez firmy planujące duże publiczne oferty akcji.
+- **CloseCorporation:** Firma, która ma maksymalnie około 30 do 50 akcjonariuszy (zależnie od stanu); nowe akcje zazwyczaj muszą być najpierw oferowane istniejącym akcjonariuszom. Odpowiedzialność akcjonariuszy zazwyczaj jest ograniczona do ich inwestycji w akcje. Płaci podatek dochodowy federalny od korporacji przed dokonywaniem wypłat dywidendy akcjonariuszom. Ta struktura korporacyjna jest zazwyczaj wybierana przez pojedynczą osobę lub małą grupę osób zakładających firmę.
+- **S Corporation:** Firma o specjalnym statusie podatkowym, taki że nie płaci federalnego podatku dochodowego od korporacji, ale przekazuje zyski lub straty bezpośrednio akcjonariuszom, gdzie są one raportowane w ich zeznaniach podatkowych osobistych. Odpowiedzialność akcjonariuszy zazwyczaj jest ograniczona do ich inwestycji w akcje. Jest to struktura korporacyjna zazwyczaj wybierana przez właścicieli małych firm, którzy woleliby być opodatkowani, jakby byli jednoosobowym przedsiębiorcą lub partnerami. To mniej restrykcyjna forma firmy niż korporacja, oferująca ochronę ograniczonej odpowiedzialności i opodatkowanie podobne do jednoosobowej działalności gospodarczej lub partnerstwa.
+
+W Polsce istnieje kilka głównych form prawnych dla firm. Poniżej przedstawiam podstawowe rodzaje firm w Polsce:
+
+**1. Spółka z Ograniczoną Odpowiedzialnością (sp. z o.o.):**
+- Ograniczona odpowiedzialność właścicieli do wysokości wniesionego kapitału.
+- Wymagał co najmniej jednego wspólnika, a kapitał zakładowy musi być w pełni opłacony.
+
+**2. Spółka Akcyjna (S.A.):**
+- Właściciele posiadają akcje, a ich odpowiedzialność ograniczona jest do wartości zakupionych akcji.
+- Kapitał zakładowy jest wyższy niż w przypadku spółki z o.o.
+- Wymaga co najmniej jednego akcjonariusza.
+
+**3. Jednoosobowa Działalność Gospodarcza (Jednoosobowa firma):**
+- Firma prowadzona jest przez jedną osobę, która jest odpowiedzialna bez ograniczeń za zobowiązania firmy.
+- Prosty proces zakładania, ale brak ochrony ograniczonej odpowiedzialności.
+
+**4. Spółka Komandytowo-Akcyjna (S.K.A.):**
+- Mieszanka cech spółki komandytowej i akcyjnej.
+- Istnieją wspólnicy komandytariusze (odpowiedzialni bez ograniczeń) i akcjonariusze (odpowiedzialność ograniczona do wartości akcji).
+
+**5. Spółka Komandytowa (sp. k.):**
+- Składa się z co najmniej dwóch wspólników: komandytariusza (odpowiedzialnego bez ograniczeń) i komandytobiorcy (odpowiedzialnego ograniczonym wkładem).
+
+**6. Spółdzielnia:**
+- To organizacja ekonomiczna prowadzona na zasadzie wspólnej własności i demokratycznej kontroli przez jej członków.
+- Podział zysków i odpowiedzialność jest uzależniona od zaangażowania każdego członka.
+
+
+
+**4.18 Nazwy Firm**
+W większości krajów lub stanów firma musi zarejestrować się w wyznaczonym organie (np. Companies House w Wielkiej Brytanii, GUS w Polsce), zanim będzie jej wolno rozpocząć działalność handlową.
+Każda Firma ma nazwę organizacji zarejestrowaną w wyznaczonym organie. Często zawiera ona przyrostek wskazujący na jej status prawny, na przykład SA (Polska), PLC (Wielka Brytania), Inc. (Stany Zjednoczone) lub AG (Niemcy). Możesz ustawić wartość atrybutu "use" dla Nazwy Organizacji na "legal name", aby to uchwycić (patrz Rysunek 4.10).
+W wielu krajach Firmom wolno działać pod więcej niż jedną nazwą. Możesz modelować to jako osobne inne Nazwy Organizacji i identyfikować je, ustawiając "use" na "trading name".
+
+
+
+**4.19 Identyfikatory dla Firm**
+Nie istnieje międzynarodowo uznawany, powszechnie stosowany, pojedynczy unikalny identyfikator dla Firm. Podobnie jak w przypadku Ludzi, dlatego dochodzimy do wniosku, że najlepszym podejściem do identyfikacji Firm jest przypisanie każdej z nich unikalnego identyfikatora PartyIdentifier, który generujesz samodzielnie.
+Jednakże może być konieczne również uchwycenie różnych RegisteredIdentifiers (patrz sekcja 4.7) z powodów prawnych, biznesowych lub w celu ułatwienia wymiany informacji z innymi organizacjami.
+Poniżej omawiamy kilka powszechnych kandydatów na identyfikatory i dyskutujemy, dlaczego najlepiej traktować je jako RegisteredIdentifiers, a nie jako unikalne identyfikatory Party.
+**DUNS number:** Ten unikalny, dziewięciocyfrowy kod identyfikacyjny — wydawany bezpłatnie przez Dun & Bradstreet (zobacz www.dnb.com dla więcej szczegółów) — odnosi się do jednostki biznesowej. Obecnie istnieje około 70 milionów firm na świecie, które posiadają numer DUNS (Data Universal Numbering System).
+Numery DUNS są używane przez Organizację Narodów Zjednoczonych, rząd federalny USA, rząd australijski, Komisję Europejską, między innymi. Są również używane jako unikalny identyfikator przez VeriSign (www.verisign.com) do przydzielania cyfrowych identyfikatorów. Niektóre firmy wymagają, aby wszyscy ich partnerzy biznesowi mieli numer DUNS. Jeśli jest to polityka twojej firmy, możesz już mieć solidny, gotowy do użycia unikalny identyfikator dla tych partnerów, który można uchwycić jako PartyIdentifier. Wiele organizacji jednak nie jest w stanie tego zrobić.
+
+**Domeny internetowe:**
+Mogłoby się wydawać, że nazwy domen (np. www.clearviewtraining.com) są kandydatami na identyfikatory dla Firm, ponieważ są zagwarantowane jako unikalne przez ICANN (Internet Corporation for Assigned Names and Numbers — www.icann.org). Jednak nie można polegać na nazwach domen jako jednoznacznym, powszechnie stosowanym identyfikatorze dla firmy z kilku powodów.
+- Firma może mieć więcej niż jedną nazwę domeny (np. brytyjska firma BT posiada www.bt.com, www.btplc.com i www.britishtelecom.com).
+- Niektóre mniejsze firmy mogą nie mieć własnej nazwy domeny lub posługiwać się tylko subdomeną.
+- Firma może być zmuszona do zmiany swojej nazwy domeny z powodu zmiany nazwy firmy, powodów marketingowych lub sporu o nazwę domeny.
+
+**Symbole giełdowe:**
+Tylko firmy notowane na giełdzie posiadają symbole giełdowe.
+
+**Narodowe identyfikatory:**
+Firmy mogą mieć narodowe numery identyfikacyjne. Na przykład w Wielkiej Brytanii numer firmy wydany przez Companies House jest unikalnym identyfikatorem dla firmy. Niemniej jednak, te numery nie mogą być zagwarantowane jako unikalne poza granicami krajowymi.
+
+**Zarejestrowana nazwa i adres biura:**
+Firmy mogą być unikalnie identyfikowane w określonym czasie poprzez ich zarejestrowaną nazwę i zarejestrowany adres biura, ale zarówno jedno, jak i drugie mogą ulec zmianie w pewnym momencie.
+
+### 4.20 Jednostki Organizacyjne Firmy
+
+W zasadzie, Firma może organizować swoje Jednostki Organizacyjne według własnego uznania — nie ma na to żadnych ograniczeń prawnych. W praktyce często spotyka się pewne powszechne struktury organizacyjne. Na przykład, Firma jest zazwyczaj podzielona na jedną lub więcej Dywizji, gdzie każda Dywizja może zawierać jedną lub więcej Działów, a te z kolei mogą składać się z jednej lub więcej Zespołów. Ilustruje to Rysunek 4.12. Należy jednak pamiętać, że Firmy mogą mieć inne struktury, często zależne od ich rozmiaru.
+
+![image-20231115064915461](image-20231115064915461.png)
+
+
+
+#### 4.20.1 Identyfikatory jednostek organizacyjnych
+
+Często Jednostki Organizacyjne posiadają unikalną nazwę w ramach swojej nadrzędnej Organizacji. Jednak nawet jeśli tak jest, to używanie tej samej nazwy jako jedynego identyfikatora może być ryzykowne. W przyszłości może dojść do reorganizacji, która spowoduje zmianę nazwy.
+
+Ponadto, możliwe jest, że więcej niż jedna jednostka w ramach Organizacji będzie miała tę samą nazwę. Na przykład firma może mieć kilka Dywizji, z których każda posiada Dział obsługi klienta, jak pokazano na Rysunku 4.13.
+
+![image-20231115064951504](image-20231115064951504.png)
+
+Aby rozwiązać te problemy, można przypisać każdej Jednostce Organizacyjnej unikalny identyfikator, który samodzielnie generujesz. Jednak istnieje również inny sposób podejścia.
+
+Można stworzyć unikalny identyfikator, generując ścieżkę zaczynając od góry organizacji i schodząc w dół, na przykład:
+```
+ACompany.Training.CustomerService
+```
+To podejście ze ścieżką działa, ponieważ nigdy nie ma sensu, aby dwie Jednostki Organizacyjne o tym samym rodzicu miały dokładnie tę samą nazwę. Należy jednak zauważyć, że istnieje pewne utrzymanie, jeśli jednostki są przemieszczane w strukturze organizacyjnej (co zaskakująco często zdarza się w biznesie), a także problem, jeśli Jednostka Organizacyjna zmieni nazwę, ale pozostanie niezmieniona pod innymi względami. W tym przypadku unikalny identyfikator powinien pozostać niezmieniony, ale jeśli przyjąłeś strategię identyfikacji według ścieżek organizacyjnych, możesz być zmuszony do jej zmiany.
+
+Podsumowując, ponownie najlepszym podejściem jest przypisanie każdej Jednostce Organizacyjnej unikalnego identyfikatora PartyIdentifier, który generujesz samodzielnie.
+
+### 4.21 Partnerstwa i jednoosobowe działalności gospodarcze
+
+Jeśli Twoja organizacja współpracuje z partnerstwami lub jednoosobowymi działalnościami gospodarczymi, można to uwzględnić za pomocą wzorca Party.
+
+**Partnerstwo** można modelować jako Organizację. Nazwa partnerstwa i wszelkie alternatywne nazwy handlowe można uchwycić jako organizationName i otherOrganizationNames, z odpowiednimi oznaczeniami "use" w każdym przypadku.
+
+**Jednoosobowa działalność gospodarcza** może być modelowana jako Osoba. Jeśli nazwa, pod którą osoba prowadzi działalność, różni się od jej własnej nazwy, można to uchwycić jako otherPersonName, z oznaczeniem "use" jako "trading name".
+
+Można użyć wzorca PartyRole (patrz Rozdział 5), aby określić, czy partnerstwo czy jednoosobowa działalność gospodarcza działa jako dostawca, partner, itp. Wykorzystaj RegisteredIdentifier, aby odnotować wszelkie kody identyfikacyjne podatkowe dla działalności, której Twoja organizacja potrzebuje do wiadomości (np. Numery rejestracji VAT w ramach Wspólnoty Europejskiej).
+
+
+
+### 4.22 Preferencje
+
+
+
+***Archeotyp Preferencji reprezentuje wyrażony wybór Strony (lub jej upodobania do) czegoś, często spośród zestawu możliwych lub oferowanych opcji.***
+
+Ta definicja sugeruje, że istnieje pewien zakres opcji, spośród których Strona może wybierać. Zobaczymy, jak można to modelować trochę później.
+Istnieją co najmniej dwie różne rodzaje Preferencji, które można uchwycić:
+- Ogólne Preferencje utrzymywane przez Stronę (np. preferencje dietetyczne)
+- Konkretne Preferencje utrzymywane przez Stronę pełniącą określoną Rolę Strony
+
+Większość preferencji to preferencje drugiego typu, czyli pojawiają się, gdy Strona znajduje się w określonym kontekście, który dostarcza różnych opcji. Nasz model Preferencji (Rysunek 4.14) uwzględnia oba typy.
+
+Każda Strona i każda Rola Strony mogą opcjonalnie mieć zero lub więcej Preferencji. Omawiamy Rolę Strony w Sekcji 5.3.
+
+Każda Preferencja ma Typ Preferencji.
+
+***Archeotyp Typu Preferencji określa nazwę, opis i zakres Opcji Preferencji dla danej Preferencji.***
+
+***Archeotyp Opcji Preferencji określa nazwę możliwej opcji oraz jej opis.***
+
+![image-20231115065529360](image-20231115065529360.png)
+
+**4.22 Preferencje**
+
+Każda Preferencja określa dokładnie jedną opcję spośród zakresu opcji wymienionych w jej Typie Preferencji.
+
+Na przykład, Rysunek 4.15 pokazuje Typ Preferencji dla posiłku w klasie ekonomicznej podczas lotu, wraz z dostępnymi Opcjami Preferencji.
+
+Rzeczywista Preferencja wybierze jedną z Opcji Preferencji zdefiniowanych przez Typ Preferencji, jak pokazano na Rysunku 4.16.
+
+Typy Preferencji mogą być powiązane z określonym produktem lub usługą. Tak jest zazwyczaj w przypadku, gdy Typy Preferencji są używane z Rolą Strony Klienta. Aby pokazać to powiązanie, Typ Preferencji może opcjonalnie określać produkt lub usługę jako przedmiot, który go dotyczy. Jeśli tak jest, nazwy Opcji Preferencji
+
+
+
+![image-20231115065651303](image-20231115065651303.png)
+
+​	![image-20231115070158027](image-20231115070158027.png)			 			 			 			 			 			 		
+
+zazwyczaj będą odnosić się do konkretnych cech produktu lub usługi (patrz Sekcja 7.10, aby uzyskać pełne informacje na ten temat).
+
+Opcjonalnie możesz przypisać określonej Preferencji preferenceWeight. Jest to miara tego, jak ważna jest Preferencja dla Strony lub Roli Strony, która ją posiada. Ważenie Preferencji w ten sposób może pomóc podejmować inteligentne decyzje CRM w przypadkach, gdy dozwolone jest tylko podzbiorcze Preferencji lub gdy występuje konflikt między wyrażonymi Preferencjami.
+
+### 4.23 PartyManager
+
+***Archeotyp PartyManager zarządza kolekcją Stron.***
+
+Zazwyczaj dobrą praktyką jest skoncentrowanie zarządzania Stronami w jednym miejscu w ramach Twojego biznesu. Ta funkcja jest reprezentowana w naszym modelu jako archetyp PartyManager, przedstawiony na Rysunku 4.17.
+
+Archeotyp PartyManager dostarcza usługi dodawania i usuwania Stron z rejestrów Twojej firmy. Zapewnia również zestaw operacji "finder", które pozwalają odnaleźć określoną Stronę. Możesz dodawać kolejne operacje, jeśli są potrzebne do spełnienia konkretnych wymagań Twojego biznesu.
+
+
+
+![image-20231115070320072](image-20231115070320072.png)
+
+### 4.24 Podsumowanie
+
+W tym rozdziale omówiliśmy wzorzec archetypu Party, który jest wzorcem do reprezentowania istotnych informacji biznesowych o osobach i organizacjach. Omówiliśmy poniższe tematy.
+
+- **Party:** jak reprezentować osobę lub organizację
+  - **PartyIdentifier:** jak jednoznacznie identyfikować stronę
+  - **RegisteredIdentifier:** jak reprezentować identyfikatory przypisane Podmiotowi przez uznaną lub ustawową jednostkę
+  - **PartySignature:** jak reprezentować znak identyfikacyjny Podmiotu
+  - **PartyAuthentication:** jak reprezentować zaufany sposób potwierdzania tożsamości Podmiotu
+
+- **Address:** jak reprezentować informacje kontaktowe dla Podmiotu
+  - **GeographicAddress**
+  - **TelecomAddress**
+  - **EmailAddress**
+
+- **EmailAddress**
+- **WebPageAddress**
+- **AddressProperties:** jak określić arbitralne właściwości Adresu (np. kontekst, w którym powinien być używany)
+
+- **Person:** jak reprezentować informacje o ludziach
+  - **Identifiers for people:** identyfikatory dla osób
+  - **ISOGender:** jak reprezentować informacje o płci
+  - **Ethnicity:** jak reprezentować etniczne pochodzenie osoby
+  - **BodyMetrics:** jak reprezentować informacje o ciele ludzkim
+  - **PersonName:** jak reprezentować imiona ludzi
+
+- **Organization:** jak reprezentować strukturę administracyjną lub funkcjonalną
+  - **OrganizationName:** jak reprezentować nazwę Organizacji
+  - **OrganizationUnit:** jak reprezentować Organizację będącą częścią innej Organizacji
+
+- **Company:** jak reprezentować firmy
+  - **CompanyGroup:** jak reprezentować powiązaną grupę firm
+  - **Company names:** nazwy firm
+  - **Identifiers for companies:** identyfikatory dla firm
+  - **Identifiers for company organizational units:** identyfikatory jednostek organizacyjnych firmy
+
+- **Partnerships and sole proprietors:** partnerstwa i jednoosobowe działalności gospodarcze
+
+- **Preference:** jak reprezentować wybór lub upodobanie Strony do czegoś, zazwyczaj wybieranego spośród zakresu opcji
+  - **PreferenceType:** jak reprezentować zakres opcji dostępnych dla Strony
+  - **PreferenceOption:** jak reprezentować konkretną opcję spośród zakresu dostępnego dla Podmiotu
+- **PartyManager:** jak reprezentować i zarządzać kolekcjami Stron
+
+## Rozdział 5 Wzorzec archetypu PartyRelationship
+
+### 5.1 Kontekst Biznesowy
+
+W poprzednim rozdziale dowiedziałeś się, jak przechwytywać informacje o osobach i organizacjach, używając archetypu Party i jego podklas Person i Organization. W tym rozdziale zajmiemy się znacznie bardziej skomplikowanym zagadnieniem relacji między Stronami.
+
+Jak zauważysz, modelowanie relacji między Stronami może stać się dość złożone i abstrakcyjne. Niektóre części tego rozdziału mogą więc być bardziej odpowiednie dla programistów niż dla ludzi biznesu. Jeśli jesteś przedsiębiorcą, a nie programistą, nasza rada to przeglądanie tych sekcji, które wydają się abstrakcyjne.
+
+Zrozumienie i przechwytywanie relacji między Stronami może być bardzo ważne. Na przykład możesz potrzebować zrozumienia swojej bazy klientów i różnych relacji, jakie klient ma z tobą, a być może z innymi klientami — to duża część zarządzania relacjami z klientami. Lub możesz potrzebować modelować organizację, taką jak firma czy zespół, i zrozumieć relacje w obrębie tej organizacji.
+
+Aby osiągnąć którykolwiek z tych celów, musisz modelować nie tylko same Strony, ale także relacje między tymi Stronami.
+
+Te relacje mogą być liczne i skomplikowane. Być może słyszałeś o grze "Six Degrees of Kevin Bacon". W tej grze celem jest powiązanie aktora Kevina Bacona z innym aktorem, korzystając z nie więcej niż sześciu relacji, gdzie każda relacja to film, w którym dwóch aktorów w łańcuchu wystąpiło razem. Na przykład, łatwo można połączyć Kevina Bacona z Sigourney Weaver, jak pokazano na Rysunku 5.1.
+
+​	![image-20231115071140823](image-20231115071140823.png)
+
+​	Każdy z nas jest połączony z prawie każdym innym na świecie przez zaskakująco małą liczbę relacji. Nie wiadomo dokładnie, jaka jest średnia liczba relacji w takim łańcuchu, ale najnowsze badania wskazują, że prawdopodobnie nie przekracza ona dziesięciu. Ta liczba jest bardzo niska, ponieważ kilka osób ma bardzo silne połączenia. Gdy łańcuch dochodzi do jednej z tych silnie połączonych osób, ona tworzy skrót do wielu innych osób. Taka sieć jest znana jako sieć skali swobodnej: większość węzłów (np. aktorów) ma bardzo mało relacji (np. wspólnych filmów), ale niektóre węzły (takie jak Kevin Bacon) mają ich wiele, i te węzły tworzą skróty przez sieć.
+
+Innym przykładem sieci skali swobodnej jest Internet. Przeglądanie stron internetowych jest zdominowane przez stosunkowo małą liczbę silnie połączonych węzłów, takich jak Yahoo! i Google.
+
+Drugim typem sieci jest sieć losowa, gdzie każdy węzeł ma tę samą średnią liczbę relacji (miarę jego "skali"). Ponieważ wszyscy żyjemy w życiu splecionym z bardzo skomplikowanymi relacjami, kluczowym punktem z perspektywy analityka/projektanta zorientowanego obiektowo jest ustalenie, które z tych relacji są istotne dla systemów biznesowych, a które nie. Nie można wyczerpująco uchwycić wszystkich relacji wokół danej Strony/Podmiotu, dlatego musisz użyć wymagań biznesowych, aby zdecydować, którą część sieci relacji musisz uchwycić.
+
+**5.2 Przegląd archetypu PartyRelationship i plan działania**
+
+Model archetypu PartyRelationship przedstawiony jest na Rysunku 5.2. Jest to bardziej powszechne i użyteczne pleomorficzne PartyRelationship asymetryczne (szczegóły dotyczące dwóch pleomorfii znajdziesz w Sekcji 5.3).
+
+![image-20231115071716821](image-20231115071716821.png)
+
+**5.3 PartyRole i PartyRelationship**
+
+Istnieje kilka sposobów modelowania faktu, że Strona jest powiązana z inną Stroną. Najprostsze podejście przedstawiono na Rysunku 5.3.
+
+![image-20231115071602229](image-20231115071602229.png)
+
+To, co rzeczywiście przekazuje Rysunek 5.3, to informacja, że Strony są w jakiś nieokreślony sposób powiązane z zerem lub więcej innymi Stronami. Ponieważ już to wiedziałeś, ten model nie jest szczególnie przydatny!
+
+
+
+***Archetyp PartyRelationship** przechwytuje fakt istnienia semantycznej relacji między dwiema Stronami, w której każda Strona odgrywa określoną rolę.*
+
+***Archetyp PartyRole** uchwytuje semantykę roli, jaką Strona odgrywa w konkretnej relacji PartyRelationship.*
+
+***Archetyp PartyRoleIdentifier** reprezentuje unikalny identyfikator dla PartyRole.*
+
+
+
+Zazwyczaj potrzebujesz co najmniej dwóch dodatkowych informacji, aby model stał się przydatny z perspektywy biznesowej.
+
+1. **Dokładna semantyka relacji między Stronami**
+2. **Konkretne role, jakie Strony odgrywają w tych relacjach**
+
+Możesz łatwo uchwycić te informacje, wprowadzając nowe archetypy zdefiniowane poniżej.
+
+Archetyp PartyRole zawsze służy do przechowywania informacji dotyczących samego PartyRole, a nie informacji o Stronie czy PartyRelationship. To ważne zagadnienie, którego modelarze często pomijają. Znajdziesz, że język angielski nie zawsze wyraźnie rozróżnia między relacjami a rolami. Częściowo dlatego, że niektóre relacje są symetryczne (jak opisano poniżej), więc rola i relacja stają się nieco zamiesza- ne, a częściowo dlatego, że w normalnym użyciu języka angielskiego różnica między nimi często po prostu nie jest istotna. Jednakże, podczas wywiadów z interesariuszami, ważne jest analizowanie ich wzorców językowych, aby spróbować odróżnić ewentualnie niejawne role i relacje w ich dziedzinie biznesu. Istnieją dwie warianty, czyli pleomorfie, archetypu PartyRelationship, przedstawione na Rysunku 5.4.
+
+![image-20231115072407130](image-20231115072407130.png)
+
+Relacja jest symetryczna, jeśli role na każdym końcu są identyczne - to znaczy, mogą być substytutem dla siebie nawzajem, nie zmieniając semantyki relacji w żaden sposób. W tym przypadku istnieje tylko jeden zestaw informacji o roli, a te informacje mogą być dołączone do samej relacji. To prowadzi do prostego pleomorfu, który nazywamy SymmetricPartyRelationship, przedstawionego na Rysunku 5.5. 
+
+![image-20231115072501705](image-20231115072501705.png)
+
+W tym przypadku PartyRole jest tylko atrybutem PartyRelationship. Dobrym przykładem tego rodzaju symetrycznej relacji jest relacja siostra/siostra między dwiema siostrami (patrz Rysunek 5.6). 
+
+![image-20231115072538527](image-20231115072538527.png)
+
+Jednak jeśli chcesz uchwycić jakiekolwiek informacje dotyczące tylko jednej z ról - na przykład, jeśli chcesz wskazać, która siostra jest starsza, a która młodsza - to nie może być dołączone do relacji, i nie jest już ona symetryczna. W rzeczywistości większość relacji między stronami jest asymetryczna, ponieważ każda Strona odgrywa inną rolę w relacji. Ta asymetria jest zazwyczaj tym, co nadaje relacji jej wartość - jedna Strona ma zdolności i/lub wymagania, które uzupełniają te drugiej Strony. Asymetria prowadzi do najbardziej użytecznego pleomorfizmu, AsymmetricPartyRelationship, którego SymmetricPartyRelationship jest tylko specjalnym przypadkiem. Z tego powodu skoncentrujemy się na pleomorfizmie AsymmetricPartyRelationship w dalszej części tego rozdziału. Pleomorfizm AsymmetricPartyRelationship przedstawiono na Rysunku 5.7. (Atrybuty i operacje archetypów PartyRole i PartyRelationship zostaną omówione w odpowiednich sekcjach w dalszej części rozdziału.) Semantyka tego modelu doskonale odpowiada opisowi języka naturalnego dotyczącemu ról i relacji: strona odgrywa rolę w relacji z inną stroną, która odgrywa rolę uzupełniającą. Na Rysunku 5.7 widać, że jedna rola Strony działa jako klient w relacji Strony, a druga rola Strony działa jako dostawca. Można używać terminów klient i dostawca, aby podkreślić fakt, że relacja jest asymetryczna, ale konkretne przypisanie pary ról Strony do stron klienta i dostawcy w PartyRelationship może nie zawsze być jednoznaczne.
+
+![image-20231115072614883](image-20231115072614883.png)
+
+Na przykład w relacji biznesowej typu producent/konsument (B2B) jasne jest, która rola jest dostawcą (producentem), a która klientem (konsumentem). W relacjach takich jak ojciec/syn jednak decyzja o tym, która rola jest połączona z dostawcą, a która z klientem, zależy od konkretnej interpretacji tej relacji. Niemniej jednak zawsze należy dokonywać przypisania w sposób spójny. Jak już wspomnieliśmy, w każdej relacji, w której obie role są identyczne (np. relacja siostra/siostra), po prostu nie ma decyzji do podjęcia, a pojęcie klienta i dostawcy jest zbędne.
+
+Poziom abstrakcji, na którym pracujesz, staje się bardzo ważny, gdy znajdujesz role i relacje. Na przykład, jeśli rozważasz relację ojciec/syn w abstrakcyjny sposób, moglibyście wprowadzić relację symetryczną o nazwie FamilyRelationship. Jest to oczywiście bardzo abstrakcyjny rodzaj relacji, który można by zastosować również do relacji ojciec/córka, ojciec/matka, siostra/siostra itp.
+W miarę jak relacje stają się mniej abstrakcyjne, zazwyczaj stają się bardziej asymetryczne. Tak więc, jeśli uczynisz relację FamilyRelationship mniej abstrakcyjną, w przypadku relacji ojciec/syn stanie się najpierw ParentChild, potem (jeszcze mniej abstrakcyjną) ParentSon, a ostatecznie FatherSon. Wszystkie te bardziej konkretne relacje są asymetryczne. Możesz to zobaczyć na ilustracji w Figurze 5.8.
+
+![image-20231115072645028](image-20231115072645028.png)
+
+Przed przejściem do omówienia szczegółowej semantyki PartyRole i PartyRelationship, przyjrzymy się bardzo prostemu przykładowi, aby zobaczyć, jak te archetypy mogą być praktycznie używane. W tym przykładzie używamy PartyRoles i PartyRelationships do wyrażenia relacji strukturalnych - zobacz Sekcję 6.3 dla przykładu użycia PartyRole w kontekście niestrukturalnym.
+Będziemy modelować mały projekt rozwoju oprogramowania o nazwie Archetype Cartridge Project, który był rzeczywistym projektem, w którym braliśmy udział. (Opisaliśmy niektóre rezultaty tej pracy w Rozdziale 2.)
+Aby skorzystać z archetypu PartyRelationship, musimy najpierw zidentyfikować następujące elementy:
+
+- Strony zaangażowane
+- PartyRelationships łączące te Strony
+- PartyRoles, jakie Strony odgrywają w tych PartyRelationships
+
+Pamiętasz z poprzedniego rozdziału, że Strony dzielą się na dwa podstawowe rodzaje: Osoby i Organizacje. W tym przykładzie mamy jedną Organizację (archetypeCartridgeProject) i kilka Osób, które są członkami projektu.
+- jim
+- ila
+- ronald
+
+Role, jakie Osoby odgrywają w projekcie, są przedstawione w Tabeli 5.1.
+Widzisz, że jim pełni dwie role w projekcie - ProjectManager i Architect. archetypeCartridgeProject sam odgrywa rolę w odniesieniu do swoich Członków. Ta rola nosi nazwę EmployingProject.
+Wreszcie potrzebujemy kilku PartyRelationships, aby połączyć te PartyRoles w odpowiedni sposób. W tym przypadku cała interesująca informacja może być uchwycona.

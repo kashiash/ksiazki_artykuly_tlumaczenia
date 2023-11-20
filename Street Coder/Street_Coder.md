@@ -2,11 +2,39 @@
 
 
 
+
+
+
+
+
+
 tłumaczenie czatem GuPeTe 
 
 https://www.manning.com/books/street-coder
 
 Wskazane czytanie na jasnym tle. Jesli masz czarne tlko nie bedziesz widzial polowy obrazków !
+
+
+
+Od Autora :
+
+Będę rozmawiał o mojej książce "Street Coder" i konkretnie o fragmencie, w którym wspominam o przydatnych antywzorcach. Co to są antywzorce, zastanawiasz się? Antywzorce są odpowiednikami najlepszych wzorców projektowych i praktyk, w zasadzie zasad i tak dalej. W świecie programowania mamy pewne paradygmaty w rozwoju oprogramowania, jak na przykład w ciągu czasu programowania opracowaliśmy pewne najlepsze praktyki, które możemy zastosować do programowania, nie musząc sięgać po to, jak możemy pracować nad określonym problemem. Są to dla nas jak skróty, ale złe w nich jest to, że stały się bardzo utrwalone, ale jednocześnie stały się jak kult programistyczny, jakbyś naprawdę mógł rozwiązać problem innym podejściem niż zalecany wzorzec. W przydatnych antywzorcach omawiam pewne techniki, które przeczą niektórym z tych paradygmatów, zasad i wzorców projektowych. Co mamy tutaj? Pozwól mi zacząć od mówienia trochę o sobie. Jestem samoukiem programistą. Nie uczyłem się w college'u o programowaniu. Nauczyłem się sam, ponieważ dorastałem w małym mieście w środkowej Turcji, więc bez dostępu do wielu książek ani zasobów do programowania, co faktycznie zmusiło mnie do szukania skomplikowanych szczegółów programowania, przeglądania fragmentów czasopism i pytań znajomych, każdego, kto się na tym znał. Musiałem się nauczyć wszystkiego sam, co faktycznie dało mi pewną perspektywę na rozwój oprogramowania, której niektórzy ludzie, którzy uczą się o tym w college'u, mogą nie mieć. Jedną z najważniejszych rzeczy, jakie się nauczyłem, było to, że niektóre koncepcje, które mogą wydawać się nudne lub bezużyteczne w programie uniwersyteckim, mogą być naprawdę bardziej przydatne w profesjonalnym środowisku, niż myślimy, i podobnie wiele z najlepszych praktyk, które się uczymy, lub złych praktyk, które nam odradzano, mogą być naprawdę przydatne w tych ustawieniach.
+
+Więc myślę, że zdobyłem pewną perspektywę, którą mogę dostarczyć programistom na początku ich kariery, aby mogli zastosować ją do swojego własnego rozwoju i wzrostu osobistego. Później, w mojej karierze, pracowałem jako inżynier oprogramowania w firmie Microsoft. Założyłem również popularną stronę o nazwie Eksi Sozluk, która jest jedną z najpopularniejszych tureckich stron internetowych na świecie w chwili obecnej. Mam teraz ponad 20 lat doświadczenia zawodowego w programowaniu, więc "Street Coder" to książka, w której staram się przekazać część mojego doświadczenia, aby spowodować zmianę perspektywy u programistów. To właśnie jest moim celem, i w książce staram się udzielić kilku wskazówek i trików, tak jak tutaj. To, co próbuję zrobić, zamiast być kompleksową książką z wytycznymi programowania, to być światłem przewodnim dla programistów, którzy chcą zmienić swoje podejście do, jak już wspomniałem, ustalonych paradygmatów i najlepszych praktyk. Wspominam głównie o rzeczach, które są najczęściej pomijane w rozwoju oprogramowania, więc, jak powiedziałem, przygotowałem długie ćwiczenia, i prawdopodobnie nie będziemy mieli czasu, aby przejść przez każde z nich, ale dobra wiadomość jest taka, że wszystko to znajduje się w książce. Więc jeśli kupisz książkę, będziesz miał dostęp do wszystkiego, ale postaram się być jak najbardziej klarowny.
+
+w tej prezentacji, więc jak już powiedziałem, antywzorce to po prostu odpowiedniki wzorców projektowych lub najlepszych praktyk. Używam tego jako ogólnego terminu, w zasadzie rzeczy, na które patrzy się z góry w obecnej chwili w programowaniu. Jedną z rzeczy, które mogą sprawić ci trudność, jest powtarzanie siebie. Mam na myśli, że jedną z najlepszych zasad jest DRY: don't repeat yourself, prawda?
+Dlatego ja zamiast tego sugeruję powtarzanie siebie w książce, więc polecam zrobienie odwrotnie niż niepowtarzanie siebie. Dlaczego więc w ogóle istnieje zasada o nazwie DRY, czyli nie powtarzaj się? Jednym z powodów tego jest to, że ludzie nie chcą robić wszystkiego od nowa. Nie chcą powtarzać siebie. Nie chcą marnować czasu na wpisywanie czegoś wielokrotnie,
+ani nie chcą być obciążeni utrzymaniem dwóch rzeczy jednocześnie. Powiedzmy, że masz fragment kodu i chcesz go użyć w dwóch różnych miejscach. W takim przypadku powtarzanie się obciążyłoby cię aktualizacją dwóch różnych miejsc, gdy masz aktualizację i zmianę dla tego fragmentu kodu, więc musisz pracować dwa razy więcej, prawda? Dlatego wszyscy mówią: "Nie powtarzaj się; po prostu używaj ponownie kodu," ale sprawy może być zła. Oczywiście nie zawsze jest zła.  Najczęściej może być użyteczne, ale może być złe, gdy faktycznie wprowadza się złożoność i sprzężenie z tym. Chciałbym przejść przez przykład i pokazać, jak to może się zdarzyć i przerodzić z kuli śnieżnej w lawinę, próbując ciągle używać tego samego kodu. 
+
+	Pozwól mi uruchomić Visual Studio. Stworzę po prostu aplikację konsolową, bo to najłatwiejsze do odtworzenia w ten sposób, i w razie problemów z kodem, mogę przywrócić jedno z wcześniejszych rozwiązań, ale chcę to napisać od nowa, abyś mógł przeżyć ten proces razem ze mną. Powiedzmy, nazwijmy to NewStream. .NET 5 jest w porządku,
+więc utwórzmy tutaj nasz projekt. Mamy tutaj prostą aplikację "Witaj, świecie!", prawda? A powiedzmy, mamy prosty problem jak normalizacja formularza. Co to jest normalizacja? Zazwyczaj, gdy masz formularz na swojej stronie internetowej lub w aplikacji internetowej, firmy mogą zdecydować się na normalizację pól. Na przykład, jeśli masz imię pisane małymi literami, chcą, żeby było, jak w tym przypadku, powiedzmy, wpisuję moje imię tutaj, a ludzie mogą chcieć to znormalizować tylko po to, aby widzieć to w jednolity sposób, aby wszystkie nazwy klientów wyglądały jednolicie. To zazwyczaj nie jest dobry pomysł. Mam na myśli, że mogą istnieć kultury, w których preferowane są małe litery, albo mogą mieć osobiste preferencje co do małych liter w swoim imieniu, więc faktycznie nie polecam normalizacji, ale możesz spotkać się z takim przypadkiem w swojej karierze. Twoi szefowie mogą podejść i powiedzieć: "Hej, po prostu to znormalizuj i nie obchodzi mnie nic więcej", więc jak to zrobić? To wydaje się być prosty problem, więc po prostu poproszę o wejście, ReadLine. Przeczytajmy imię z konsoli i poprośmy o imię, "Podaj swoje imię: ", prawda? Mamy tu imię i chcielibyśmy wydrukować wynik tutaj, tak, że gdy wpiszę moje imię tak, jak jest, zostanie to wydrukowane tak, jak jest, więc chciałbym to znormalizować, prawda? Więc to, co zrobię, to po prostu wywołam funkcję i wygeneruję dla niej kod. Dużo korzystam z narzędzi do generowania kodu w Visual Studio, ponieważ pomagają mi one, jak już to powtarzam. (śmiech) Tak więc, mamy funkcję tutaj, prawda? To, co robię, to po prostu naciskam Ctrl + kropka, i pojawia się menu, menu refaktoryzacji, a ja już mam opcję utworzenia funkcji, więc właśnie to robię. Po prostu naciskam Enter i podaję to tutaj, więc po prostu dzielimy imię na poszczególne słowa
+i kapitalizujemy je indywidualnie, prawda? Więc to, co zrobię, to podzielimy to na tablicę w ten sposób, używając spacji jako separatora, i będę po prostu przechodzić przez każde słowo, ups, nie tak, bo będę potrzebować indeksu, aby umieścić znormalizowane słowo ponownie w tablicy, i po prostu zwrócę, String.Join,
+
+...cdn
+
+
+
+
 
 ## 1 Na ulicy
 
@@ -5055,3 +5083,398 @@ Nie obawiaj się nieskończonego wygaszania w pamięci podręcznej, ponieważ al
 
 
 Donald Knuth poinformował mnie, że jego cytat w oryginalnym artykule został zrewidowany i ponownie wydrukowany w jego książce "Literate Programming". Otrzymanie osobistej odpowiedzi od niego było jednym z największych punktów mojego procesu pisania.
+
+
+
+## 8 Przyjemna skalowalność
+
+
+
+Ten rozdział obejmuje
+Skalowalność kontra wydajność
+Postępująca skalowalność
+Łamanie zasad baz danych
+Gładka równoległość
+Prawda w monolicie
+
+"Były to najlepsze czasy, były to najgorsze czasy, to był wiek mądrości, to był wiek głupoty."
+
+—Charles Dickens o skalowalności
+
+
+
+Przeżyłem wiele związanej ze skalowalnością przygód z powodu decyzji technicznych, które podjąłem w przypadku Ekşi Sözlük w 1999 roku. Cała baza danych dla strony internetowej początkowo była pojedynczym plikiem tekstowym. Operacje zapisu blokowały plik tekstowy, powodując zamrożenie dla wszystkich odwiedzających. Odczyty również nie były zbyt wydajne – pobranie pojedynczego rekordu zajmowało czas O(N), co wymagało przeskanowania całej bazy danych. To były najgorsze z najgorszych możliwych projektów technicznych.
+
+Nie dlatego, że sprzęt serwera był tak wolny, że kod się zacinał. Struktury danych i decyzje dotyczące równoległości wszystko przyczyniały się do ociężałości. To jest sedno samej skalowalności. Wydajność sama w sobie nie sprawi, że system będzie skalowalny. Potrzebujesz, aby wszystkie aspekty twojego projektu dostosowywały się do rosnącej liczby użytkowników.
+
+Co ważniejsze, ten okropny projekt nie był ważniejszy niż szybkość, z jaką uruchomiłem stronę internetową, co zajęło zaledwie kilka godzin. Początkowe decyzje techniczne nie miały znaczenia na dłuższą metę, ponieważ byłem w stanie spłacić większość długu technicznego po drodze. Zmieniłem technologię bazy danych, jak tylko zaczęła sprawiać zbyt wiele problemów. Napisałem kod od nowa, gdy używana technologia przestała działać. Jak mówi tureckie przysłowie, "Karawana przygotowuje się w drodze", co oznacza "Twórz to w miarę, jak idziesz".
+
+W kilku miejscach w tej książce zalecałem również mierzenie dwa razy i cięcie raz, co pozornie jest w konflikcie z mottem "Que será, será"1. To dlatego, że nie ma jednej recepty na wszystkie nasze problemy. Musimy trzymać wszystkie te metody w naszych narzędziach i stosować właściwą dla danego problemu.
+
+Z perspektywy systemów, skalowalność oznacza zdolność do przyspieszenia systemu poprzez dodawanie większej ilości sprzętu. Z perspektywy programistycznej, skalowalny kod może utrzymać stałą responsywność w obliczu rosnącego zapotrzebowania. Oczywiście istnieje górna granica tego, jak kod może sprostać obciążeniu, a celem pisania skalowalnego kodu jest przesunięcie tej górnej granicy tak daleko, jak to możliwe.
+
+Podobnie jak refaktoryzacja, skalowalność najlepiej rozwiązuje się stopniowo, w namacalnych, mniejszych krokach ku większemu celowi. Oczywiście można zaprojektować system tak, aby był w pełni skalowalny od samego początku, ale nakłady włożone w osiągnięcie tego celu i uzyskiwane korzyści są przyćmione przez znaczenie jak najszybszego wprowadzenia produktu na rynek.
+
+Niektóre rzeczy w ogóle nie skalują. Jak pięknie powiedział Fred Brooks w swojej wspaniałej książce "The Mythical Man Month": "Urodzenie dziecka zajmuje dziewięć miesięcy, bez względu na to, ile kobiet jest przypisanych." Brooks mówił o tym, jak przypisanie większej liczby ludzi do już opóźnionego projektu może tylko dodatkowo opóźnić go, ale dotyczy to również pewnych aspektów skalowalności. Na przykład nie można sprawić, aby rdzeń CPU wykonywał więcej instrukcji na sekundę niż jego częstotliwość zegara. Tak, wspomniałem, że możemy go nieco przekroczyć, korzystając z SIMD, przewidywania skoków, i tak dalej, ale nadal istnieje górna granica wydajności, jaką można osiągnąć na pojedynczym rdzeniu CPU.
+
+Pierwszym krokiem do osiągnięcia skalowalnego kodu jest usunięcie złego kodu, który mu przeszkadza w skalowaniu. Taki kod może tworzyć wąskie gardła, powodując, że kod pozostaje wolny nawet po dodaniu większej liczby zasobów sprzętowych. Usunięcie pewnych fragmentów takiego kodu może nawet wydawać się sprzeczne z intuicją. Przejdźmy przez potencjalne wąskie gardła i jak możemy je usunąć.
+
+### 8.1 Nie używaj blokad
+
+W programowaniu blokowanie to funkcja, która pozwala pisać kod bezpieczny dla wątków (thread-safe). Bezpieczny dla wątków.i oznacza, że kawałek kodu może działać spójnie nawet, gdy jest wywoływany jednocześnie przez dwa lub więcej wątki. Rozważ klasę odpowiedzialną za generowanie unikalnych identyfikatorów dla jednostek utworzonych w twojej aplikacji, i załóżmy, że musi generować sekwencyjne identyfikatory numeryczne. Zazwyczaj to nie jest dobry pomysł, jak omówiłem w rozdziale 6, ponieważ rosnące identyfikatory mogą ujawniać informacje o twojej aplikacji. Możesz nie chcieć ujawniać, ile zamówień otrzymujesz dziennie, ile masz użytkowników, itp. Załóżmy jednak, że istnieje uzasadniony powód biznesowy dla posiadania kolejnych identyfikatorów, na przykład, aby zapewnić, że nie brakuje przedmiotów. Prosta implementacja mogłaby wyglądać tak:
+
+```csharp
+class UniqueIdGenerator {
+ private int value;
+ public int GetNextValue() => ++value;
+}
+```
+
+Kiedy kilka wątków korzysta z tego samego egzemplarza tej klasy, istnieje możliwość, że dwa wątki otrzymają tę samą wartość lub wartości, które są nieuporządkowane. Dzieje się tak, ponieważ wyrażenie ++value tłumaczy się na kilka operacji na CPU: jedną, która odczytuje wartość, jedną, która ją inkrementuje, jedną, która zapisuje zinkrementowaną wartość z powrotem do pola, i wreszcie jedną, która zwraca wynik, jak można wyraźnie zobaczyć w wyniku asemblerowym x86 kompilatora JIT:2
+
+```assembly
+UniqueIdGenerator.GetNextValue()
+    mov eax, [rcx+8]
+    inc eax
+    mov [rcx+8], eax
+    ret
+```
+
+Każda linia to instrukcja, którą wykonuje CPU, jedna po drugiej. Kiedy próbujesz wizualizować kilka rdzeni CPU wykonujących te same instrukcje jednocześnie, łatwiej zobaczyć, jak może to powodować konflikty w klasie, jak pokazano na rysunku 8.1. Tam widać, że trzy wątki zwracają tę samą wartość, 1, chociaż funkcja została wywołana trzy razy.
+
+![CH08_F01_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-1.png)
+
+Poprzedni kod, który używa rejestru EAX, nie jest bezpieczny dla wielu wątków. Sposób, w jaki wszystkie wątki starają się manipulować danymi, nie szanując innych wątków, nazywany jest wyścigiem (race condition). Procesory, języki programowania i systemy operacyjne dostarczają różne funkcje, które mogą pomóc w radzeniu sobie z tym problemem. Zazwyczaj sprowadza się to do zablokowania innych rdzeni CPU przed odczytywaniem lub zapisywaniem do tej samej regionu pamięci w tym samym czasie, a to, drodzy państwo, nazywane jest blokadą (locking).
+
+W następnym przykładzie najbardziej zoptymalizowanym sposobem jest użycie operacji atomowego inkrementowania, która bezpośrednio zwiększa wartość w miejscu pamięci i uniemożliwia innym rdzeniom CPU dostęp do tego samego obszaru pamięci podczas tego działania, dzięki czemu żaden wątek nie czyta tej samej wartości lub nie pomija wartości w niewłaściwy sposób. Wyglądałoby to tak:
+
+```csharp
+using System.Threading;
+class UniqueIdGeneratorAtomic {
+ private int value;
+ public int GetNextValue() => Interlocked.Increment(ref value);
+}
+```
+W tym przypadku blokada jest implementowana przez sam CPU, i zachowywałby się tak, jak pokazano na rysunku 8.2 podczas wykonywania. Instrukcja blokady CPU powstrzymuje wykonanie równoległe na rdzeniach w tej lokalizacji podczas trwania instrukcji, która natychmiast ją następuje, więc blokada automatycznie jest zwalniana, gdy każda atomowa operacja dodawania w pamięci jest wykonywana. Zauważ, że instrukcje zwrotu nie zwracają bieżącej wartości pola, ale wynik operacji dodawania w pamięci. Wartość pola pozostaje sekwencyjna bez względu na to.
+
+
+
+![CH08_F02_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-2.png)
+
+Wielokrotnie zdarzą się sytuacje, gdy prosta atomowa operacja inkrementacji nie wystarczy, aby uczynić twój kod bezpiecznym dla wielu wątków. Na przykład, co jeśli musisz zsynchronizować aktualizację dwóch różnych liczników? W przypadkach, gdy nie możesz zapewnić spójności za pomocą operacji atomowych, możesz użyć instrukcji blokady w języku C#, jak pokazano w liście 8.1. Dla uproszczenia trzymamy się naszego pierwotnego przykładu licznika, ale blokady mogą być używane do sekwencyjnego wykonywania dowolnych zmian stanu w tym samym procesie. Alokujemy nowy fikcyjny obiekt do użycia jako blokady, ponieważ .NET używa nagłówka obiektu do przechowywania informacji o blokadzie.
+
+Listing 8.1 Bezpieczny dla wielu wątków licznik z instrukcją blokady w języku C#
+
+```csharp
+class UniqueIdGeneratorLock {
+  private int value;
+  private object valueLock = new object();
+  public int GetNextValue() {
+    lock (valueLock) {
+      return ++value;
+    }
+  }
+}
+```
+Dlaczego alokujemy nowy obiekt? Czy nie moglibyśmy po prostu użyć `this`, aby nasza własna instancja również działała jak blokada? To oszczędziłoby nam trochę pisania. Problem polega na tym, że nasza instancja może być również zablokowana przez jakiś kod spoza naszej kontroli. To może powodować niepotrzebne opóźnienia lub nawet zakleszczenia, ponieważ nasz kod może czekać na ten inny kod.
+
+*DEADLOCKI SIE ZDARZAJĄ*
+
+*Deadlock występuje, gdy dwa wątki czekają na zasoby uzyskane przez drugiego. To dość łatwe do osiągnięcia: wątek 1 uzyskuje zasób A i oczekuje na zwolnienie zasobu B, podczas gdy wątek 2 uzyskuje zasób B i oczekuje na zwolnienie zasobu A, jak pokazano na poniższym rysunku.*
+
+![CH08_UN01_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/Figures/CH08_UN01_Kapanoglu.png)
+
+*Efektem jest jak nieskończona pętla, oczekująca na warunek, który nigdy nie zostanie spełniony. Dlatego ważne jest, aby być jasnym co do tego, które blokady używamy do jakiego celu w kodzie. Posiadanie oddzielnego obiektu dla naszych blokad zawsze jest dobrym pomysłem, dzięki czemu można śledzić kod, który używa określonych blokad i upewnić się, że nie są one udostępniane przez inny kod. To nie jest możliwe w przypadku lock(this).*
+
+*Niektóre z zawieszonych aplikacji, z którymi się spotykasz, są wynikiem zakleszczenia, i wbrew powszechnemu przekonaniu, nie można ich naprawić, uderzając w stół myszką, krzycząc na monitor czy opuszczając program w gniewie.*
+
+*Nie ma magicznego rozwiązania zakleszczeń poza jasnym zrozumieniem mechanizmów blokowania w twoim kodzie, ale dobrą praktyką jest zawsze zwalnianie ostatnio nabytego blokady jako pierwszej i zwalnianie blokad tak szybko, jak to możliwe. Niektóre konstrukcje programistyczne mogą ułatwić unikanie użycia blokad, jak na przykład kanały w języku programowania Go, ale i z nimi również można doświadczyć zakleszczeń, choć jest to mniej prawdopodobne.*
+
+​	Nasz własny zaimplementowany kod blokowania zachowywałby się tak, jak pokazano na rysunku 8.3. Jak widać, nie jest to tak wydajne jak atomowa operacja inkrementacji, ale wciąż jest całkowicie bezpieczne dla wielu wątków.
+
+
+
+![CH08_F03_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-3.png)
+
+Jak widać, blokady mogą sprawić, że inne wątki zatrzymują się i czekają na pewny warunek. Chociaż zapewniają spójność, może to być jedno z największych wyzwań dla skalowalności. Nie ma nic gorszego niż marnowanie cennego czasu procesora na oczekiwanie. Powinieneś dążyć do minimalizacji czasu oczekiwania. Jak to osiągnąć?
+
+​	Po pierwsze, upewnij się, że naprawdę potrzebujesz blokad. Widziałem kod napisany przez inteligentnych programistów, który może działać bez użycia jakichkolwiek blokad, ale niepotrzebnie czeka na pewien warunek. Jeśli instancja obiektu nie będzie manipulowana przez inne wątki, to oznacza, że być może nie potrzebujesz w ogóle blokad. Nie mówię, że na pewno nie potrzebujesz, ponieważ trudno ocenić skutki uboczne kodu. Nawet obiekt o zasięgu lokalnym może używać współdzielonych obiektów i dlatego może wymagać blokad. Musisz być jasny co do swojego zamiaru i skutków ubocznych swojego kodu. Nie używaj blokad, ponieważ magicznie sprawiają, że otaczający je kod jest bezpieczny dla wielu wątków. Zrozum, jak działają blokady, i wyraźnie określ, co robisz.
+
+​	Po drugie, dowiedz się, czy używana przez Ciebie struktura danych współdzielona ma alternatywę bez blokad. Struktury danych bez blokad mogą być bezpośrednio dostępne przez wiele wątków bez konieczności używania blokad. Niemniej jednak implementacja struktur bez blokad może być skomplikowana. Mogą nawet być wolniejsze niż ich odpowiedniki z blokadami, ale mogą być bardziej skalowalne. Powszechne zastosowanie struktury bez blokad to współdzielone słowniki, lub, jak są one nazywane w niektórych platformach, mapy. Możesz potrzebować słownika czegoś współdzielonego przez wszystkie wątki, na przykład pewnych kluczy i wartości, a zwykły sposób radzenia sobie z tym to użycie blokad.
+
+Rozważmy przykład, w którym musisz przechowywać w pamięci tokeny API, aby nie musieć zawsze sprawdzać ich ważności w bazie danych przy każdym dostępie. Poprawną strukturą danych w tym przypadku byłby cache, a struktury danych do cachowania mogą mieć implementacje bez blokad, ale programiści często używają narzędzia, które jest im najbliższe, gdy próbują rozwiązać problem, w tym przypadku słownik:
+
+```csharp
+public Dictionary<string, Token> Tokens { get; } = new();
+```
+
+Zauważ tę nową, fajną składnię new() w C# 9.0? Wreszcie skończyły się czarne dni, kiedy trzeba było pisać ten sam typ dwa razy podczas deklarowania elementów klasy. Kompilator teraz może przypuszczać jego typ na podstawie deklaracji.
+
+Tak czy inaczej, wiemy, że słowniki nie są bezpieczne dla wielu wątków, ale bezpieczeństwo wielowątkowe jest problemem tylko wtedy, gdy kilka wątków modyfikuje daną strukturę danych. To ważny punkt: jeśli masz strukturę danych, którą inicjujesz na początku swojej aplikacji i nigdy jej nie zmieniasz, nie potrzebujesz, aby była zablokowana lub bezpieczna dla wielu wątków w inny sposób, ponieważ wszystkie struktury tylko do odczytu bez skutków ubocznych są bezpieczne dla wielu wątków.
+
+*SKUTKI UBOCZNE*
+
+*Co oznacza posiadanie kodu ze skutkami ubocznymi, oprócz okazjonalnych bólów głowy i nudności, które odczuwasz podczas przeglądania kodu? Termin ten pochodzi z dziedziny programowania funkcyjnego. Jeśli funkcja zmienia cokolwiek poza swoim zakresem, uważa się to za skutek uboczny—nie tylko zmienne czy pola, ale cokolwiek. Na przykład, jeśli funkcja zapisuje komunikat dziennika, powoduje to nieodwracalną zmianę w wyjściu dziennika, co również uważa się za skutek uboczny. Funkcja bez żadnych skutków ubocznych może być uruchamiana dowolną ilość razy, a nic w środowisku nie zmieni się. Funkcje bez skutków ubocznych nazywane są funkcjami czystymi. Funkcja, która oblicza pole koła i zwraca wynik, jest funkcją czystą:*
+
+```csharp
+class Circle {
+ public static double Area(double radius) => Math.PI * Math.Pow(radius, 2);
+}
+```
+
+*To jest funkcja czysta nie tylko dlatego, że nie ma skutków ubocznych, ale również dlatego, że elementy i funkcje, do których ma dostęp, są również czyste. W przeciwnym razie mogłyby również powodować skutki uboczne, co sprawiłoby, że nasza funkcja byłaby nieczysta. Jednym z korzyści funkcji czystych jest to, że są one gwarantowane jako bezpieczne dla wielu wątków, więc można je uruchamiać równolegle z innymi funkcjami czystymi bez żadnych problemów.*
+
+Ponieważ musimy manipulować strukturą danych w tym przykładzie, musimy mieć interfejs opakowujący do zapewnienia blokad, jak pokazano w liście 8.2. Możesz zobaczyć w metodzie get, że jeśli token nie może zostać znaleziony w słowniku, zostanie odbudowany przez odczytywanie powiązanych danych z bazy danych. Odczytywanie z bazy danych może być czasochłonne, co oznacza, że wszystkie żądania zostaną wstrzymane do czasu zakończenia tej operacji odczytu.
+
+Listing 8.2 Blokada oparta na słowniku bezpiecznym dla wielu wątków
+
+```csharp
+class ApiTokens {
+  private Dictionary<string, Token> tokens { get; } = new();
+ 
+  public void Set(string key, Token value) {
+    lock (tokens) {
+      tokens[key] = value;
+    }
+  }
+ 
+  public Token Get(string key) {
+    lock (tokens) {
+      if (!tokens.TryGetValue(key, out Token value)) {
+        value = getTokenFromDb(key);
+        tokens[key] = value;
+        return tokens[key];
+      }
+      return value;
+    }
+  }
+ 
+  private Token getTokenFromDb(string key) {
+    . . . zadanie czasochłonne . . .
+  }
+}
+```
+To w ogóle nie jest skalowalne, a alternatywa bez blokad byłaby tu świetna. W .NET dostępne są dwie różne zestawy struktur danych bezpiecznych dla wielu wątków. Nazwy jednego zaczynają się od Concurrent*, w których używane są krótkotrwałe blokady. Nie są to wszystko struktury bez blokad. Wciąż używają blokad, ale są zoptymalizowane, aby utrzymywać je przez krótkie okresy czasu, co sprawia, że są dość szybkie i być może prostsze niż prawdziwa alternatywa bez blokad. Drugi zestaw alternatyw to Immutable*, w którym oryginalne dane nigdy nie są zmieniane, ale każda operacja modyfikacji tworzy nową kopię danych z modyfikacjami. Jest to tak wolne, jak się tego spodziewasz, ale są sytuacje, w których mogą być one preferowane przed wersjami Concurrent.
+
+Jeśli użyjemy zamiast tego ConcurrentDictionary, nasz kod stanie się nagle znacznie bardziej skalowalny, jak pokazano w poniższym kodzie. Teraz widzisz, że instrukcje blokady nie są już potrzebne, dzięki czemu czasochłonne zapytanie może działać lepiej równolegle z innymi żądaniami i zablokuje tak mało, jak to możliwe.
+
+Listing 8.3 Słownik bez blokad, bezpieczny dla wielu wątków
+
+```csharp
+class ApiTokensLockFree {
+  private ConcurrentDictionary<string, Token> tokens { get; } = new();
+ 
+  public void Set(string key, Token value) {
+    tokens[key] = value;
+  }
+ 
+  public Token Get(string key) {
+    if (!tokens.TryGetValue(key, out Token value)) {
+      value = getTokenFromDb(key);
+      tokens[key] = value;
+      return tokens[key];
+    }
+    return value;
+  }
+ 
+  private Token getTokenFromDb(string key) {
+    . . . zadanie czasochłonne . . .
+  }
+}
+```
+Niewielkim minusem tej zmiany jest to, że wiele żądań może uruchamiać kosztowną operację, taką jak getTokenFromDb, dla tego samego tokenu równolegle, ponieważ już nic nie zapobiega temu za pomocą blokad. W najgorszym przypadku wykonywałbyś tę samą czasochłonną operację równolegle dla tego samego tokenu niepotrzebnie, ale nawet wtedy nie blokowałbyś żadnych innych żądań, więc jest to prawdopodobnie lepsze niż alternatywne scenariusze. Niewykluczone, że niekorzystanie z blokad może być tego warte.
+
+
+
+8.1.1 Podwójna blokada (Double-checked locking)
+
+Inna prosta technika pozwala unikać użycia blokad w pewnych scenariuszach. Na przykład zapewnienie, że tylko jedna instancja obiektu jest tworzona, gdy wiele wątków ją żąda, może być trudne. Co jeśli dwa wątki złożą to samo żądanie jednocześnie? Na przykład, zakładając, że mamy obiekt cache. Jeśli przypadkowo dostarczymy dwie różne instancje, różne części kodu będą miały inny cache, co może powodować niezgodności lub marnowanie zasobów. Aby temu zapobiec, zabezpieczamy kod inicjalizacji wewnątrz blokady, aby upewnić się, jak pokazano w poniższym kodzie. Właściwość statyczna Instance będzie trzymać blokadę przed utworzeniem obiektu, dzięki czemu upewnia się, że żadne inne instancje nie utworzą tej samej instancji więcej niż raz.
+
+Listing 8.4 Zapewnienie utworzenia tylko jednej instancji
+
+```csharp
+class Cache {
+  private static object instanceLock = new object();
+  private static Cache instance;
+  public static Cache Instance {
+    get {
+      lock(instanceLock) {
+        if (instance is null) {
+          instance = new Cache();
+        }
+        return instance;
+      }
+    }
+  }
+}
+```
+Kod działa dobrze, ale każde odwołanie do właściwości Instance spowoduje utrzymanie blokady. To może generować niepotrzebne oczekiwania. Naszym celem jest zminimalizowanie użycia blokad. Możesz dodać dodatkową kontrolę wartości instancji: zwracać jej wartość przed uzyskaniem blokady, jeśli już została zainicjowana, a blokadę uzyskiwać tylko wtedy, gdy tego nie zrobiono, jak pokazano w poniższym kodzie. To proste dodanie eliminuje 99,9% konfliktów blokad w kodzie, sprawiając, że jest bardziej skalowalny. Wciąż potrzebujemy dodatkowej kontroli wewnątrz instrukcji blokady, ponieważ istnieje mała możliwość, że inny wątek mógł już zainicjować wartość i zwolnić blokadę tuż przed jej uzyskaniem.
+
+Listing 8.5 Podwójna blokada
+
+```csharp
+public static Cache Instance {
+  get {
+    if (instance is not null) {
+      return instance;
+    }
+    lock (instanceLock) {
+      if (instance is null) {
+        instance = new Cache();
+      }
+      return instance;
+    }
+  }
+}
+```
+Podwójna blokada może być niemożliwa do zastosowania we wszystkich strukturach danych. Na przykład nie można tego zrobić dla elementów słownika, ponieważ niemożliwe jest bezpieczne odczytanie z słownika poza blokadą podczas manipulacji.
+
+C# przeszedł długą drogę i ułatwił bezpieczne inicjalizacje singletonów za pomocą pomocniczych klas, takich jak LazyInitializer. Możesz napisać ten sam kod właściwości w prostszy sposób. Funkcja ta już wykonuje podwójną blokadę wewnętrznie, oszczędzając ci dodatkową pracę.
+
+Listing 8.6 Bezpieczna inicjalizacja za pomocą LazyInitializer
+
+```csharp
+public static Cache Instance {
+ get {
+   return LazyInitializer.EnsureInitialized(ref instance);
+ }
+}
+```
+Istnieją inne przypadki, w których podwójna blokada może być korzystna. Na przykład, jeśli chcesz upewnić się, że lista zawiera co najwyżej określoną liczbę elementów, możesz bezpiecznie sprawdzić jej właściwość Count, ponieważ podczas tego sprawdzenia nie uzyskujesz dostępu do żadnych elementów listy. Count to zazwyczaj po prostu proste odczytanie pola i jest w większości przypadków bezpieczne wątkowo, chyba że używasz odczytanej liczby do iteracji przez elementy. Przykład może wyglądać jak poniżej, i byłby w pełni bezpieczny wątkowo.
+
+Listing 8.7 Alternatywne scenariusze podwójnej blokady
+
+```csharp
+class LimitedList<T> {
+  private List<T> items = new();
+ 
+  public LimitedList(int limit) {
+    Limit = limit;
+  }
+ 
+  public bool Add(T item) {
+    if (items.Count >= Limit) {
+      return false;
+    }
+    lock (items) {
+      if (items.Count >= Limit) {
+        return false;
+      }
+      items.Add(item);
+      return true;
+    }
+  }
+ 
+  public bool Remove(T item) {
+    lock (items) {
+      return items.Remove(item);
+    }
+  }
+ 
+  public int Count => items.Count;
+  public int Limit { get; }
+}
+```
+
+### 8.2 Akceptuj niespójność danych
+
+Bazy danych oferują ogromną liczbę funkcji zapobiegających niespójności: blokady, transakcje, liczniki atomowe, dzienniki transakcji, sumy kontrolne stron, migawki itp. To dlatego, że są projektowane dla systemów, w których nie możesz pozwolić sobie na pobieranie nieprawidłowych danych, jak w przypadku banków, reaktorów jądrowych i aplikacji do dopasowywania par.
+
+Niezawodność nie jest pojęciem czarno-białym. Istnieją poziomy niewiarygodności, które można przetrwać przy znacznych zyskach wydajnościowych i skalowalności. NoSQL to filozofia, która rezygnuje z pewnych możliwości zapewniania spójności tradycyjnych systemów baz danych relacyjnych, takich jak klucze obce i transakcje, jednocześnie zyskując wydajność, skalowalność i niejasność w zamian.
+
+Nie musisz przechodzić na pełne rozwiązania NoSQL, aby czerpać korzyści z takiego podejścia. Podobne zyski można osiągnąć na tradycyjnej bazie danych, takiej jak MySQL czy SQL Server.
+
+#### 8.2.1 Przeklęte NOLOCK
+
+Jako wskazanie zapytania, NOLOCK oznacza, że silnik SQL, który je czyta, może być niespójny i może zawierać dane z transakcji, które jeszcze nie zostały zatwierdzone. Może to brzmieć groźnie, ale czy naprawdę jest? Pomyśl o tym. Rozważmy platformę mikroblogową Blabber, o której rozmawialiśmy w rozdziale 4. Za każdym razem, gdy opublikujesz post, zostanie zaktualizowana również inna tabela zawierająca liczbę postów. Jeśli post nie zostanie opublikowany, licznik nie powinien zostać zinkrementowany. Kod przykładowy wyglądałby tak, jak w poniższym zestawieniu. Możesz zobaczyć w kodzie, że otaczamy wszystko transakcją, więc jeśli operacja zawiedzie w dowolnym punkcie, nie otrzymamy niespójnych liczb w liczbie postów.
+
+Listing 8.8 Opowieść o dwóch tabelach
+
+```csharp
+public void AddPost(PostContent content) {
+  using (var transaction = db.BeginTransaction()) {
+    db.InsertPost(content);
+    int postCount = db.GetPostCount(userId);
+    postCount++;
+    db.UpdatePostCount(userId, postCount);
+  }
+}
+```
+Okresowe zapytanie aktualizujące tabelę wciąż będzie trzymało blokady na tej tabeli, ale będą to bardziej szczegółowe blokady, prawdopodobnie na pewnym wierszu, lub w najgorszym przypadku, na pojedynczej stronie na dysku. Możesz złagodzić ten problem podwójnym sprawdzaniem blokady: możesz najpierw uruchomić zapytanie tylko do odczytu, które sprawdza, które wiersze należy zaktualizować, a następnie uruchomić zapytanie aktualizacji. To sprawi, że baza danych nie będzie nerwowała się z powodu blokowania zasobów tylko dlatego, że wykonałeś instrukcję aktualizacji w bazie danych. Podobne zapytanie wyglądałoby tak, jak w poniższym zestawieniu. Najpierw wykonujemy zapytanie SELECT, aby zidentyfikować niespójne liczby, które nie trzymają blokad. Następnie aktualizujemy liczniki postów na podstawie naszych niespójnych rekordów. Możemy również grupować te aktualizacje, ale wykonując je indywidualnie, będziemy trzymać bardziej szczegółowe blokady, prawdopodobnie na poziomie wiersza, co pozwoli na uruchamianie większej liczby zapytań na tej samej tabeli bez utrzymywania blokady dłużej niż to konieczne. Wada polega na tym, że aktualizacja każdego indywidualnego wiersza potrwa dłużej, ale w końcu się zakończy.
+
+Listing 8.9 Kod uruchamiany okresowo w celu osiągnięcia spójności ostatecznej
+
+```csharp
+public void UpdateAllPostCounts() {
+  var inconsistentCounts = db.GetMismatchedPostCounts();
+  foreach (var entry in inconsistentCounts) {
+    db.UpdatePostCount(entry.UserId, entry.ActualCount);
+  }
+}
+```
+Zapytanie SELECT w SQL nie trzyma blokad na tabeli, ale może być opóźnione przez inną transakcję. Tutaj pojawia się sugestia zapytania NOLOCK. Sugestia zapytania NOLOCK pozwala na odczyt brudnych danych, ale w zamian nie musi szanować blokad utrzymywanych przez inne zapytania lub transakcje. To także ułatwia ci zadanie. Na przykład w SQL Server, zamiast używać `SELECT * FROM customers`, możesz użyć `SELECT * FROM customers (NOLOCK)`, co stosuje NOLOCK do tabeli customers.
+
+Co to są brudne dane? Jeśli transakcja zaczyna zapisywać pewne rekordy do bazy danych, ale jeszcze nie została zakończona, te rekordy są uważane za brudne w danym momencie. Oznacza to, że zapytanie z sugestią NOLOCK może zwrócić wiersze, które jeszcze nie istnieją w bazie danych lub nigdy nie będą istnieć. W wielu scenariuszach może to być poziom niespójności, z którym twoja aplikacja może sobie poradzić. Na przykład nie używaj NOLOCK podczas uwierzytelniania użytkownika, ponieważ może to być problem związany z bezpieczeństwem, ale nie powinno być problemu z jego użyciem przy wyświetlaniu postów. W najgorszym przypadku zobaczysz post, który pozornie istnieje tylko przez krótki okres, a i tak zniknie przy następnym odświeżeniu. Możliwe, że już miało to miejsce na platformach społecznościowych, których używasz. Użytkownicy usuwają swoje treści, ale te posty nadal pojawiają się w twoim strumieniu, chociaż zazwyczaj otrzymasz błąd, jeśli spróbujesz z nimi zinterakcjonować. To dlatego, że platforma jest gotowa na pewien poziom niespójności ze względu na skalowalność.
+
+Możesz zastosować NOLOCK do wszystkiego w połączeniu SQL, uruchamiając najpierw instrukcję SQL, która brzmi niepotrzebnie głęboko: SET TRANSACTION ISOLATION LEVEL READ_UNCOMMITTED. Chyba Pink Floyd wydał piosenkę o podobnym tytule. W każdym razie ta instrukcja ma więcej sensu i lepiej wyraża twoje zamiary.
+
+Nie bój się niespójności danych, jeśli jesteś świadomy konsekwencji. Jeśli widzisz wyraźny wpływ kompromisu, możesz preferować celową niespójność, aby stworzyć przestrzeń na większą skalowalność.
+
+### 8.3 Nie cachuj połączeń do bazy danych
+To dość powszechna praktyka otwierania pojedynczego połączenia do bazy danych i udostępniania go w kodzie. Pomysł jest rozsądny na papierze: eliminuje nadmiar połączeń i uwierzytelniania przy każdym zapytaniu, dzięki czemu stają się one szybsze. Dodatkowo, jest nieco uciążliwe pisanie wszędzie komend otwierania i zamykania połączenia. Jednak prawda jest taka, że gdy masz tylko jedno połączenie do bazy danych, nie możesz uruchamiać równoległych zapytań. Efektywnie możesz wykonać tylko jedno zapytanie na raz. To ogromna przeszkoda dla skalowalności, jak pokazano na rysunku 8.4.
+
+![CH08_F04_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-4.png)
+
+Posiadanie pojedynczego połączenia nie jest dobrym pomysłem z innych powodów. Zapytania mogą wymagać różnych zakresów transakcji podczas ich wykonywania, co może prowadzić do konfliktów przy próbie ponownego użycia jednego połączenia do wielu zapytań jednocześnie.
+
+Muszę się zgodzić, że część problemu wynika z nazwania tych rzeczy "połączeniami", kiedy tak naprawdę nimi nie są. Większość bibliotek łączności z bazą danych po stronie klienta faktycznie nie otwiera połączenia, gdy tworzysz obiekt połączenia. Zamiast tego utrzymują pewną liczbę już otwartych połączeń i po prostu pobierają jedno dla Ciebie. Kiedy myślisz, że otwierasz połączenie, w rzeczywistości pobierasz już otwarte połączenie z tzw. puli połączeń. Po zamknięciu połączenia rzeczywiste połączenie nie jest zamykane. Wraca ono do puli, a jego stan jest resetowany, dzięki czemu wszelkie pozostałości po poprzednim zapytaniu nie wpływają na nowe zapytania.
+
+Mogę usłyszeć, jak mówisz: "Wiem, co zrobić! Po prostu będę trzymać połączenie dla każdego żądania i zamknę je, gdy żądanie się zakończy!" To pozwoliłoby na równoczesne wykonywanie się żądań bez blokowania się nawzajem, jak pokazano na rysunku 8.5. Możesz zobaczyć, że każde żądanie otrzymuje oddzielne połączenie, dzięki czemu mogą działać równocześnie.
+
+![CH08_F05_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-5.png)
+
+Problem z tym podejściem polega na tym, że gdy jest więcej niż pięć żądań, puli połączeń trzeba zmusić klienta do czekania, aż będzie w stanie dostarczyć dostępne połączenie. Te żądania czekają w kolejce, zabijając zdolność do obsługi większej liczby żądań, chociaż żądanie może nie być w użyciu w danym momencie, ponieważ puli połączeń nie ma możliwości dowiedzenia się, czy żądane połączenie jest w użyciu, chyba że zostanie ono wyraźnie zamknięte. Sytuację tę przedstawia rysunek 8.6.
+
+![CH08_F06_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-6.png)
+
+Co byś powiedział, gdybym powiedział ci, że istnieje jeszcze lepsze podejście, które jest nieintuicyjne, ale sprawi, że kod będzie możliwie najbardziej skalowalny? Tajnym rozwiązaniem jest utrzymywanie połączeń tylko przez czas trwania zapytań. To pozwoli na jak najszybsze zwracanie połączenia do puli, umożliwiając innym żądaniom przechwycenie dostępnego połączenia i osiągnięcie maksymalnej skalowalności. Rysunek 8.7 pokazuje, jak to działa. Widzisz, jak pula połączeń obsługuje jednocześnie nie więcej niż trzy zapytania, pozostawiając miejsce dla kolejnego żądania lub dwóch.
+
+![CH08_F07_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-7.png)
+
+Powód, dla którego to działa, wynika z faktu, że żądanie nie polega nigdy tylko na wykonaniu zapytania. Zazwyczaj obok samych zapytań zachodzi jeszcze pewne przetwarzanie. Oznacza to, że czas, w którym utrzymujesz obiekt połączenia podczas wykonywania czegoś niezwiązanego z zapytaniami, jest stracony. Poprzez utrzymywanie połączeń otwartych jak najkrócej, zostawiasz maksymalną liczbę połączeń dostępną dla innych żądań.
+
+Problem polega na tym, że to wymaga więcej pracy. Rozważmy przykład, w którym musisz zaktualizować preferencje klienta na podstawie jego nazwiska. Zazwyczaj wykonanie zapytań wyglądałoby mniej więcej tak, jak w poniższym kodzie. Wykonujesz zapytania natychmiast, bez zastanawiania się nad czasem życia połączenia.
+
+```csharp
+public void UpdateCustomerPreferences(string name, string prefs) {
+  int? result = MySqlHelper.ExecuteScalar(customerConnection,
+      "SELECT id FROM customers WHERE name=@name",
+      new MySqlParameter("name", name)) as int?;
+  if (result.HasValue) {
+    MySqlHelper.ExecuteNonQuery(customerConnection,
+        "UPDATE customer_prefs SET pref=@prefs",
+        new MySqlParameter("prefs", prefs));
+  }
+}
+```
+
+To dlatego, że masz otwarte połączenie, które możesz ponownie wykorzystać. Gdybyś dodał kod otwierania i zamykania połączenia, stałoby się to nieco bardziej skomplikowane, jak w poniższym kodzie (listing 8.11). Możesz pomyśleć, że powinniśmy zamykać i otwierać połączenie między dwoma zapytaniami, aby połączenie mogło być zwrócone do puli połączeń dla innych żądań, ale to jest zupełnie niekonieczne na tak krótki okres. Dodatkowo zauważ, że nie zamykamy połączenia explicite na końcu funkcji. Powodem jest to, że instrukcja `using` na początku zapewnia, że wszystkie zasoby związane z obiektem połączenia są natychmiast zwalniane po opuszczeniu funkcji, zmuszając jednocześnie do zamknięcia połączenia.
+
+```csharp
+public void UpdateCustomerPreferences(string name, string prefs) {
+  using (var connection = new MySqlConnection(connectionString)) {
+    connection.Open();
+
+    int? result = MySqlHelper.ExecuteScalar(connection,
+        "SELECT id FROM customers WHERE name=@name",
+        new MySqlParameter("name", name)) as int?;
+    if (result.HasValue) {
+      MySqlHelper.ExecuteNonQuery(connection,
+          "UPDATE customer_prefs SET pref=@prefs",
+          new MySqlParameter("prefs", prefs));
+    }
+    // connection.Close() is not needed here due to the 'using' statement.
+  }
+}
+```
+
