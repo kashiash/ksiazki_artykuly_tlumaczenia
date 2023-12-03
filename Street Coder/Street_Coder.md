@@ -4059,7 +4059,7 @@ Ponieważ zapobieganie atakom CSRF jest już automatyczne w nowoczesnych framewo
 
 ### 6.4 Wywołaj pierwszą powódź
 
-Denial of Service (DoS) to powszechna nazwa na sytuację, gdy usługa przestaje działać. Może to być po prostu coś, co powoduje, że serwer przestaje działać, zawiesza się lub się zawiesza, lub coś, co może zwiększyć użycie procesora lub nasycić dostępną przepustowość. Czasami ten drugi rodzaj ataków nazywa się powodzią. Skupimy się szczególnie na powodziach i jak możemy im przeciwdziałać.
+Denial of Service (DoS) to powszechna nazwa na sytuację, gdy usługa przestaje działać. Może to być po prostu coś, co powoduje, że serwer przestaje działać, zawiesza się lub się zawiesza, lub coś, co może zwiększyć użycie procesora lub nasycić dostępną przepustowość. Czasami ten drugi rodzaj ataków nazywa się powodzią sieci (`flooding`). Skupimy się szczególnie na powodziach i jak możemy im przeciwdziałać.
 
 Nie istnieje kompletna rozwiązanie na powodzie, ponieważ nawet większa liczba zwykłych użytkowników może przyczynić się do wyłączenia strony internetowej. Trudno jest odróżnić prawidłowego użytkownika od atakującego. Istnieją sposoby na łagodzenie ataków DoS, aby zmniejszyć możliwości atakującego. Jednym z popularnych sposobów jest captcha.
 
@@ -4708,7 +4708,7 @@ Załóżmy, że masz CPU z pamięcią podręczną o wielkości 16 bajtów i masz
 
 Procesory zakładają zazwyczaj, że odczytujesz dane sekwencyjnie. To nie oznacza, że listy połączone nie mają swojego zastosowania. Mają doskonałą wydajność przy wstawianiu/usuwaniu i mniejsze obciążenie pamięcią, gdy rosną. Listy oparte na tablicach muszą realokować i kopiować bufory podczas wzrostu, co jest strasznie wolne, więc przydzielają więcej, niż jest im potrzebne, co może prowadzić do niewspółmiernego zużycia pamięci w przypadku dużych list. W większości przypadków jednak lista może ci służyć dobrze, a nawet być szybsza w odczycie.
 
-### 7.4.3 Trzymaj zależne prace oddzielone
+### 7.4.3 Trzymaj prace zależne oddzielnie
 
 Pojedyncza instrukcja procesora jest przetwarzana przez osobne jednostki na procesorze. Na przykład jedna jednostka odpowiada za dekodowanie instrukcji, podczas gdy inna jest odpowiedzialna za dostęp do pamięci. Ale ponieważ jednostka dekodująca musi poczekać, aż instrukcja zostanie zakończona, może wykonywać inne prace dekodujące dla następnej instrukcji, podczas gdy dostęp do pamięci jest uruchomiony. Ta technika nazywana jest potokiem i oznacza, że CPU może wykonywać równolegle wiele instrukcji na jednym rdzeniu, o ile następna instrukcja nie zależy od wyniku poprzedniej.
 
@@ -4972,7 +4972,7 @@ Nawet użycie bufora o rozmiarze 512 bajtów robi ogromną różnicę - operacja
 
 
 
-7.5.2 Ustawienie wejścia/wyjścia w tryb nieblokujący
+#### 7.5.2 Ustawienie wejścia/wyjścia w tryb nieblokujący
 Jednym z najczęściej niezrozumianych koncepcji w programowaniu jest asynchroniczne wejście/wyjście. Często mylone jest z wielowątkowością, która jest modelem równoległym umożliwiającym przyspieszenie dowolnej operacji poprzez uruchomienie zadania na osobnych rdzeniach. Asynchroniczne wejście/wyjście (lub skrótowo: async I/O) to model równoległy przeznaczony wyłącznie do operacji obciążających wejście/wyjście i może działać na jednym rdzeniu. Wielowątkowość i async I/O mogą być również używane razem, ponieważ adresują różne przypadki użycia.
 
 Wejście/wyjście jest naturalnie asynchroniczne, ponieważ zewnętrzny sprzęt jest prawie zawsze wolniejszy niż CPU, a CPU nie lubi czekać i bezczynnie spoczywać. Mechanizmy takie jak przerwania (interrupts) i bezpośredni dostęp do pamięci (DMA) zostały wynalezione, aby umożliwić sprzętowi sygnalizowanie CPU, kiedy operacja wejścia/wyjścia zostanie zakończona, dzięki czemu CPU może przekazać wyniki. Oznacza to, że gdy operacja wejścia/wyjścia jest przekazywana do sprzętu, CPU może kontynuować wykonywanie innych czynności, podczas gdy sprzęt wykonuje swoją pracę, a CPU może sprawdzić, czy operacja wejścia/wyjścia została zakończona. Ten mechanizm stanowi podstawę asynchronicznego wejścia/wyjścia.
@@ -5421,6 +5421,7 @@ Możesz zastosować NOLOCK do wszystkiego w połączeniu SQL, uruchamiając najp
 Nie bój się niespójności danych, jeśli jesteś świadomy konsekwencji. Jeśli widzisz wyraźny wpływ kompromisu, możesz preferować celową niespójność, aby stworzyć przestrzeń na większą skalowalność.
 
 ### 8.3 Nie cachuj połączeń do bazy danych
+
 To dość powszechna praktyka otwierania pojedynczego połączenia do bazy danych i udostępniania go w kodzie. Pomysł jest rozsądny na papierze: eliminuje nadmiar połączeń i uwierzytelniania przy każdym zapytaniu, dzięki czemu stają się one szybsze. Dodatkowo, jest nieco uciążliwe pisanie wszędzie komend otwierania i zamykania połączenia. Jednak prawda jest taka, że gdy masz tylko jedno połączenie do bazy danych, nie możesz uruchamiać równoległych zapytań. Efektywnie możesz wykonać tylko jedno zapytanie na raz. To ogromna przeszkoda dla skalowalności, jak pokazano na rysunku 8.4.
 
 ![CH08_F04_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-4.png)
@@ -5478,3 +5479,689 @@ public void UpdateCustomerPreferences(string name, string prefs) {
 }
 ```
 
+Możesz opakować ceremonię otwarcia połączenia w funkcję pomocniczą i uniknąć powtarzania jej wszędzie, jak poniżej:
+
+```csharp
+using var connection = ConnectionHelper.Open();
+```
+
+To oszczędza trochę klawiszy, ale jest podatne na błędy. Możesz zapomnieć dodać instrukcji `using` przed wywołaniem, a kompilator może zapomnieć cię o tym przypomnieć. W ten sposób możesz zapomnieć o zamykaniu połączeń.
+
+#### 8.3.1 W formie ORM
+
+Na szczęście, nowoczesne narzędzia do mapowania obiektowo-relacyjnego (ORM) to biblioteki, które ukrywają zawiłości bazy danych, dostarczając zupełnie inny zestaw złożonych abstrakcji, takich jak Entity Framework. Robią to automatycznie, dzięki czemu nie musisz martwić się o to, kiedy połączenie zostanie otwarte lub zamknięte. Entity Framework otwiera połączenie wtedy, gdy jest to konieczne, i zamyka je, gdy skończy z nim pracę. Możesz używać jednego współdzielonego wystąpienia DbContext z Entity Framework przez cały cykl życia żądania. Jednak może nie chcesz używać jednego wystąpienia dla całej aplikacji, ponieważ DbContext nie jest bezpieczny wątkowo.
+
+Zapytanie podobne do listingu 8.11 można napisać w ten sposób, jak w listingu 8.12 przy użyciu Entity Framework. Możesz napisać te same zapytania, korzystając z składni LINQ, ale uważam, że ta składnia funkcyjna jest łatwiejsza do czytania i bardziej komponowalna.
+
+Listing 8.12 Wiele zapytań przy użyciu Entity Framework
+
+```csharp
+public void UpdateCustomerPreferences(string name, string prefs) {
+  int? result = context.Customers
+    .Where(c => c.Name == name)
+    .Select(c => c.Id)
+    .Cast<int?>()
+    .SingleOrDefault();
+  if (result.HasValue) {
+    var pref = context.CustomerPrefs
+      .Where(p => p.CustomerId == result)
+      .Single();
+    pref.Prefs = prefs;
+    context.SaveChanges();
+  }
+}
+```
+
+Możesz mieć więcej przestrzeni do skalowania swojej aplikacji, kiedy jesteś świadomy semantyki czasu życia klas połączeń, pul połączeń i rzeczywistych połączeń sieciowych nawiązywanych do bazy danych.
+
+### 8.4 Nie używaj wątków
+
+Skalowalność nie polega tylko na większej równoległości – chodzi także o oszczędzanie zasobów. Nie można skalować poza pełną pamięć, ani też poza 100% użyciem procesora. ASP.NET Core używa struktury puli wątków, aby utrzymać określoną liczbę wątków do obsługi żądań internetowych równolegle. Pomysł jest dość podobny do puli połączeń: posiadanie zestawu już zainicjowanych wątków pozwala uniknąć nakładu związanego z ich tworzeniem za każdym razem. Pule wątków zazwyczaj mają więcej wątków niż liczba rdzeni CPU w systemie, ponieważ wątki często oczekują na zakończenie jakiegoś zadania, głównie operacji wejścia/wyjścia (I/O). W ten sposób inne wątki mogą być planowane na tym samym rdzeniu CPU, podczas gdy pewne wątki czekają na zakończenie operacji I/O. Można zobaczyć, jak większa liczba wątków niż liczba rdzeni CPU może pomóc lepiej wykorzystać rdzenie CPU na rysunku 8.8. Procesor może wykorzystać czas, w którym wątek oczekuje na zakończenie zadania, do uruchomienia innego wątku na tym samym rdzeniu, obsługując więcej wątków niż dostępna liczba rdzeni CPU.
+
+![CH08_F08_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-8.png)
+
+To jest lepsze niż posiadanie takiej samej liczby wątków co rdzeni CPU, ale nie jest wystarczająco precyzyjne, aby jak najlepiej wykorzystać cenny czas procesora. System operacyjny przydziela wątkom krótki czas na wykonanie, a następnie oddaje rdzeń CPU innym wątkom, aby upewnić się, że każdy wątek ma szansę na uruchomienie w rozsądnym czasie. Ta technika nazywana jest przerwaniem, i to tak działało wielozadaniowość z jednordzeniowymi procesorami. System operacyjny manipulował wszystkimi wątkami na tym samym rdzeniu, tworząc iluzję wielozadaniowości. Na szczęście, ponieważ większość wątków oczekuje na operacje wejścia/wyjścia, użytkownicy nie zauważaliby, że wątki naprzemiennie uruchamiają się na jednym ich jedynym procesorze, chyba że uruchomili aplikację obciążającą procesor. Wtedy odczuli by jej skutki.
+
+Ze względu na to, w jaki sposób systemy operacyjne planują wątki, posiadanie większej liczby wątków w puli wątków niż liczba rdzeni CPU to jedynie przybliżona metoda uzyskania większej użyteczności, ale w rzeczywistości może nawet szkodzić skalowalności. Jeśli masz zbyt wiele wątków, wszystkie zaczynają dostawać mniejszy kawałek czasu procesora, więc zajmuje im to dłużej, co sprawia, że twoja strona internetowa lub interfejs API staje się nieefektywny.
+
+Bardziej precyzyjnym sposobem wykorzystania czasu oczekiwania na I/O jest korzystanie z asynchronicznego I/O, o którym rozmawiałem w rozdziale 7. Asynchroniczne I/O jest jawne: wszędzie tam, gdzie używasz słowa kluczowego await, oznacza to, że wątek będzie czekał na wynik wywołania zwrotnego, dzięki czemu ten sam wątek może być używany przez inne żądania, podczas gdy sprzęt pracuje nad samym żądaniem I/O. W ten sposób możesz obsługiwać wiele żądań na tym samym wątku równolegle, jak widać na rysunku 8.9.
+
+![CH08_F09_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_8-9.png)
+
+Asynchroniczne I/O jest bardzo obiecujące. Aktualizacja istniejącego kodu do asynchronicznych operacji wejścia/wyjścia jest również prosta, o ile masz framework obsługujący wywołania asynchroniczne na najwyższym poziomie. Na przykład w ASP.NET Core akcje kontrolera lub obsługiwacze stron Razor można pisać zarówno jako zwykłe metody, jak i jako metody asynchroniczne, ponieważ framework buduje niezbędne rusztowanie wokół nich. Wszystko, co musisz zrobić, to przepisać funkcję, korzystając z wywołań asynchronicznych, i oznaczyć metodę jako async. Tak, nadal musisz upewnić się, że twój kod działa poprawnie i przechodzi testy, ale to nadal proces prosty.
+
+Przeanalizujmy przykład z listingu 8.6 i przekształćmy go na asynchroniczny w listingu 8.13. Nie musisz wracać i sprawdzać oryginalnego kodu, ponieważ różnice są wytłuszczone w listingu. Przejrzyj różnice, a następnie je omówię.
+
+
+
+
+ChatGPT
+
+Listing 8.13 Konwersja blokującego kodu na kod asynchroniczny
+
+```swift
+
+
+public async Task UpdateCustomerPreferencesAsync(string name,
+  string prefs) {
+  int? result = await MySqlHelper.ExecuteScalarAsync(
+    customerConnection,
+    "SELECT id FROM customers WHERE name=@name",
+    new MySqlParameter("name", name)) as int?;
+  if (result.HasValue) {
+    await MySqlHelper.ExecuteNonQueryAsync(customerConnection,
+        "UPDATE customer_prefs SET pref=@prefs",
+        new MySqlParameter("prefs", prefs));
+  }
+}
+```
+
+To jest ważne, abyś wiedział, do czego służą wszystkie te elementy, abyś mógł ich świadomie i poprawnie używać.
+
+- Funkcje asynchroniczne faktycznie nie muszą mieć przyrostka "Async" w nazwie, ale konwencja ta pomaga zauważyć, że to coś, co trzeba odczekać. Możesz pomyśleć, "Ale słowo kluczowe async jest tuż obok!" jednak słowo kluczowe wpływa tylko na implementację i nie jest częścią sygnatury funkcji. Musisz przejrzeć kod źródłowy, aby dowiedzieć się, czy funkcja asynchroniczna faktycznie jest asynchroniczna. Jeśli nie oczekasz na funkcję asynchroniczną, zwróci ona wynik natychmiast, podczas gdy możesz błędnie założyć, że została już wykonana. Staraj się trzymać konwencji, chyba że nie możesz sobie na to pozwolić, gdy potrzebujesz konkretnych nazw dla funkcji, takich jak nazwy akcji kontrolera, ponieważ mogą one również określać trasy URL. Pomaga to także, jeśli chcesz mieć dwie przeciążenia tej samej funkcji o tej samej nazwie, ponieważ typy zwracane nie są uważane za element rozróżniający przeciążenia. Dlatego prawie wszystkie metody asynchroniczne w .NET są nazwane z przyrostkiem Async.
+
+- Słowo kluczowe `async` na początku deklaracji funkcji oznacza jedynie, że można używać słowa kluczowego await wewnątrz funkcji. W tle kompilator generuje odpowiedni kod obsługi i przekształca go w serię zwrotnych wywołań.
+
+- Wszystkie funkcje asynchroniczne muszą zwracać `Task` lub `Task<T>`. Funkcja asynchroniczna bez wartości zwracanej mogłaby również mieć typ void, ale to znane jest z powodowania problemów. Na przykład, zmieniają się semantyki obsługi wyjątków, a tracisz komponowalność. Komponowalność w funkcjach asynchronicznych pozwala zdefiniować akcję, która zostanie wykonana po zakończeniu funkcji w sposób programistyczny, korzystając z metod Task, takich jak ContinueWith. Dlatego funkcje asynchroniczne, które nie mają wartości zwracanej, powinny zawsze używać Task. Gdy dekorujesz funkcję słowem kluczowym `async`, wartości po instrukcjach return są automatycznie opakowywane w `Task<T>`, więc nie musisz sam tworzyć `Task<T>`.
+
+- Słowo kluczowe `await` zapewnia, że następna linia zostanie wykonana dopiero po zakończeniu wykonania wyrażenia poprzedzającego. Jeśli nie umieścisz `await` przed wieloma wywołaniami asynchronicznymi, zaczną one równocześnie, co czasami może być pożądane, ale musisz upewnić się, że czekasz na ich zakończenie, ponieważ w przeciwnym razie zadania mogą zostać przerwane. Z drugiej strony operacje równoległe są podatne na błędy; na przykład nie możesz uruchomić wielu zapytań równocześnie, używając tego samego DbContext w Entity Framework Core, ponieważ sam DbContext nie jest bezpieczny wątkowo. Jednak możesz równolegizować inne operacje wejścia/wyjścia, na przykład czytanie pliku. Wyobraź sobie przykład, w którym chcesz wykonać dwa żądania internetowe jednocześnie. Może nie chcesz, aby czekały na siebie nawzajem. Możesz wykonać obie żądania równocześnie i poczekać, aż oba zakończą, jak pokazano w listingu 8.14. Definiujemy funkcję, która otrzymuje listę adresów URL i uruchamia zadanie pobierania dla każdego z nich, nie czekając na zakończenie poprzedniego, dzięki czemu pobrania są wykonywane równolegle na jednym wątku. Możemy używać pojedynczej instancji obiektu HttpClient, ponieważ jest on bezpieczny wątkowo. Funkcja oczekuje na zakończenie wszystkich zadań i tworzy ostateczną odpowiedź z wyników wszystkich zadań.
+
+
+
+Listing 8.14 Pobieranie wielu stron internetowych równolegle na jednym wątku
+
+```swift
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+ 
+namespace Connections {
+  public static class ParallelWeb {
+    public static async Task<Dictionary<Uri, string>>
+      DownloadAll(IEnumerable<Uri> uris) {
+      var runningTasks = new Dictionary<Uri, Task<string>>();
+      var client = new HttpClient();
+      foreach (var uri in uris) {
+        var task = client.GetStringAsync(uri);
+        runningTasks.Add(uri, task);
+      }
+      await Task.WhenAll(runningTasks.Values);
+      return runningTasks.ToDictionary(kp => kp.Key, 
+        kp => kp.Value.Result);
+    }
+  }
+}
+```
+
+#### 8.4.1 Pułapki kodu asynchronicznego
+
+Musisz pamiętać o pewnych rzeczach, gdy konwertujesz swój kod na asynchroniczny. Łatwo pomyśleć "Zróbmy wszystko asynchronicznie!" i w procesie pogorszyć wszystko. Przeanalizujmy niektóre z tych problemów.
+
+Brak operacji wejścia/wyjścia oznacza brak asynchroniczności
+
+Jeśli funkcja nie wywołuje funkcji asynchronicznej, nie musi być asynchroniczna. Programowanie asynchroniczne pomaga tylko w przypadku operacji związanych z wejściem/wyjściem (I/O-bound). Użycie async w operacji związanej z procesorem nie poprawi skalowalności, ponieważ takie operacje będą wymagać osobnych wątków do działania, w przeciwieństwie do operacji wejścia/wyjścia, które mogą działać równolegle na jednym wątku. Kompilator może także ostrzegać, gdy próbujesz użyć słowa kluczowego async w funkcji, która nie wykonuje innych operacji asynchronicznych. Jeśli zignorujesz te ostrzeżenia, kod stanie się niepotrzebnie rozbudowany, a być może nawet wolniejszy z powodu dodanego rusztowania związanego z asynchronicznością. Oto przykład niepotrzebnego użycia słowa kluczowego async:
+
+```csharp
+public async Task<int> Sum(int a, int b) {
+  return a + b;
+}
+```
+
+Rozumiem, że to się zdarza, ponieważ spotkałem się z tym w praktyce, gdzie ludzie po prostu oznaczyli swoje funkcje jako async bez żadnego konkretnego powodu. Zawsze bądź jasny i wyraźny co do tego, dlaczego chcesz uczynić funkcję asynchroniczną.
+
+**Nie mieszaj synchronicznego i asynchronicznego**
+
+Bardzo trudno jest wywoływać funkcję asynchroniczną w kontekście synchronicznym bezpiecznie. Ludzie mówią: "Hej, po prostu użyj `Task.Wait()`, lub zadzwoń do `Task.Result`, i będzie dobrze." Nie, nie będzie dobrze. Ten kod będzie nawiedzał twoje marzenia, spowoduje problemy w najmniej oczekiwanych momentach, a w końcu będziesz życzyć sobie trochę snu zamiast koszmarów.
+
+Największym problemem z oczekiwaniem na funkcje asynchroniczne w kodzie synchronicznym jest to, że może to spowodować zakleszczenie z powodu innych funkcji w funkcji asynchronicznej, które zależą od kodu wywołującego. Obsługa wyjątków może również być nietypowa, ponieważ zostanie ona opakowana w oddzielne `AggregateException`.
+
+Stań się zasadą, aby nie mieszać asynchronicznego kodu w kontekście synchronicznym. To skomplikowane zagadnienie, dlatego zazwyczaj zajmują się tym tylko frameworki. C# 7.1 dodał obsługę funkcji async `Main`, co oznacza, że można od razu zacząć uruchamiać kod asynchroniczny, ale nie można wywołać funkcji asynchronicznej z synchronicznej akcji internetowej. Odwrotność jest jednak w porządku. Możesz, i będziesz, mieć kod synchroniczny w swoich funkcjach asynchronicznych, ponieważ nie każda funkcja nadaje się do pracy w trybie asynchronicznym.
+
+#### 8.4.2 Wielowątkowość z użyciem asynchroniczności
+
+Asynchroniczne operacje wejścia/wyjścia oferują lepsze właściwości skalowalności niż wielowątkowość w przypadku kodu intensywnego pod względem wejścia/wyjścia, ponieważ zużywają mniej zasobów. Jednak wielowątkowość i asynchroniczność nie są wzajemnie wykluczające się. Możesz mieć jedno i drugie. Możesz nawet używać konstrukcji programowania asynchronicznego do pisania wielowątkowego kodu. Na przykład, możesz obsługiwać pracę CPU, która trwa długo, w sposób asynchroniczny w ten sposób:
+
+```csharp
+await Task.Run(() => computeMeaningOfLifeUniverseAndEverything());
+```
+
+To nadal spowoduje uruchomienie kodu w osobnym wątku, ale mechanizm await upraszcza synchronizację zakończenia pracy. Gdybyś napisał ten sam kod, używając tradycyjnych wątków, wyglądałby trochę bardziej skomplikowanie. Musisz mieć mechanizm synchronizacji, takie jak zdarzenie:
+
+```csharp
+ManualResetEvent completionEvent = new ManualResetEvent(initialState: false);
+```
+
+*ZAUWAŻ NOWOŚĆ*
+
+*Przez długi czas programiści musieli pisać `SomeLongTypeName something = new SomeLongTypeName();` aby zainicjować obiekt. Pisanie tego samego typu zawsze było uciążliwe, nawet z pomocą środowiska programistycznego (IDE). Problem ten został nieco rozwiązany po wprowadzeniu słowa kluczowego `var` do języka, ale nie działa to w przypadku deklaracji elementów członkowskich klasy.*
+
+*C# 9.0 przyniosło wielką poprawę jakości życia: nie musisz pisać typu klasy po słowie `new`, jeśli typ jest zadeklarowany wcześniej. Możesz po prostu napisać `SomeLongTypeName something = new();`. To jest dla ciebie propozycją fantastycznego zespołu projektowego C#!*
+
+
+
+Obiekt zdarzenia, który deklarujesz, musi być również dostępny z punktu synchronizacji, co wprowadza dodatkową złożoność. Rzeczywisty kod staje się również bardziej skomplikowany:
+
+```csharp
+ThreadPool.QueueUserWorkItem(state => {
+  computeMeaningOfLifeUniverseAndEverything();
+  completionEvent.Set();
+});
+```
+
+Tak więc programowanie asynchroniczne może ułatwić napisanie niektórych wielowątkowych prac, ale nie jest ani kompletną zamianą dla wielowątkowości, ani nie pomaga w skalowalności. Kod wielowątkowy napisany w składni asynchronicznej wciąż jest zwykłym kodem wielowątkowym; nie oszczędza zasobów, tak jak kod asynchroniczny.
+
+### 8.5 Szanuj monolit
+
+Na twoim monitorze powinna być zamieszczona notatka, którą zdejmiesz tylko wtedy, gdy zaczniesz się bogacić dzięki akcjom swojej startupowej firmy. Powinna ona brzmieć: "Brak mikrousług."
+
+Idea mikrousług jest prosta: jeśli podzielimy nasz kod na osobne projekty samodzielnie hostowane, będzie łatwiej w przyszłości wdrożyć te projekty na osobnych serwerach, więc - darmowa skalowalność! Problem tutaj, podobnie jak wiele kwestii w rozwoju oprogramowania, to dodatkowa złożoność. Czy dzielimy cały współdzielony kod? Czy projekty naprawdę nie mają nic wspólnego? A co z ich zależnościami? Ile projektów trzeba zaktualizować, gdy zmieniamy tylko bazę danych? Jak współdzielisz kontekst, takie jak uwierzytelnianie i autoryzacja? Jak zapewnisz bezpieczeństwo? Pojawią się opóźnienia spowodowane milisekundowymi opóźnieniami między serwerami. Jak zachowasz kompatybilność? Co jeśli wdrożysz jeden pierwszy, a drugi się psuje z powodu nowej zmiany? Czy masz zdolność do radzenia sobie z tym poziomem złożoności?
+
+Używam terminu "monolit" jako przeciwieństwa mikrousług, gdzie komponenty twojego oprogramowania znajdują się w jednym projekcie, lub przynajmniej w ściśle powiązanych wielu projektach wdrożonych razem na tym samym serwerze. Ponieważ komponenty są od siebie zależne, jak przeniesiesz część z nich na inny serwer, aby zwiększyć skalowalność swojej aplikacji?
+
+W tym rozdziale zobaczyliśmy, jak możemy osiągnąć lepszą skalowalność nawet na pojedynczym rdzeniu CPU, nie mówiąc już o pojedynczym serwerze. Monolit może skalować się. Może działać dobrze przez długi czas, dopóki nie znajdziesz się w sytuacji, w której musisz podzielić swoją aplikację. Wtedy startup, dla którego pracujesz, jest już wystarczająco bogaty, aby zatrudnić więcej programistów do pracy. Nie komplikuj nowego projektu mikrousługami, gdy uwierzytelnianie, koordynacja i synchronizacja mogą stać się problematyczne we wczesnym etapie istnienia produktu. Ekşi Sözlük, ponad 20 lat później, nadal obsługuje 40 milionów użytkowników co miesiąc na architekturze monolitycznej. Monolit jest naturalnym następnym krokiem do przejścia z lokalnego prototypu. Płyń z nurtem i rozważ przejście do architektury mikrousług tylko wtedy, gdy korzyści przeważają nad wadami.
+
+Podsumowanie
+1. Podchodź do skalowalności jak do stopniowego programu dietetycznego. Małe ulepszenia mogą w końcu prowadzić do lepszego i bardziej skalowalnego systemu.
+2. Jednym z największych hamulców skalowalności są blokady. Nie możesz z nimi żyć, ale nie możesz też żyć bez nich. Zrozum, że są czasem zbędne.
+3. Preferuj struktury danych bez blokad lub współbieżne nad ręcznym stosowaniem blokad, aby uczynić swój kod bardziej skalowalnym.
+4. Stosuj podwójne sprawdzanie blokady, gdy jest to bezpieczne.
+5. Naucz się akceptować pewne niekonsekwencje dla lepszej skalowalności. Wybierz, które rodzaje niekonsekwencji są akceptowalne dla twojego biznesu i wykorzystaj okazję do tworzenia bardziej skalowalnego kodu.
+6. ORM-y, choć zazwyczaj postrzegane jako uciążliwe, mogą również pomóc w tworzeniu bardziej skalowalnych aplikacji poprzez zastosowanie optymalizacji, o których możesz nie pomyśleć.
+7. Używaj asynchronicznego wejścia/wyjścia we wszystkich kodach związanych z wejściem/wyjściem, które muszą być wysoce skalowalne, aby oszczędzać dostępne wątki i zoptymalizować użycie procesora.
+8. Używaj wielowątkowości do równoległego przetwarzania prac obciążających procesor (CPU), ale nie oczekuj korzyści skalowalności takich jak przy asynchronicznym wejściu/wyjściu, nawet gdy używasz wielowątkowości z konstrukcjami programowania asynchronicznego.
+9. Architektura monolityczna zakończy pełną podróż dookoła świata, zanim dyskusja nad projektowaniem architektury mikrousług zostanie zakończona.
+
+
+
+
+
+1. Popularna piosenka z lat 50. wykonywana przez Doris Day, ulubioną piosenkarkę mojego ojca, "Que Será, Será" oznacza "Co ma być, to będzie" po włosku. To oficjalne hasło dla wdrożeń kodu w piątki, zazwyczaj poprzedzane hitem 4 Non Blondes "What’s Up?" w sobotę, które kończy się "Calling It Quits" Aimee Mann w poniedziałek.
+
+2. Kompilator JIT (just in time) przekształca kod źródłowy lub kod pośredni (zwany bajtkodem, IL, IR itp.) na zestaw instrukcji natywnej architektury CPU, na której jest uruchamiany, aby zwiększyć jego prędkość.
+
+## 9 Życie z błędami
+
+**Ten rozdział obejmuje**
+- Najlepsze praktyki obsługi błędów
+- Życie z błędami
+- Celowe obsługiwanie błędów
+- Unikanie debugowania
+- Zaawansowane debugowanie z kaczką gumową
+
+Najbardziej przenikliwym dziełem literatury na temat błędów jest "Przemiana" Franza Kafki. Opowiada ona historię Gregora Samsy, programisty, który pewnego dnia budzi się, aby odkryć, że jest jedynym błędem. Owszem, w opowieści nie jest on faktycznym programistą, ponieważ praktyka programowania w 1915 roku składała się tylko z kilku stron kodu napisanego przez Adę Lovelace 70 lat przed napisaniem książki przez Kafkę. Ale zawód Gregora Samsy był najbliższy programisty: był podróżnym handlowcem.
+
+Błędy stanowią podstawowe jednostki miary określania jakości oprogramowania. Ponieważ programiści uważają każdy błąd za plamę na jakości swojego rzemiosła, zazwyczaj dążą albo do zera błędów, albo aktywnie zaprzeczają ich istnieniu, twierdząc, że działa to na ich komputerze lub że to funkcja, a nie błąd.
+
+*PROBLEM KOMIWOJAŻERA*
+
+*Problem komiwojażera jest kluczowym zagadnieniem w informatyce, ponieważ obliczanie optymalnej trasy dla podróżującego handlowca jest problemem NP-trudnym, całkowicie nieintuicyjnym skrótem dla niedeterministycznego wielomianowego czasu kompletnego. Ponieważ w tym skrócie brakuje wielu słów, przez długi czas wierzyłem, że oznacza ono "niemonomianowo kompletny", i byłem bardzo zdezorientowany.*
+
+*Problemy wielomianowego czasu (P) można rozwiązać szybciej niż przez próbowanie wszystkich możliwych kombinacji, które w przeciwnym razie mają złożoność silniową, drugą co do wielkości złożoność ze wszystkich złożoności. NP jest nadzbiorem problemów P (wielomianowych), które można rozwiązać tylko siłą brute. Problemy wielomianowe w porównaniu z NP zawsze są mile widziane. NP, problemy niedeterministycznego wielomianowego czasu, nie mają znanego wielomianowego algorytmu do ich rozwiązania, ale ich rozwiązanie można zweryfikować w czasie wielomianowym. W tym sensie NP-complete oznacza "Jesteśmy kiepscy w rozwiązywaniu tego, ale możemy dość szybko zweryfikować sugerowane rozwiązanie".*
+
+Rozwój oprogramowania jest niezwykle skomplikowany ze względu na wrodzoną nieprzewidywalność programu. To właściwość maszyny Turinga, teoretycznej konstrukcji, na której oparte są wszystkie komputery i większość języków programowania, dzięki pracom Alana Turinga. Język programowania oparty na maszynie Turinga nazywany jest kompletnym Turinga. Maszyny Turinga pozwalają na nieskończone poziomy kreatywności w programowaniu, ale niemożliwe jest zweryfikowanie ich poprawności bez ich wykonania. Niektóre języki zależą od maszyny niekompletnej Turinga, takie jak HTML, XML czy wyrażenia regularne, które są znacznie mniej zdolne niż języki kompletnego Turinga. Z powodu charakteru maszyny Turinga błędy są nieuniknione. Niemożliwe jest stworzenie programu bez błędów. Akceptowanie tego faktu przed przystąpieniem do tworzenia oprogramowania ułatwi Ci pracę.
+
+### 9.1 Nie naprawiaj błędów
+
+Zespół programistów musi mieć proces selekcji, aby zdecydować, które błędy należy naprawić w przypadku każdego dużego projektu. Termin triaging powstał podczas I wojny światowej, kiedy lekarze musieli decydować, których pacjentów leczyć, a których pozostawić bez opieki, aby przeznaczyć swoje ograniczone zasoby dla tych, którzy wciąż mieli szansę na przeżycie. To jedyny sposób na efektywne wykorzystanie rzadkich zasobów. Triaging pomaga Ci zdecydować, co musisz naprawić w pierwszej kolejności i czy w ogóle powinieneś to naprawić.
+
+Jak nadać priorytet błędowi? Jeśli nie jesteś pojedynczą osobą podejmującą wszystkie decyzje biznesowe, Twój zespół musi mieć wspólne kryteria, aby określić priorytet danego błędu. W zespole Windows w firmie Microsoft mieliśmy skomplikowany zestaw kryteriów pozwalających zdecydować, które błędy należy naprawić, zgodnie z oceną wielu autorytetów technicznych. W związku z tym codziennie spotykaliśmy się, aby ustalić priorytety błędów i debatowaliśmy w miejscu zwanym War Room, czy warto naprawić błąd. Jest to zrozumiałe w przypadku produktu o tak ogromnej skali, jak Windows, ale w przypadku większości projektów programistycznych może być niepotrzebne. Musiałem poprosić o ustalenie priorytetu błędu, ponieważ po aktualizacji zautomatyzowany system w oficjalnym centrum małżeńskim w Stambule został zepsuty i wszystkie ceremonie zaślubin musiały zostać zatrzymane. Musiałem uzasadnić swoje stanowisko, rozbijając niemożność zawarcia związku małżeńskiego na namacalne wskaźniki, takie jak możliwość zastosowania, wpływ i dotkliwość. „Ile par zawiera związek małżeński dziennie w Stambule?” nagle zabrzmiało jak sensowne pytanie na rozmowie kwalifikacyjnej.
+
+Prostszym sposobem oceny priorytetu może być użycie stycznego drugiego wymiaru zwanego (upierdliwością) dotkliwością. Chociaż celem jest zasadniczo posiadanie jednego priorytetu, posiadanie drugorzędnego wymiaru może ułatwić ocenę, gdy dwie różne kwestie pozornie mają ten sam priorytet. Uważam, że wymiary priorytetu/ważności są przydatne i zapewniają dobrą równowagę między zorientowaniem na biznes i zorientowaniem na technologię. Priorytet to wpływ błędu na biznes, natomiast ważność to wpływ na klienta. Na przykład, jeśli strona internetowa na Twojej platformie nie działa, jest to problem o dużej wadze, ponieważ klient nie może z niej korzystać. Jednak jego priorytet może być zupełnie inny w zależności od tego, czy znajduje się na stronie głównej, czy na mało znanej stronie, którą odwiedza tylko kilku klientów. Podobnie, jeśli logo Twojej firmy zniknie na stronie głównej, może to nie mieć żadnego znaczenia, a mimo to mieć najwyższy priorytet biznesowy. Wymiar ważności odciąża w pewnym stopniu priorytetyzację biznesową, ponieważ nie jest możliwe określenie dokładnych wskaźników pozwalających ustalić priorytety błędów.
+
+Powinieneś mieć próg priorytetu i ważności, aby wszelkie błędy znajdujące się poniżej niego zostały sklasyfikowane jako nienaprawione. Na przykład każdy błąd, który ma zarówno niski priorytet, jak i wagę, może zostać uznany za niemożliwy do naprawienia i usunięty z radaru. Tabela 9.1 pokazuje rzeczywiste znaczenie poziomów priorytetu i ważności.
+
+Tabela 9.1 Rzeczywiste znaczenia priorytetu i powagi (zobacz figurę w tabeli)
+
+| Priorytet | Powaga | Rzeczywiste znaczenie                                        |
+| --------- | ------ | ------------------------------------------------------------ |
+| Wysoki    | Wysoka | Natychmiastowa naprawa.                                      |
+| Wysoki    | Niska  | Szef chce to naprawić.                                       |
+| Niski     | Wysoka | Pozwól stażystowi to naprawić.                               |
+| Niski     | Niska  | Nie naprawiaj. Nigdy nie naprawiaj, chyba że nie ma nic innego do zrobienia w biurze. W takim przypadku pozwól stażystowi to naprawić. |
+
+Śledzenie błędów również wiąże się z kosztami. W firmie Microsoft ocena priorytetu błędów zajmowała naszemu zespołowi co najmniej godzinę dziennie. Ważne jest, aby Twój zespół unikał ponownego przetwarzania błędów, które prawdopodobnie nigdy nie zostaną naprawione. Spróbuj podjąć decyzję na wcześniejszym etapie procesu. Oszczędza to czas, a jednocześnie zapewnia utrzymanie przyzwoitej jakości produktu.
+
+
+
+### 9.2 Terror błędu
+Nie każdy błąd jest spowodowany błędem w kodzie i nie każdy błąd oznacza istnienie błędu w kodzie. Ten związek pomiędzy błędami i błędami jest najbardziej widoczny, gdy zobaczysz wyskakujące okienko z informacją: nieznany błąd. Jeśli jest to nieznany błąd, skąd możesz mieć pewność, że jest to błąd? Być może jest to nieznany sukces!
+
+Takie sytuacje mają swoje korzenie w prymitywnym skojarzeniu błędów i błędów. Programiści instynktownie traktują wszelkie błędy jako błędy i konsekwentnie i konsekwentnie starają się je eliminować. Tego rodzaju rozumowanie zwykle prowadzi do nieznanej sytuacji błędu, ponieważ coś poszło nie tak, a programiście po prostu nie zależy na zrozumieniu, czy jest to błąd. To zrozumienie sprawia, że programiści traktują wszystkie rodzaje błędów w ten sam sposób, zwykle albo zgłaszając każdy błąd niezależnie od tego, czy użytkownik musi je zobaczyć, albo ukrywając je wszystkie i zakopując w pliku dziennika na serwerze, którym nikt nigdy nie będzie się zajmował Czytać.
+
+Rozwiązaniem tego rodzaju obsesji traktowania wszystkich błędów w ten sam sposób jest uznanie ich za część swojego stanu. Być może błędem było nazywanie ich błędami. Powinniśmy po prostu nazwać je niezwykłymi i nieoczekiwanymi zmianami stanu lub wyjątkami. Och, czekaj, już je mamy!
+
+#### 9.2.1 Sama prawda o wyjątkach
+Wyjątki mogą być najbardziej niezrozumiałym konstruktem w historii programowania. Nie zliczę nawet, ile razy widziałem, jak ktoś po prostu umieścił swój nieudany kod w bloku try, a następnie pustym bloku catch i nazwał to dobrym. To jak zamknąć drzwi do płonącego pokoju i założyć, że problem w końcu sam się rozwiąże. Nie jest to błędne założenie, ale może być dość kosztowne.
+
+Listing 9.1 Rozwiązanie wszystkich problemów życiowych
+
+```swift
+try {
+ doSomethingMysterious();
+}
+catch {
+ // this is fine
+}
+```
+
+Nie winię za to także programistów. Jak powiedział Abraham Maslow w 1966 roku: „Jeśli jedynym narzędziem, jakie posiadasz, jest młotek, masz tendencję do postrzegania każdego problemu jako gwoździa”. Jestem pewien, że kiedy po raz pierwszy wynaleziono młotek, była to kolejna wielka rzecz i wszyscy próbowali zastosować go w swoim procesie rozwiązywania problemów. Neolityczni ludzie prawdopodobnie publikowali wpisy na blogach, używając ręcznych oznaczeń na ścianach jaskiń, o tym, jak rewolucyjny był młotek i jak może sprawić, że problemy znikną, nie wiedząc, że w przyszłości pojawią się lepsze narzędzia do smarowania chleba masłem.
+
+Widziałem przypadki, w których programista dodał ogólną procedurę obsługi wyjątków dla całej aplikacji, która w rzeczywistości ignoruje wszystkie wyjątki, zapobiegając wszystkim awariom. Dlaczego więc ciągle dostają się błędy? Już dawno rozwiązalibyśmy ten problem, gdyby rozwiązaniem było dodanie pustej procedury obsługi.
+
+Wyjątki są nowatorskim rozwiązaniem problemu stanu nieokreślonego. W czasach, gdy obsługa błędów odbywała się wyłącznie na podstawie zwracanych wartości, można było pominąć obsługę błędu, założyć sukces i kontynuować działanie. To postawiłoby aplikację w stanie, którego programista nigdy się nie spodziewał. Problem z nieznanym stanem polega na tym, że nie można poznać skutków tego stanu ani tego, jak poważne mogą być. Jest to właściwie jedyny powód wyświetlania ekranów błędów krytycznych systemu operacyjnego, takich jak panika jądra w systemach UNIX lub niesławny niebieski ekran śmierci w systemie Windows. Zatrzymują system, aby zapobiec potencjalnym dalszym szkodom. Stan nieznany oznacza, że nie można już przewidzieć, co wydarzy się dalej. Tak, procesor może po prostu wpaść w panikę i wejść w nieskończoną pętlę, dysk twardy może zdecydować o zapisaniu zer w każdym sektorze, a Twoje konto na Twitterze może zdecydować o opublikowaniu losowych opinii politycznych pisanych wielkimi literami.
+
+Kody błędów różnią się od wyjątków tym, że można wykryć, czy wyjątki nie są obsługiwane w czasie wykonywania – inaczej jest w przypadku kodów błędów. Typowym rozwiązaniem w przypadku nieobsłużonych wyjątków jest zakończenie aplikacji, ponieważ dany stan nie jest przewidywany. Systemy operacyjne robią to samo: zamykają aplikację, jeśli nie obsłuży ona wyjątku. Nie mogą zrobić tego samego w przypadku sterowników urządzeń lub komponentów na poziomie jądra, ponieważ nie działają w izolowanych przestrzeniach pamięci, w przeciwieństwie do procesów trybu użytkownika. Dlatego muszą całkowicie zatrzymać system. Nie stanowi to większego problemu w systemach operacyjnych opartych na mikrojądrze, ponieważ liczba komponentów na poziomie jądra jest minimalna, a nawet sterowniki urządzeń działają w przestrzeni użytkownika, ale wiąże się to z niewielkim spadkiem wydajności, z którym jeszcze się nie pogodziliśmy.
+
+Największym niuansem, którego nam brakuje w przypadku wyjątków, jest fakt, że są one wyjątkowe. Nie służą do ogólnej kontroli przepływu; masz do tego wartości wyników i konstrukcje kontroli przepływu. Wyjątkiem są przypadki, gdy coś dzieje się poza umową funkcji i funkcja nie może już wypełnić swojej umowy. Funkcja taka jak (a,b) => a/b gwarantuje wykonanie operacji dzielenia, ale nie może tego zrobić, gdy wartość b wynosi 0. Jest to nieoczekiwany i nieokreślony przypadek.
+
+Załóżmy, że pobierasz aktualizacje oprogramowania swojej aplikacji komputerowej, przechowujesz pobraną kopię na dysku i przełączasz aplikację na nowo pobraną, gdy użytkownik uruchomi ją następnym razem. Jest to powszechna technika samodzielnego aktualizowania aplikacji poza ekosystemem zarządzania pakietami. Operacja aktualizacji wyglądałaby jak na rysunku 9.1. Jest to trochę naiwne, ponieważ nie uwzględnia niedokończonych aktualizacji, ale o to właśnie chodzi.
+
+![CH09_F01_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_9-1.png)
+
+Jeśli w dowolnym momencie automatycznej aktualizacji zostanie zgłoszony wyjątek, otrzymasz niekompletny folder app2, co spowoduje zastąpienie plików aplikacji uszkodzoną wersją, powodując katastrofalny stan, którego nie będzie można odzyskać.
+
+Na każdym kroku możesz napotkać wyjątek, który może spowodować, że wszystko się rozpadnie, jeśli nie zostanie obsługiwane lub zostanie obsługiwane nieprawidłowo. Rysunek pokazuje również, jak ważne jest, aby projekt procesu był odporny na wyjątki. Jakakolwiek awaria na dowolnym etapie może spowodować uszkodzenie aplikacji, której nie będzie można już odzyskać. Nie powinieneś pozostawiać aplikacji w złym stanie, nawet jeśli wystąpi wyjątek.
+
+#### 9.2.2 Nie łap wyjątków
+Bloki `Try/catch` są uważane za szybkie i łatwe łatki dla kodu, który ulega awarii z powodu wyjątku. Zignorowanie wyjątku powoduje brak awarii, ale nie powoduje zniknięcia pierwotnej przyczyny.
+
+Wyjątki mają powodować awarie, ponieważ jest to najłatwiejszy sposób zidentyfikowania problemu bez powodowania dalszych problemów. Nie bój się awarii. Bój się błędów, które nie powodują czystych awarii, a także wygodnego śledzenia stosu, które pomaga dokładnie określić miejsce, w którym to się stało. Bój się problemów ukrytych za pustymi instrukcjami catch, czających się w kodzie i ukrytych pod postacią w większości poprawnie wyglądającego stanu, lekko kumulujących się przez długi czas zły stan i ostatecznie powodujących zauważalne spowolnienie lub całkowicie nieistotnie wyglądającą awarię , jak wyjątek `OutOfMemoryException`. Niepotrzebne bloki `catch` mogą zapobiec niektórym awariom, ale czytanie dzienników może kosztować wiele godzin. Wyjątki są świetne, ponieważ pozwalają wykryć problem, zanim stanie się on trudny do wykrycia.
+
+Pierwsza zasada obsługi wyjątków brzmi: nie wyłapujesz wyjątku. Drugą zasadą obsługi wyjątków jest `IndexOutOfRangeException` z rozdziału 9 Street Codera.
+
+Widzisz, co się dzieje, gdy masz tylko jedną regułę? Nie przechwytuj wyjątku, ponieważ powoduje to awarię. Jeśli jest to spowodowane nieprawidłowym zachowaniem, napraw błąd, który to powoduje. Jeśli jest to spowodowane znaną możliwością, umieść w kodzie wyraźne instrukcje obsługi dla tego konkretnego przypadku.
+
+Ilekroć w którymś momencie kodu istnieje możliwość wystąpienia wyjątku, zadaj sobie pytanie: „Czy mam zaplanowane konkretne rozwiązanie w związku z tym wyjątkiem, czy też chcę po prostu zapobiec awarii?” Jeśli to drugie, obsługa tego wyjątku może nie być konieczna, a nawet może być szkodliwa, ponieważ ślepa obsługa wyjątku może ukryć głębszy, poważniejszy problem z kodem.
+
+Rozważmy aplikację samoaktualizującą się, o której wspomniałem w rozdziale 9. 2.1. Może mieć funkcję pobierającą serię plików aplikacji do folderu, jak pokazano na aukcji 9.2. Musimy pobrać dwa pliki z naszego serwera aktualizacji, zakładając, że są to najnowsze wersje. Oczywiście istnieje wiele problematycznych problemów związanych z takim podejściem, takich jak nieużywanie centralnego rejestru do identyfikacji najnowszej wersji i pobieranie tej konkretnej wersji. Co się stanie, jeśli rozpocznę pobieranie aktualizacji, gdy programiści będą w trakcie aktualizowania plików zdalnych? Dostałbym połowę plików z poprzedniej wersji i połowę z następnej wersji, co spowodowałoby uszkodzenie instalacji. Na potrzeby naszego przykładu załóżmy, że programiści zamknęli serwer WWW przed aktualizacją, zaktualizowali pliki i włączyli go ponownie po zakończeniu, aby zapobiec takim schrzanieniom.
+
+Listing 9.2 Kod do pobierania wielu plików
+
+```swift
+private const string updateServerUriPrefix =
+  "https://streetcoder.org/selfupdate/";
+ 
+private static readonly string[] updateFiles =
+  new[] { "Exceptions.exe", "Exceptions.app.config" };
+ 
+private static bool downloadFiles(string directory,
+  IEnumerable<string> files) {
+  foreach (var filename in updateFiles) {
+    string path = Path.Combine(directory, filename);
+    var uri = new Uri(updateServerUriPrefix + filename);
+    if (!downloadFile(uri, path)) {
+      return false;
+    }
+  }
+  return true;
+}
+ 
+private static bool downloadFile(Uri uri, string path) {
+  using var client = new WebClient();
+  client.DownloadFile(uri, path);
+  return true;
+}
+```
+
+Wiemy, że metoda DownloadFile może generować wyjątki z różnych powodów. Faktycznie, Microsoft udostępnia doskonałą dokumentację dotyczącą zachowania funkcji w .NET, w tym informacje na temat wyjątków, jakie mogą być generowane. Istnieją trzy wyjątki, które metoda DownloadFile klasy WebClient może zgłosić:
+
+1. `ArgumentNullException` - gdy podany argument jest null,
+2. `WebException` - gdy wystąpi coś niespodziewanego podczas pobierania, na przykład utrata połączenia internetowego,
+3. `NotSupportedException` - gdy ta sama instancja WebClient zostanie wywołana z wielu wątków, aby oznaczyć, że klasa sama w sobie nie jest bezpieczna dla wielowątkowości.
+
+Aby zapobiec nieprzyjemnym awariom, programista może zdecydować się otoczyć wywołanie metody DownloadFile blokiem try / catch, dzięki czemu pobieranie będzie kontynuowane. Ponieważ wielu programistów może nie zwracać uwagi na rodzaje wyjątków do przechwytywania, często stosują blok catch bez określonego typu. Wprowadzamy kod wynikowy, abyśmy mogli wykryć, czy wystąpił błąd.
+
+Listing 9.3 Zapobieganie awariom poprzez tworzenie większej liczby błędów
+
+```swift
+private static bool downloadFile(Uri uri, string path) {
+ using var client = new WebClient();
+ try {
+   client.DownloadFile(uri, path);
+   return true;
+ }
+ catch {
+   return false;
+ }      
+}
+```
+
+Problem z tym podejściem polega na tym, że wyłapujesz wszystkie trzy możliwe wyjątki, z których dwa faktycznie wskazują na określony błąd programisty. ArgumentNullException ma miejsce tylko wtedy, gdy przekażesz nieprawidłowy argument i osoba wywołująca jest za to odpowiedzialna, co oznacza, że gdzieś na stosie wywołań znajdują się złe dane lub zła walidacja danych wejściowych. Podobnie wyjątek NotSupportedException jest zgłaszany tylko w przypadku niewłaściwego użycia klienta. Oznacza to, że ukrywasz wiele potencjalnie łatwych do naprawienia błędów, które mogą prowadzić do jeszcze poważniejszych konsekwencji, jeśli wyłapią wszystkie wyjątki. Nie, pomimo tego, co może dyktować jakiś magiczny krąg niewolnictwa zwierząt, nie musisz łapać ich wszystkich. Gdybyśmy nie mieli wartości zwracanej, prosty błąd argumentu spowodowałby pominięcie plików i nawet nie wiedzielibyśmy, czy tam są. Zamiast tego powinieneś wychwycić konkretny wyjątek, który prawdopodobnie nie jest błędem programisty, jak pokazuje Listing 9.4. Wyłapujemy tylko wyjątek WebException, czego w rzeczywistości można się spodziewać, ponieważ wiesz, że pobieranie może się nie powieść w dowolnym momencie z dowolnego powodu, więc chcesz uczynić to częścią swojego stanu. Złap wyjątek tylko wtedy, gdy jest oczekiwany. Pozwalamy, aby inne rodzaje wyjątków powodowały awarię, ponieważ oznacza to, że byliśmy głupi i zasługujemy na życie z jej konsekwencjami, zanim spowoduje to poważniejszy problem.
+
+Listing 9.4 Precyzyjna obsługa wyjątków
+
+```swift
+private static bool downloadFile(Uri uri, string path) {
+  using var client = new WebClient();
+  try {
+    client.DownloadFile(uri, path);
+    return true;
+  }
+  catch (WebException) {
+    return false;
+  }      
+}
+```
+
+Dlatego analizatorzy kodu sugerują, aby unikać stosowania bloków `catch` bez typu, ponieważ są one zbyt szerokie i powodują przechwytywanie nieistotnych wyjątków. Bloków Catchall należy używać tylko wtedy, gdy naprawdę masz na myśli przechwytywanie wszystkich wyjątków na świecie, prawdopodobnie w celach ogólnych, takich jak rejestrowanie.
+
+#### 9.2.3 Odporność na wyjątki
+Twój kod powinien działać poprawnie nawet bez obsługi wyjątków, nawet jeśli ulegnie awarii. Powinieneś zaprojektować przepływ, który będzie działał poprawnie nawet wtedy, gdy stale pojawiają się wyjątki, i nie powinieneś wchodzić w stan brudny. Twój projekt powinien tolerować wyjątki. Głównym powodem jest to, że wyjątki są nieuniknione. Możesz umieścić catchall try/catch w swojej metodzie Main, a aplikacja nadal będzie nieoczekiwanie kończona, gdy nowe aktualizacje spowodują ponowne uruchomienie. Nie powinieneś pozwalać, aby wyjątki zakłócały stan aplikacji.
+
+Kiedy program Visual Studio ulega awarii, plik, który w tym momencie zmieniałeś, nie znika. Po ponownym uruchomieniu aplikacji otrzymasz przypomnienie o brakującym pliku i zaoferowana zostanie opcja odzyskania brakującego pliku. Visual Studio zarządza tym, stale przechowując kopię niezapisanych plików w lokalizacji tymczasowej i usuwając ją po faktycznym zapisaniu pliku. Podczas uruchamiania sprawdza istnienie tych plików tymczasowych i pyta, czy chcesz je odzyskać. Powinieneś zaprojektować swój kod tak, aby przewidywał podobne problemy.
+
+W naszym przykładzie aplikacji samoaktualizującej się proces powinien umożliwiać występowanie wyjątków i przywracanie ich po ponownym uruchomieniu aplikacji. Odporny na wyjątki projekt naszego samoaktualizatora wyglądałby jak na rysunku 9.2, na którym zamiast pobierać pojedyncze pliki, pobieramy pojedynczy pakiet atomowy, co zapobiega otrzymywaniu niespójnego zestawu plików. Podobnie tworzymy kopie zapasowe oryginalnych plików przed zastąpieniem ich nowymi, aby móc je odzyskać, gdyby coś poszło nie tak.
+
+![CH09_F02_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_9-2.png)
+
+Ile czasu zajmuje instalacja aktualizacji na naszych urządzeniach, wskazuje, że aktualizacja oprogramowania jest skomplikowana i jestem pewien, że przeoczyłem wiele przypadków, w których ten projekt może się nie udać. Możesz jednak zastosować podobne techniki, aby zapobiec złemu stanowi aplikacji.
+
+Osiągnięcie projektu odpornego na wyjątki zaczyna się od idempotencji. Funkcja lub adres URL jest idempotentna, jeśli zwraca ten sam wynik niezależnie od tego, ile razy zostanie wywołana. Może się to wydawać trywialne w przypadku czystej funkcji, takiej jak `Sum()`, ale staje się bardziej skomplikowane w przypadku funkcji modyfikujących stan zewnętrzny. Przykładem jest proces realizacji transakcji w platformach zakupów online. Czy jeśli przypadkowo klikniesz dwukrotnie przycisk Prześlij zamówienie, Twoja karta kredytowa zostanie obciążona dwukrotnie? Nie powinno. Wiem, że niektóre witryny próbują to naprawić, wyświetlając ostrzeżenie typu „Nie klikaj przycisku dwa razy!” ale jak wiadomo, większość kotów chodzących po klawiaturze to analfabeci.
+
+W przypadku żądań internetowych o idempotencji zwykle myśli się w uproszczony sposób, np. „Żądania `HTTP GET` powinny być idempotentne, a wszystko, co nie jest idempotentne, powinno być żądaniem `POST`”. Jednak żądania `GET` mogą nie być idempotentne, powiedzmy, w przypadku treści zawierających dynamicznie zmieniające się części; lub żądanie `POST` może być idempotentne, jak operacja głosowania za: wielokrotne głosy za tą samą treścią nie powinny zmieniać liczby głosów oddanych przez użytkowników na tę samą treść.
+
+W jaki sposób pomaga nam to stać się odpornymi na wyjątki? Kiedy projektujemy naszą funkcję tak, aby miała spójne skutki uboczne niezależnie od tego, ile razy jest wywoływana, zyskujemy również pewne korzyści w zakresie spójności w przypadku nieoczekiwanego przerwania. Nasz kod można bezpiecznie wywoływać wiele razy, nie powodując żadnych problemów.
+
+Jak osiągnąć idempotencję? W naszym przykładzie możesz mieć unikalny numer realizacji zamówienia i możesz utworzyć rekord w bazie danych od razu po rozpoczęciu przetwarzania zamówienia i sprawdzić jego istnienie na początku funkcji przetwarzania, jak pokazuje rysunek 9.3. Kod musi być bezpieczny dla wątków, ponieważ niektóre koty potrafią chodzić naprawdę szybko. Transakcje DB mogą pomóc uniknąć złego stanu, ponieważ zostaną wycofane, jeśli w jakiś sposób zostaną odcięte z powodu wyjątku, ale w wielu scenariuszach mogą nie być konieczne.
+
+Na rysunku 9.3 definiujemy operację zmiany statusu zamówienia, ale w jaki sposób możemy zapewnić, że zrobimy to atomowo? A co jeśli ktoś inny to zmieni zanim przeczytamy wynik? Sekret polega na zastosowaniu operacji aktualizacji warunkowej bazy danych, która upewnia się, że status jest taki sam jak oczekiwany. Może to wyglądać tak:
+
+```swift
+UPDATE orders SET status=@NewState WHERE id=@OrderID status=@CurrentState
+```
+
+UPDATE returns the number of rows affected, so if the state changed during the UPDATEoperation, the operation itself would fail and it would return 0 as the number of rows affected. If the state change is successful, it would return 1. You can use this to atomically update the record state changes, as shown in figure 9.3.
+
+![CH09_F03_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_9-3.png)
+
+Przykład implementacji wyglądałby jak na aukcji 9.5. Definiujemy każdy indywidualny stan, w jakim może znajdować się zamówienie w trakcie przetwarzania zamówienia i umożliwiamy naszemu przetwarzaniu obsługę sytuacji na różnych poziomach przetwarzania. Jeśli jest już przetwarzane, po prostu wyświetlamy stronę w trakcie przetwarzania i wygasamy zamówienie, jeśli upłynie limit czasu.
+
+Listing 9.5 Przetwarzanie zleceń idempotentnych
+
+```swift
+public enum OrderStatus {
+  New,
+  Processing,
+  Complete,
+  Failed,
+}
+ 
+[HttpPost]
+public IActionResult Submit(Guid orderId) {
+  Order order = db.GetOrder(orderId);
+ 
+  if (!db.TryChangeOrderStatus(order, from: OrderStatus.New,
+    to: OrderStatus.Processing)) {    
+    if (order.Status != OrderStatus.Processing) {
+      return redirectToResultPage(order);
+    }
+    if (DateTimeOffset.Now - order.LastUpdate > orderTimeout) {
+      db.ChangeOrderStatus(order, OrderStatus.Failed);
+      return redirectToResultPage(order);
+    }
+    return orderStatusView(order);
+  }
+  if (!processOrder(order)) {
+    db.ChangeOrderStatus(order, OrderStatus.Failed);
+  } else {
+    db.TryChangeOrderStatus(order,
+      from: OrderStatus.Processing,
+      to: OrderStatus.Complete);
+  }
+  return redirectToResultPage(order);
+}
+```
+
+Mimo że jest to żądanie `HTTP POST`, złożenie zamówienia można wywołać wielokrotnie, nie powodując przy tym żadnych niepożądanych skutków ubocznych, w związku z czym jest ono idempotentne. Jeśli aplikacja internetowa ulegnie awarii i ponownie ją uruchomisz, może ona nadal zostać przywrócona po wielu nieprawidłowych stanach, takich jak stan przetwarzania. Przetwarzanie zamówień może być bardziej skomplikowane i w niektórych przypadkach może wymagać zewnętrznego, okresowego czyszczenia, ale nadal możesz zachować dużą odporność na wyjątki, nawet bez jakichkolwiek instrukcji `catch`.
+
+#### 9.2.4 Odporność bez transakcji
+Idempotencja może nie wystarczyć do zapewnienia odporności na wyjątki, ale stanowi doskonałą podstawę, ponieważ zachęca nas do zastanowienia się, jak nasza funkcja zachowałaby się w różnych stanach. W naszym przykładzie krok zamówienia procesu może powodować wyjątki i pozostawiać brudny stan dla danego zamówienia, uniemożliwiając ponowne wywołanie tego samego kroku. Zwykle transakcje chronią przed tym, ponieważ wycofują wszystkie zmiany, nie pozostawiając po sobie żadnych brudnych danych. Jednak nie każda pamięć masowa obsługuje transakcje — na przykład systemy plików.
+
+Nadal masz opcje, nawet jeśli transakcje nie są dostępne. Załóżmy, że utworzyłeś aplikację do udostępniania zdjęć, w której ludzie mogą przesyłać albumy i udostępniać je znajomym. Twoja sieć dostarczania treści (CDN, fajna nazwa serwerów plików) może mieć folder dla każdego albumu z plikami obrazów pod spodem, a rekordy albumów będą znajdować się w bazie danych. Zawijanie operacji ich budowania w transakcję jest dość niepraktyczne, ponieważ obejmuje ona wiele technologii.
+
+Tradycyjne podejście do tworzenia albumu polega na utworzeniu najpierw rekordu albumu, utworzeniu folderu, a na koniec przesłaniu obrazów do folderu na podstawie tych informacji. Jeśli jednak w dowolnym miejscu procesu zostanie zgłoszony wyjątek, otrzymasz płytę z brakującymi zdjęciami. Problem ten dotyczy praktycznie wszystkich rodzajów współzależnych danych.
+
+Masz wiele możliwości uniknięcia tego problemu. W naszym przykładzie albumu możesz najpierw utworzyć folder dla obrazów w lokalizacji tymczasowej, przenieść folder do identyfikatora UUID utworzonego dla albumu, a na koniec utworzyć rekord albumu jako ostatnią operację w tym procesie. W ten sposób użytkownicy nigdy nie będą przeglądać albumów, które są w połowie ukończone.
+
+Inną opcją byłoby utworzenie najpierw rekordu albumu z wartością statusu określającą, że rekord jest nieaktywny, a następnie dodanie pozostałych danych. Możesz wreszcie zmienić status nagrania albumu na aktywny po zakończeniu operacji wstawiania. W ten sposób nie otrzymasz zduplikowanych rekordów albumów, gdy wyjątki zakłócają proces przesyłania.
+
+W obu przypadkach można zastosować okresowe procedury czyszczenia, które będą w stanie wyczyścić porzucone rekordy i usunąć je z bazy danych. Przy tradycyjnym podejściu trudno stwierdzić, czy zasób jest ważny, czy też jest pozostałością po przerwanej operacji.
+
+#### 9.2.5 Wyjątki a błędy
+Można argumentować, że wyjątki oznaczają błędy i może to być prawda, ale nie wszystkie błędy kwalifikują się jako wyjątki. Nie używaj wyjątków w przypadkach, w których oczekujesz, że osoba dzwoniąca będzie sobie z tym radzić przez większość czasu. To nie jest wyjątkowa sytuacja. Bardzo znanym przykładem jest Parse versus TryParse w .NET, gdzie ten pierwszy zgłasza wyjątek w przypadku nieprawidłowych danych wejściowych, podczas gdy drugi po prostu zwraca wartość false.
+
+Parse był tylko raz. Następnie pojawił się TryParse w .NET Framework 2.0, ponieważ nieprawidłowe dane wejściowe okazały się powszechne i oczekiwane w większości scenariuszy. W takich przypadkach wyjątki stanowią obciążenie, ponieważ są powolne. Dzieje się tak dlatego, że muszą nosić ze sobą ślad stosu, co wymaga przede wszystkim przejścia po stosie w celu zebrania informacji o śladzie stosu. Może to być bardzo kosztowne w porównaniu do zwykłego zwracania wartości logicznej. Wyjątki są również trudniejsze w obsłudze, ponieważ wymagana jest cała ceremonia try/catch, podczas gdy prosta wartość wyniku wymaga jedynie sprawdzenia za pomocą if, jak pokazano na poniższej liście. Możesz zobaczyć, że implementacja z try/catch wymaga więcej pisania, trudniej jest ją poprawnie zaimplementować, ponieważ programista może łatwo zapomnieć o konieczności utrzymywania procedury obsługi wyjątków specyficznej dla FormatException, a kod jest trudniejszy do przestrzegania.
+
+Listing 9.6 Opowieść o dwóch analizach
+
+```swift
+public static int ParseDefault(string input,
+  int defaultValue) {
+  try {
+    return int.Parse(input);
+  }
+  catch (FormatException) {
+    return defaultValue;
+  }
+}
+ 
+public static int ParseDefault(string input,
+  int defaultValue) {
+  if (!int.TryParse(input, out int result)) {
+    return defaultValue;
+  }
+  return result;
+}
+```
+
+Analizowanie nadal ma swoje miejsce, gdy oczekujesz, że dane wejściowe będą zawsze poprawne. Jeśli masz pewność, że wartość wejściowa jest zawsze poprawnie sformatowana, a każda nieprawidłowa wartość jest w rzeczywistości błędem, chcesz, aby został zgłoszony wyjątek. Jest to w pewnym sensie wyzwanie, ponieważ wtedy masz pewność, że nieprawidłowa wartość wprowadzona jest błędem. „Rozbij się, jeśli potrafisz!”
+
+Regularne wartości błędów są wystarczająco dobre, aby w większości przypadków zwracać odpowiedzi. Nawet nie ma nic złego w zwracaniu niczego, jeśli wartość zwracana nie ma żadnego zastosowania. Na przykład, jeśli oczekujesz, że operacja głosowania za zawsze zakończy się sukcesem, nie podawaj wartości zwracanej. Powrót funkcji już oznacza sukces.
+
+Możesz mieć różne rodzaje wyników błędów w zależności od tego, jak bardzo oczekujesz, że osoba dzwoniąca będzie potrzebowała informacji. Jeśli wywołującemu zależy tylko na sukcesie lub porażce, a nie na szczegółach, zwrócenie wartości bool jest w porządku i naprawdę oznacza sukces; z drugiej strony fałsz jest porażką. Jeśli masz trzeci stan lub używasz już wartości bool do określenia czegoś innego, możesz potrzebować innego podejścia.
+
+Na przykład Reddit ma funkcję głosowania, ale tylko wtedy, gdy treść jest wystarczająco nowa. Nie możesz głosować na komentarze ani posty starsze niż sześć miesięcy. Nie możesz także głosować na usunięte posty. Oznacza to, że głosowanie może zakończyć się niepowodzeniem na wiele sposobów, a o tej różnicy może być konieczne powiadomienie użytkownika. Nie możesz po prostu powiedzieć „głosowanie nie powiodło się: nieznany błąd”, ponieważ użytkownik może pomyśleć, że to tymczasowy problem i próbować dalej. Musisz powiedzieć: ***„Ten post jest za stary”*** lub ***„Ten post został usunięty”***, aby użytkownik dowiedział się o dynamice danej platformy i przestał próbować głosować. Lepszym rozwiązaniem byłoby ukrycie przycisków głosowania, aby użytkownik od razu wiedział, że nie może głosować na dany post, ale Reddit nalega, aby je pokazać.
+
+W przypadku Reddita możesz po prostu użyć wyliczenia `enum`, aby rozróżnić różne tryby awarii. Możliwe wyliczenie wyniku głosowania na Reddicie mogłoby wyglądać jak lista 9.7. Może to nie jest wyczerpujące, ale nie potrzebujemy dodatkowych wartości dla innych możliwości, ponieważ nie mamy co do nich żadnych planów. Na przykład, jeśli głosowanie nie powiedzie się z powodu błędu DB, musi to być wyjątek, a nie wartość wyniku. Wskazuje na awarię infrastruktury lub błąd. Chcesz mieć stos wywołań; chcesz, żeby to było gdzieś zarejestrowane.
+
+Listing 9.7 Wynik głosowania na Reddicie
+
+```swift
+public enum VotingResult {
+ Success,
+ ContentTooOld,
+ ContentDeleted,
+}
+```
+
+Wspaniałą rzeczą w wyliczeniach jest to, że kompilator może ostrzec Cię o nieobsłużonych przypadkach, gdy używasz wyrażeń przełączających. Otrzymujesz ostrzeżenie w przypadku spraw, którymi się nie zająłeś, ponieważ nie są one wystarczająco wyczerpujące. Kompilator C# nie może zrobić tego samego dla instrukcji `switch`, a jedynie dla wyrażeń `switch`, ponieważ zostały one nowo dodane do języka i można je zaprojektować dla takich scenariuszy. Przykładowa wyczerpująca obsługa wyliczeń dla operacji głosowania za może wyglądać jak na poniższej liście. Nadal możesz otrzymać osobne ostrzeżenie, jeśli instrukcja switch nie jest wystarczająco wyczerpująca, ponieważ teoretycznie możesz przypisać nieprawidłowe wartości do wyliczeń ze względu na wstępne decyzje projektowe podjęte dla języka C#.
+
+```swift
+[HttpPost]
+public IActionResult Upvote(Guid contentId) {
+ var result = db.Upvote(contentId);
+ return result switch {
+   VotingResult.Success => success(),
+   VotingResult.ContentTooOld 
+     => warning("Content is too old. It can't be voted"),
+   VotingResult.ContentDeleted 
+     => warning("Content is deleted. It can't be voted"),
+ };
+}
+```
+
+### 9.3 Nie debuguj
+Debugowanie to starożytne określenie; powstał nawet przed programowaniem, zanim Grace Hopper spopularyzowała go w latach czterdziestych XX wieku, znajdując prawdziwą ćmę w przekaźnikach komputera Mark II. Pierwotnie był używany w aeronautyce do procesów identyfikujących usterki samolotów. Obecnie zastępuje ją bardziej zaawansowana praktyka Doliny Krzemowej, polegająca na zwalnianiu dyrektora generalnego za każdym razem, gdy problem zostaje wykryty po fakcie.
+
+Współczesne rozumienie debugowania obejmuje głównie uruchamianie programu w debugerze, umieszczanie punktów przerwania, śledzenie kodu krok po kroku i sprawdzanie stanu programu. Debugery są bardzo przydatne, ale nie zawsze są najlepszymi narzędziami. Zidentyfikowanie pierwotnej przyczyny problemu może być bardzo czasochłonne. Debugowanie programu może nie być nawet możliwe w każdych okolicznościach. Możesz nawet nie mieć dostępu do środowiska, w którym działa kod.
+
+
+
+#### 9.3.1 debugowanie printf(). 
+
+Wstawianie linii wyjściowych konsoli do programu w celu znalezienia problemu to starożytna praktyka. Od tego czasu my, programiści, otrzymaliśmy wymyślne debugery z funkcjami debugowania krok po kroku, ale nie zawsze są one najskuteczniejszymi narzędziami do identyfikowania pierwotnej przyczyny problemu. Czasami bardziej prymitywne podejście może pomóc w zidentyfikowaniu problemu. Debugowanie `printf()` ma swoją nazwę od funkcji `printf()` w języku programowania C (w Polsce znana częściej jako Print(“Dupa”). Jego nazwa oznacza format drukowany. Jest całkiem podobna do `Console.WriteLine()`, aczkolwiek ma inną składnię formatowania.
+
+Ciągłe sprawdzanie stanu aplikacji jest prawdopodobnie najstarszym sposobem debugowania programów. Wyprzedza nawet monitory komputerowe. Starsze komputery były wyposażone w lampki na przednich panelach, które faktycznie pokazywały stan bitów rejestrów procesora, dzięki czemu programiści mogli zrozumieć, dlaczego coś nie działa. Na szczęście dla mnie monitory komputerowe zostały wynalezione zanim się urodziłem.
+
+Debugowanie `printf()` to podobny sposób okresowego pokazywania stanu działającego programu, dzięki czemu programista może zrozumieć, gdzie występuje problem. Zwykle jest to mile widziane jako technika dla nowicjuszy, ale z kilku powodów może być lepsza od debugowania krok po kroku. Na przykład programista może wybrać większą szczegółowość częstotliwości raportowania stanu. Dzięki debugowaniu krok po kroku punkty przerwania można ustawiać tylko w określonych miejscach, ale tak naprawdę nie można pominąć więcej niż jednej linii. Potrzebujesz albo skomplikowanej konfiguracji punktu przerwania, albo po prostu musisz żmudnie naciskać klawisz Step Over. Może to być dość czasochłonne i nudne.
+
+Co ważniejsze, `printf()` lub `Console.WriteLine()` zapisuje stan na terminalu konsoli, który ma historię. Jest to istotne, ponieważ możesz zbudować łańcuch rozumowania między różnymi stanami, patrząc na dane wyjściowe terminala, czego nie da się zrobić za pomocą debugera krok po kroku.
+
+Nie wszystkie programy mają widoczne dane wyjściowe konsoli, aplikacje internetowe lub usługi. .NET oferuje alternatywy dla tych środowisk, przede wszystkim Debug.WriteLine() i Trace.WriteLine(). Debug.WriteLine() zapisuje dane wyjściowe do konsoli wyjściowej debugera, która jest wyświetlana w oknie wyjściowym debugera w programie Visual Studio zamiast danych wyjściowych własnej konsoli aplikacji. Największą zaletą Debug.WriteLine jest to, że wywołania tej metody są całkowicie usuwane ze zoptymalizowanych (wersji `release`) plików binarnych, dzięki czemu nie wpływają na wydajność wydanego kodu.
+
+Jest to jednak problem w przypadku debugowania kodu produkcyjnego. Nawet jeśli instrukcje wyjściowe debugowania zostałyby zachowane w kodzie, nie byłoby praktycznego sposobu ich odczytania. `Trace.WriteLine()` jest pod tym względem lepszym narzędziem, ponieważ śledzenie .NET może mieć poza zwykłymi danymi wyjściowymi odbiorniki konfigurowalne w czasie wykonywania. Dane wyjściowe śledzenia można zapisać w pliku tekstowym, dzienniku zdarzeń, pliku XML i czymkolwiek, co można sobie wyobrazić po zainstalowaniu odpowiedniego komponentu. Dzięki magii .NET możesz nawet zmienić konfigurację śledzenia podczas działania aplikacji.
+
+Konfigurowanie śledzenia jest łatwe, więc możesz je włączyć, gdy kod jest uruchomiony. Rozważmy przykład działającej aplikacji internetowej, w przypadku której konieczne może być włączenie śledzenia podczas jej działania, aby zidentyfikować problem.
+
+#### 9.3.2 Zagłębianie w zrzuty awaryjne
+Inną alternatywą dla debugowania krok po kroku jest sprawdzenie zrzutów awaryjnych. Chociaż niekoniecznie są tworzone po awarii, zrzuty awaryjne to pliki zawierające zawartość migawki przestrzeni pamięci programu. Nazywa się je również zrzutami rdzenia w systemach UNIX. Możesz ręcznie utworzyć zrzuty awaryjne, klikając prawym przyciskiem myszy nazwę procesu w Menedżerze zadań Windows, a następnie klikając Utwórz plik zrzutu, jak pokazano na rysunku 9.4. Jest to operacja nieinwazyjna, która wstrzymałaby proces jedynie do czasu jego zakończenia, ale umożliwiłaby jego dalsze działanie.
+
+![CH09_F04_Kapanoglu](https://drek4537l1klr.cloudfront.net/kapanoglu/HighResolutionFigures/figure_9-4.png)
+
+Możesz wykonać ten sam rodzaj płynnego zrzucania rdzenia w wariantach UNIX bez zabijania aplikacji, ale jest to nieco bardziej skomplikowane. Wymaga zainstalowania narzędzia dotnet dump:
+
+```swift
+dotnet tool install --global dotnet-dump
+```
+
+Narzędzie doskonale nadaje się do analizowania zrzutów awaryjnych, dlatego warto zainstalować je nawet w systemie Windows. Polecenie instalacji jest takie samo dla systemu Windows.
+
+W serwisie GitHub, pod przykładami zawartymi w tym rozdziale, znajduje się projekt o nazwie `InfiniteLoop`, który stale zużywa procesor. Może to być nasza aplikacja internetowa lub nasza usługa działająca na serwerze produkcyjnym. Dobrym ćwiczeniem jest próba zidentyfikowania problemu w takim procesie. To prawie jak doskonalenie umiejętności otwierania zamków na atrapie zamka. Być może myślisz, że nie potrzebujesz umiejętności otwierania zamków, ale poczekaj, aż usłyszysz o opłatach za pracę ślusarza. Cały kod aplikacji pokazano na aukcji 9.9. Zasadniczo wykonujemy operację mnożenia w pętli w sposób ciągły, bez żadnej korzyści dla pokoju na świecie. Prawdopodobnie nadal marnuje znacznie mniej energii niż Bitcoin. Używamy losowych wartości określonych w czasie wykonywania, aby zapobiec przypadkowej optymalizacji naszej pętli przez kompilator.
+
+Listing 9.9 Aplikacja InfiniteLoop z nieuzasadnionym zużyciem procesora
+
+```swift
+using System;
+
+namespace InfiniteLoop {
+ class Program {
+   public static void Main(string[] args) {
+     Console.WriteLine("This app runs in an infinite loop");
+     Console.WriteLine("It consumes a lot of CPU too!");
+     Console.WriteLine("Press Ctrl-C to quit");
+     var rnd = new Random();
+     infiniteLoopAggressive(rnd.NextDouble());
+   }
+
+   private static void infiniteLoopAggressive(double x) {
+     while (true) {
+       x *= 13;
+     }
+   }
+ }
+}
+```
+
+Skompiluj aplikację InfiniteLoop i pozostaw ją uruchomioną w osobnym oknie. Załóżmy, że jest to nasza usługa w środowisku produkcyjnym i musimy dowiedzieć się, gdzie utknęła lub gdzie zużywa tak dużo procesora. Znalezienie stosu wywołań bardzo by nam pomogło i możemy to zrobić za pomocą zrzutów awaryjnych, nie powodując niczego powodującego awarię.
+
+Każdy proces ma identyfikator procesu (PID), czyli wartość liczbową, która jest unikalna wśród innych uruchomionych procesów. Znajdź PID procesu po uruchomieniu aplikacji. Możesz użyć Menedżera zadań w systemie Windows lub po prostu uruchomić to polecenie w wierszu poleceń programu PowerShell:
+
+```swift
+Get-Process InfiniteLoop | Select -ExpandProperty Id
+```
+
+Lub w systemie UNIX możesz po prostu wpisać
+
+```swift
+pgrep InfiniteLoop
+```
+
+Zostanie wyświetlony PID procesu. Możesz utworzyć plik zrzutu przy użyciu tego identyfikatora PID, wypisując polecenie dotnet dump:
+
+```swift
+dotnet dump collect -p PID
+```
+
+Jeśli Twój PID to, powiedzmy, 26190, wpisz
+
+```swift
+dotnet dump collect -p 26190
+```
+
+Polecenie pokaże, gdzie zapisany jest zrzut awaryjny:
+
+```swift
+Writing full to C:\Users\ssg\Downloads\dump_20210613_223334.dmp
+Complete
+```
+
+Możesz później przeanalizować polecenie dotnet-dump na wygenerowanym pliku zrzutu:
+
+```swift
+dotnet dump analyze .\dump_20210613_223334.dmp
+Loading core dump: .\dump_20210613_223334.dmp ...
+Ready to process analysis commands. Type 'help' to list available commands or 'help [command]' to get detailed help on a command.
+Type 'quit' or 'exit' to exit the session.
+> _
+```
+
+W przypadku nazw ścieżek UNIX zamiast ukośników odwrotnych w systemie Windows można używać ukośników. Z tym rozróżnieniem wiąże się ciekawa historia, która sprowadza się do dodania przez Microsoft katalogów do MS-DOS w wersji 2.0 zamiast 1.0.
+
+Podpowiedź analizy akceptuje wiele poleceń, które można zobaczyć z pomocą, ale wystarczy znać tylko kilka z nich, aby określić, co robi proces. Jednym z nich jest polecenie threads, które pokazuje wszystkie wątki działające w ramach tego procesu:
+
+```swift
+> threads
+*0 0x2118 (8472)
+1 0x7348 (29512)
+2 0x5FF4 (24564)
+3 0x40F4 (16628)
+4 0x5DC4 (24004)
+```
+
+Bieżący wątek jest oznaczony gwiazdką i możesz go zmienić za pomocą polecenia setthread w następujący sposób:
+
+```swift
+> setthread 1
+> threads
+0 0x2118 (8472)
+*1 0x7348 (29512)
+2 0x5FF4 (24564)
+3 0x40F4 (16628)
+4 0x5DC4 (24004)
+```
+
+Jak widać aktywny wątek uległ zmianie. Jednak polecenie dotnet dump może analizować tylko wątki zarządzane, a nie wątki natywne. Jeśli spróbujesz zobaczyć stos wywołań niezarządzanego wątku, pojawi się błąd:
+
+```swift
+> clrstack
+OS Thread Id: 0x7348 (1)
+Unable to walk the managed stack. The current thread is likely not a
+managed thread. You can run !threads to get a list of managed threads in
+the process
+Failed to start stack walk: 80070057
+```
+
+Do przeprowadzenia tego rodzaju analizy potrzebny jest natywny debuger, taki jak WinDbg, LLDB lub GDB, a działają one w zasadzie podobnie do analizowania zrzutów awaryjnych. Jednak obecnie nie interesuje nas stos niezarządzany i zazwyczaj wątek 0 należy do naszej aplikacji. Możesz wrócić do wątku 0 i ponownie uruchomić polecenie `clrstack`:
+
+```swift
+> setthread 0
+> clrstack
+OS Thread Id: 0x2118 (0)
+       Child SP               IP Call Site
+000000D850D7E678 00007FFB7E05B2EB InfiniteLoop.Program.infiniteLoopAggressive(Double) [C:\Users\ssg\src\book\CH09\InfiniteLoop\Program.cs @ 15]
+000000D850D7E680 00007FFB7E055F49 InfiniteLoop.Program.Main(System.String[]) [C:\Users\ssg\src\book\CH09\InfiniteLoop\Program.cs @ 10]
+```
+
+Oprócz kilku niewygodnie długich adresów pamięci, stos wywołań ma całkowity sens. Pokazuje, co robił ten wątek, kiedy zrzut został sprowadzony do numeru wiersza (numeru po @), któremu odpowiada, nawet bez przerywania działającego procesu! Pobiera te informacje z plików informacyjnych debugowania z rozszerzeniem .pdb na platformie .NET i dopasowuje adresy pamięci do symboli i numerów linii. Dlatego ważne jest, aby wdrożyć symbole debugowania na serwerze produkcyjnym na wypadek konieczności zlokalizowania błędów.
+
+Debugowanie zrzutów awaryjnych to obszerny temat i obejmuje wiele innych scenariuszy, takich jak identyfikacja wycieków pamięci i warunków wyścigu. Logika jest prawie uniwersalna we wszystkich systemach operacyjnych, językach programowania i narzędziach do debugowania. Masz migawkę pamięci w pliku, w której możesz sprawdzić zawartość pliku, stos wywołań i dane. Potraktuj to jako punkt wyjścia i alternatywę dla tradycyjnego debugowania krok po kroku.  
+
+#### 9.3.3 Zaawansowane debugowanie gumowej kaczki
+Jak pokrótce omówiłem na początku książki, debugowanie gumową kaczką to sposób na rozwiązanie problemów poprzez polecenie ich gumowej kaczce siedzącej na biurku. Chodzi o to, że kiedy ubierzesz swój problem w słowa, przeformułujesz go w jaśniejszy sposób, abyś mógł w magiczny sposób znaleźć jego rozwiązanie.
+
+Używam do tego wersji roboczych Stack Overflow. Zamiast zadawać pytanie na temat `Stack Overflow` i marnować czas wszystkich na moje być może głupie pytanie, po prostu piszę swoje pytanie na stronie internetowej, nie publikując go. Dlaczego zatem `Stack Overflow`? Ponieważ świadomość presji otoczenia na platformie zmusza Cię do powtórzenia jednego aspektu, który jest kluczowy przy konstruowaniu pytania: „Czego próbowałeś?”
+
+Zadawanie sobie tego pytania przynosi wiele korzyści, ale najważniejsza z nich to świadomość, że nie wypróbowałeś jeszcze wszystkich możliwych rozwiązań. Samo myślenie o tym pytaniu pomogło mi pomyśleć o wielu innych możliwościach, których nie rozważałem.             
+
+Podobnie mody Stack Overflow proszą Cię o podanie szczegółów. Zbyt ogólne pytania są uznawane za nie na temat. To zmusza Cię do zawężenia problemu do jednego konkretnego problemu, co pomaga w jego analitycznej dekonstrukcji. Kiedy przećwiczysz to na stronie internetowej, stanie się to nawykiem i będziesz mógł to później zrobić mentalnie.
+
+### Streszczenie
+• Nadaj priorytet błędom, aby uniknąć marnowania zasobów na naprawianie błędów, które nie mają znaczenia.
+• Wychwytuj wyjątki tylko wtedy, gdy masz zaplanowane, zamierzone działanie w tej sprawie. W przeciwnym razie nie łap ich.
+• Napisz kod odporny na wyjątki, który będzie w stanie najpierw wytrzymać awarie, zamiast próbować uniknąć awarii po namyśle.
+• Używaj kodów wyników lub wyliczeń zamiast wyjątków w przypadkach, gdy błędy są częste lub wysoce oczekiwane.
+• Korzystaj z afordancji śledzenia dostarczonych przez platformę, aby identyfikować problemy szybciej niż niezgrabne debugowanie krok po kroku.
+• Użyj analizy zrzutu awaryjnego, aby zidentyfikować problemy z uruchamianiem kodu w środowisku produkcyjnym, jeśli inne metody są niedostępne.
+• Użyj folderu wersji roboczych jako narzędzia do debugowania gumowej kaczki i zadaj sobie pytanie, czego próbowałeś.
