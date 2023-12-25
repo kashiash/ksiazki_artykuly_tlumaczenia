@@ -129,3 +129,24 @@ Tabela 1.1 Zbiór danych do wstępnego szkolenia popularnego LLM GPT-3
 Tabela 1.1 przedstawia liczbę tokenów, gdzie token to jednostka tekstu odczytywana przez model, a liczba tokenów w zbiorze danych jest w przybliżeniu równa liczbie słów i znaków interpunkcyjnych w tekście. Tokenizację, czyli proces konwersji tekstu na tokeny, omówimy bardziej szczegółowo w następnym rozdziale.
 
 Główny wniosek jest taki, że skala i różnorodność tego zbioru danych szkoleniowych pozwala tym modelom dobrze wykonywać różnorodne zadania, w tym składnię języka, semantykę i kontekst, a nawet niektóre wymagające wiedzy ogólnej.
+
+> SZCZEGÓŁY ZBIORU DANYCH GPT-3
+>
+> Należy zauważyć, że każdy podzbiór w tabeli 1.1 został pobrany z 300 miliardów tokenów, co oznacza, że nie wszystkie zbiory danych zostały obejrzane w całości, a niektóre były widziane wielokrotnie. Kolumna proporcji, pomijając zaokrąglenia, dodaje 100%. Dla porównania, 410 miliardów tokenów w zbiorze danych CommonCrawl wymaga około 570 GB pamięci. Późniejsze modele oparte na GPT-3, na przykład LLaMA firmy Meta, zawierają również artykuły badawcze z Arxiv (92 GB) oraz pytania i odpowiedzi dotyczące kodu ze StackExchange (78 GB).
+>
+> Korpus Wikipedii składa się z Wikipedii w języku angielskim. Chociaż autorzy artykułu GPT-3 nie podali bliżej szczegółów, Books1 to prawdopodobnie próbka z Projektu Gutenberg (https://www.gutenberg.org/), a Books2 prawdopodobnie pochodzi z Libgen (https://en .wikipedia.org/wiki/Library_Genesis). CommonCrawl to filtrowany podzbiór bazy danych CommonCrawl (https://commoncrawl.org/), a WebText2 to tekst stron internetowych ze wszystkich wychodzących linków do Reddita z postów z liczbą głosów pozytywnych wynoszącą co najmniej 3.
+>
+> Autorzy artykułu GPT-3 nie udostępnili zbioru danych szkoleniowych, ale porównywalnym zbiorem danych, który jest publicznie dostępny, jest The Pile (https://pile.eleuther.ai/). Kolekcja może jednak zawierać dzieła chronione prawem autorskim, a dokładne warunki użytkowania mogą zależeć od zamierzonego przypadku użycia i kraju. Więcej informacji można znaleźć w dyskusji HackerNews pod adresem https://news.ycombinator.com/item?id=25607809.
+
+Wstępnie przeszkolony charakter tych modeli sprawia, że są one niezwykle wszechstronne w zakresie dalszego dostrajania dalszych zadań, dlatego są one również znane jako modele podstawowe lub podstawowe. Przygotowanie do szkolenia LLM wymaga dostępu do znacznych zasobów i jest bardzo kosztowne. Na przykład koszt wstępnego szkolenia GPT-3 szacuje się na 4,6 miliona dolarów w przeliczeniu na kredyty na przetwarzanie w chmurze[2].
+
+Dobra wiadomość jest taka, że wiele wstępnie wyszkolonych LLM, dostępnych jako modele typu open source, można używać jako narzędzi ogólnego przeznaczenia do pisania, wyodrębniania i edytowania tekstów, które nie były częścią danych szkoleniowych. Ponadto LLM można dostosować do konkretnych zadań ze stosunkowo mniejszymi zbiorami danych, zmniejszając potrzebne zasoby obliczeniowe i poprawiając wydajność konkretnego zadania.
+
+W tej książce zaimplementujemy kod do wstępnego uczenia i użyjemy go do wstępnego uczenia LLM do celów edukacyjnych. Wszystkie obliczenia będą możliwe do wykonania na sprzęcie konsumenckim. Po zaimplementowaniu kodu do uczenia wstępnego dowiemy się, jak ponownie wykorzystywać ogólnodostępne wagi modeli i ładować je do architektury, którą będziemy wdrażać, co pozwoli nam pominąć kosztowny etap szkolenia wstępnego podczas dostrajania LLM w dalszej części tej książki.
+
+### 1.6 Bliższe spojrzenie na architekturę GPT
+Poprzednio w tym rozdziale wspominaliśmy o terminach modele podobne do GPT, GPT-3 i ChatGPT. Przyjrzyjmy się teraz bliżej ogólnej architekturze GPT. Po pierwsze, GPT oznacza Generatywny Pretrained Transformer i został pierwotnie wprowadzony w następującym artykule:
+
+• Poprawa zrozumienia języka poprzez generatywne szkolenie wstępne (2018) Radford i in. z OpenAI, http://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf
+
+GPT-3 to powiększona wersja tego modelu, która ma więcej parametrów i została przeszkolona na większym zbiorze danych. Oryginalny model ChatGPT został stworzony poprzez dostrojenie GPT-3 na dużym zestawie danych instrukcji przy użyciu metody z artykułu OpenAI InstructGPT, który omówimy bardziej szczegółowo w Rozdziale 8, Dostrajanie za pomocą informacji zwrotnych od ludzi w celu wykonania instrukcji. Jak widzieliśmy wcześniej na rysunku 1.6, modele te są kompetentnymi modelami uzupełniania tekstu i mogą wykonywać inne zadania, takie jak poprawianie pisowni, klasyfikacja lub tłumaczenie językowe. Jest to naprawdę niezwykłe, biorąc pod uwagę, że modele GPT są wstępnie szkolone w oparciu o stosunkowo proste zadanie przewidywania następnego słowa, jak pokazano na rysunku 1.7.
