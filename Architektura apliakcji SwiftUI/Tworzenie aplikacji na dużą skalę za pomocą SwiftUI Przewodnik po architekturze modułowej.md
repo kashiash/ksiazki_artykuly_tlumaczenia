@@ -109,7 +109,7 @@ function App() {
 }
 ```
 
-W powyższym kodzie ReactJS stworzyliśmy komponent funkcjonalny o nazwie App. Komponent App zwraca element <div> zawierający <h1> i <button>. Rzeczą, którą należy tu zauważyć, jest to, że nie są to rzeczywiste elementy HTML. Są to wirtualne elementy DOM (Document Object Model) zarządzane przez framework React. Głównym powodem jest to, że React musi śledzić zmiany w tych elementach, aby mógł tylko renderować to, co się zmieniło. Gdy React dowie się o zmienionych elementach za pomocą procesu diffingu, te wirtualne elementy DOM są używane do renderowania prawdziwych elementów HTML na ekranie.
+W powyższym kodzie ReactJS stworzyliśmy komponent funkcjonalny o nazwie App. Komponent App zwraca element `<div>` zawierający `<h1>` i `<button>` . Rzeczą, którą należy tu zauważyć, jest to, że nie są to rzeczywiste elementy HTML. Są to wirtualne elementy DOM (Document Object Model) zarządzane przez framework React. Głównym powodem jest to, że React musi śledzić zmiany w tych elementach, aby mógł tylko renderować to, co się zmieniło. Gdy React dowie się o zmienionych elementach za pomocą procesu diffingu, te wirtualne elementy DOM są używane do renderowania prawdziwych elementów HTML na ekranie.
 
 SwiftUI używa wewnętrznie tych samych koncepcji. Poglądy we właściwości ciała nie są rzeczywistymi poglądami, ale deklaracją poglądów. W końcu te widoki są konwertowane na rzeczywiste widoki, a następnie wyświetlane na ekranie. John Sundell mówił o tym również w swoim artykule [SwiftUI views versus modifiers](https://www.swiftbysundell.com/articles/swiftui-views-versus-modifiers/).
 
