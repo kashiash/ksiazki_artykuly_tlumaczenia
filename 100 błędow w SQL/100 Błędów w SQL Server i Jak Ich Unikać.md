@@ -2973,3 +2973,699 @@ Kiedy tabele są ze sobą powiązane, dobrą praktyką jest tworzenie między ni
 • Użyj diagramu relacji encji (ERD), aby zweryfikować i udokumentować swój projekt. Ten diagram przedstawia encje z ich atrybutami, a także kluczami podstawowymi i obcymi, wraz z relacjami między nimi.
 • Unikaj używania szerokich kolumn lub wielu kolumn jako klucza podstawowego, ponieważ zostanie on zreplikowany w indeksach nieklastrowych i może prowadzić do pogorszenia wydajności.
 • Zawsze używaj ograniczenia klucza obcego, gdy tabele są ze sobą powiązane, aby uniknąć problemów ze spójnością danych.
+
+
+
+ ## 5 Rozwój T-SQL
+
+Ten rozdział obejmuje
+• Wprowadzenie do błędów programistycznych T-SQL
+• Błędy, które mogą spowodować nieoczekiwane rezultaty
+• Błędy, które mogą prowadzić do problemów z wydajnością
+• Korzystanie z pętli w T-SQL
+• Usuwanie dużej liczby wierszy
+
+SQL to język będący standardem ANSI i ISO, który umożliwia twórcom baz danych przeszukiwanie i manipulowanie danymi w relacyjnej bazie danych. T-SQL jest dialektem języka SQL używanym w SQL Server i służy do interakcji z instancjami SQL Server i hostowanymi w nich bazami danych.
+
+W rozdziale 4 zaprojektowaliśmy i stworzyliśmy tabele dla nowej bazy danych MagicChoc. W tym rozdziale przeanalizujemy niektóre typowe błędy, które mogą popełnić w T-SQL programiści, którzy mają mniejsze doświadczenie z tym językiem. Przykłady rozwoju T-SQL znajdziesz u MagicChoc, który chce, abyśmy opracowali logikę, która będzie używana w ich aplikacjach frontendowych. Wykorzystamy to jako okazję do rozpoczęcia odkrywania niektórych typowych błędów, które można popełnić w T-SQL przez programistów, którzy mają mniejsze doświadczenie z tym językiem.
+
+Opanowanie SQL może być wyzwaniem dla programistów, którzy są bardziej zaznajomieni z pisaniem kodu aplikacji, używając języków takich jak C# lub Visual Basic, ze względu na duże różnice koncepcyjne pomiędzy sposobem działania tych języków. Na przykład pętla w językach .NET jest całkowicie akceptowalna, ale w świecie SQL opartym na zestawach może powodować poważne problemy z wydajnością.
+
+Większość błędów programistycznych w języku T-SQL powoduje problemy z wydajnością i na tym skupimy się głównie w tym rozdziale. Pierwsze dwie sekcje skupią się jednak na błędach prowadzących do nieoczekiwanych rezultatów. Na koniec przyjrzymy się typowemu błędowi popełnianemu podczas usuwania dużej liczby wierszy.
+
+### 5.1 #14 Nieprawidłowe postępowanie z wartościami NULL
+MagicChoc poprosił nas o sprawdzenie danych i potwierdzenie, ile podkategorii produktów nie ma opisu. Dlatego uruchamiamy zapytanie z Listingu 5.1.
+
+Listing 5.1 Błędne zliczanie wartości NULL
+
+```sql
+SELECT COUNT(*) 
+FROM dbo.ProductSubcategories
+WHERE ProductSubcategoryDescription = NULL ;
+```
+
+Jako wynik zwracane jest 0. Fantastyczny. Zatem każda podkategoria produktów ma swój opis, prawda? Wiemy, że jest w sumie 16 podkategorii, więc sprawdźmy jeszcze raz nasz wynik, odwracając zapytanie i zliczając liczbę wierszy, w których opis nie ma wartości NULL, używając zapytania z Listingu 5.2.
+
+Listing 5.2 Błędne zliczanie wartości innych niż NULL
+
+```sql
+SELECT COUNT(*) 
+FROM dbo.ProductSubcategories
+WHERE ProductSubcategoryDescription <> NULL ;
+```
+
+Poczekaj minutę! To zapytanie również zwraca jako wynik 0. Więc co tu się dzieje? Programiści nowicjusze w SQL czasami nie zdają sobie sprawy, że wartość NULL jest nieznaną wartością. Dlatego dla porównania wartość NULL nie jest równa innej wartości NULL.
+
+Aby to zrozumieć, rozważmy następującą analogię. Ile gwiazd jest w naszej galaktyce? Osobiście nie znam odpowiedzi na to pytanie. Ile ziaren piasku jest na świecie? Powtórzę raz jeszcze: osobiście nie mam pojęcia. Czy to oznacza, że liczba gwiazd w galaktyce jest równa liczbie ziarenek piasku na świecie? Nie, oczywiście, że tak nie jest. Może tak być, może nie. Nie mam pojęcia. Dlatego tak jak nie mogę powiedzieć, że dwie wartości, których nie znam, są takie same lub różne, tak SQL Server nie może nam powiedzieć, czy dwie nieznane mu wartości są takie same, czy różne.
+
+Aby poradzić sobie z tym problemem, wystarczy zmienić naszą składnię, gdy mamy do czynienia z wartościami NULL, aby używać IS lub IS NOT zamiast = i <>. Na przykład skrypt z aukcji 5.3 pomyślnie zwraca liczbę podkategorii produktów, które nie mają opisu, po której następuje liczba podkategorii produktów, które mają opis.
+
+Listing 5.3 Pomyślnie zwrócono liczbę wartości NULL i innych niż NULL
+
+```sql
+SELECT COUNT(*) 
+FROM dbo.ProductSubcategories
+WHERE ProductSubcategoryDescription IS NULL ;
+ 
+SELECT COUNT(*) 
+FROM dbo.ProductSubcategories
+WHERE ProductSubcategoryDescription IS NOT NULL ;
+```
+
+Innym aspektem postępowania z wartościami NULL, który może dezorientować osoby, które nie mają doświadczenia z SQL, jest użycie funkcji IS NULL w porównaniu z funkcją ISNULL(). Jak właśnie widzieliśmy, funkcja IS NULL jest używana w klauzuli WHERE do filtrowania zestawu wyników w taki sposób, aby zwracał tylko wiersze, w których kolumna zawiera wartości NULL.
+
+Z drugiej strony funkcja ISNULL() jest używana na liście SELECT, w klauzuli JOIN lub w klauzuli SET instrukcji UPDATE w celu zastąpienia wartości NULL wartością różną od NULL. Na przykład zapytanie z aukcji 5.4 zwróci pełną listę podkategorii produktów, ale opisy o wartości NULL zostaną zastąpione wartością Brak opisu.
+
+Listing 5.4 Użyj funkcji ISNULL(), aby zastąpić wartość NULL
+
+```sql
+SELECT
+      ProductSubcategoryName
+    , ISNULL(ProductSubcategoryDescription, 'No description available')
+FROM dbo.ProductSubcategories ;
+```
+
+Zawsze zachowaj ostrożność, gdy masz do czynienia z wartościami NULL. Pamiętaj, że wartość NULL nie jest równa innej wartości NULL. Należy również pamiętać, że składnia IS NULL służy do filtrowania zapytań w celu zwrócenia wartości NULL, natomiast funkcja ISNULL() służy do zamiany wartości NULL na wartość inną niż NULL.
+
+### 5.2 #15 Używanie NOLOCK jako ulepszenia wydajności
+Aplikacja sprzedażowa MagicChoc zawiera rozwijane pole wypełnione adresami związanymi z klientem, co pozwala sprzedawcy wybrać adres dostawy, pod który ma zostać dostarczone zamówienie. Jednak po załadowaniu ekranu adresu dostawy lista rozwijana zapełnia się powoli i zostaliśmy poproszeni o poprawę wydajności zapytania.
+
+Słyszeliśmy, że blokowanie i blokowanie może powodować problemy z wydajnością w SQL Server i ktoś wspomniał, że istnieje wskazówka dotycząca zapytań, zwana NOLOCK, która może poprawić wydajność. Dlatego zmieniamy zapytanie wypełniające listę rozwijaną adresu dostawy, tak aby brzmiało jak na liście 5.5.
+
+Listing 5.5 Dodaj wskazówkę dotyczącą zapytania NOLOCK
+
+```sql
+DECLARE @CustomerID INT ;
+SET @CustomerID = 2 ;
+ 
+SELECT 
+      Street
+    , Area
+    , City
+    , ZipCode
+FROM dbo.Addresses a WITH(NOLOCK)
+INNER JOIN dbo.Customers c
+    ON a.AddressID = c.DeliveryAddressID
+WHERE CustomerID = @CustomerID ;
+```
+
+Przez jakiś czas wszystko było w porządku, ale pewnego dnia zamówienie zostało dostarczone pod nieprawidłowy adres i zostaliśmy poproszeni o zbadanie, jak mogło do tego dojść.
+
+Wyobraź sobie następujący scenariusz. Sprzedawca przetwarza zamówienie na Cooking Schmooking. W tym samym czasie administrator rozmawia z innym członkiem zespołu Cooking Schmooking na temat aktualizacji różnych szczegółów, w tym zmiany adresu. Administrator zdaje sobie sprawę, że podał błędny adres i anuluje aktualizację klienta przed jej zakończeniem. Następnie administrator kontynuuje wprowadzanie prawidłowego adresu. Przyjrzyjmy się dokładnej sekwencji zdarzeń na rysunku 5.1.
+
+##### Figure 5.1 Sequence of events
+
+![img](https://drek4537l1klr.cloudfront.net/carter/v-2/Figures/05__image001.png)
+
+SQL Server używa blokowania, aby mieć pewność, że transakcja nie będzie mogła odczytać danych, które są aktualnie modyfikowane przez inną transakcję. Używając wskazówki dotyczącej zapytania NOLOCK, zapobiegliśmy usunięciu przez naszą instrukcję SELECT jakichkolwiek blokad. W rezultacie sprzedawca odczytał adres z tabeli w trakcie realizacji transakcji przeprowadzającej aktualizację. Transakcja wykonująca aktualizację została następnie wycofana. W rezultacie sprzedawca odczytał adres dostawy, który tak naprawdę nigdy nie został zatwierdzony i dlatego tak naprawdę nigdy nie istniał w bazie danych.
+
+Istnieje wiele sposobów optymalizacji wydajności SQL Server, a jedną z opcji jest dostrajanie blokowania poprzez użycie poziomów izolacji transakcji, które wpływają na sposób utrzymywania blokad. Omówimy to w rozdziale 12. Zawsze jednak zalecałbym unikanie stosowania NOLOCK wobec zapytania, ponieważ jest to nieprzejrzysta optymalizacja, która zwykle dodaje więcej ryzyka niż korzyści.
+
+### 5.3 #16 Używanie SELECT * w standardzie
+Przyjrzyjmy się teraz błędom, które mogą prowadzić do problemów z wydajnością. Zacznijmy od rozważenia scenariusza, w którym opracowujemy procedurę zwracającą informacje dotyczące obszarów sprzedażowych. Nie pamiętamy kolumn w tabeli, ani jak wyglądają dane, dlatego uruchamiamy następujące zapytanie ad hoc:
+
+
+
+```sql
+SELECT *
+FROM SalesAreas
+```
+
+Następnie kolega pyta nas: „Czy przechowujemy daty przydatności do spożycia produktów?” Nie jesteśmy pewni, więc uruchamiamy następujące zapytanie ad hoc, abyśmy mogli odpowiedzieć naszemu koledze:
+
+```sql
+SELECT *
+FROM Products
+```
+
+Oba powyższe przykłady są całkowicie poprawnym użyciem SELECT *. Błąd, który chcę omówić, polega na tym, że programiści używają SELECT * w kodzie, który planują wydać i utrzymywać.
+
+Wyobraźmy sobie, że nasza aplikacja będzie przeprowadzać analizę tego, jak długo trwa dostawa zamówień i ile z nich się spóźnia. Aby spełnić ten wymóg musimy zwrócić do aplikacji frontendowej następujące kolumny:
+
+• Data zamówienia sprzedaży
+• Termin dostawy zamówienia sprzedaży
+• Rzeczywista data dostawy zamówienia sprzedaży
+Zamiast jednak wybierać te trzy konkretne kolumny, decydujemy się użyć SELECT *. Istnieją trzy powody, dla których taka praktyka jest błędem: wydajność, utrzymanie kodu i czytelność kodu. Najpierw omówmy wydajność.
+
+Kiedy myślimy o SELECT *, powinniśmy wziąć pod uwagę dwa aspekty wydajności. Pierwsza kwestia dotyczy przesyłania danych do warstwy aplikacji. W tym przypadku nasza aplikacja potrzebuje przesłania trzech kolumn o łącznej długości 9 bajtów. Gdybyśmy wysłali do aplikacji wszystkie kolumny, wówczas rozmiar każdego wiersza wyniósłby aż 61 bajtów na wiersz. Oznacza to dodatkowe 51 bajtów na wiersz. Wyobraź sobie, że w tabeli znajduje się 2,5 miliona zamówień sprzedaży. To dodatkowe 121 MB danych, które przesyłamy przez sieć bez powodu.
+
+Teraz wyobraź sobie, że zastosowaliśmy tę samą technikę w przypadku tabeli zawierającej kilka kolumn NVARCHAR(MAX), z których każda może pomieścić do 2 GB. Co się stanie, jeśli wielu użytkowników uruchomiło to samo zapytanie w tym samym czasie? Możesz zobaczyć, jak łatwo może to stać się problemem.
+
+Drugi aspekt wyników, który powinniśmy wziąć pod uwagę, dotyczy indeksów. Aby wyjaśnić ten problem, wyobraźmy sobie, że dokładnym wymaganiem jest zwrócenie trzech kolumn przefiltrowanych według SalesOrderDate. Aby zaspokoić to zapytanie w najbardziej efektywny sposób, moglibyśmy stworzyć tak zwany indeks pokrywający. Oznacza to indeks zawierający wszystkie kolumny, które chcemy zwrócić.
+
+Na przykład lista 5.6 tworzy indeks zbudowany na kolumnie SalesOrderDate, ale następnie zawiera SalesOrderDeliveryDueDate i SalesOrderDeliveryActualDate. Gdy używasz składni INCLUDE, SQL Server generuje indeks w głównych kolumnach, ale następnie uwzględnia wartości uwzględnionych kolumn na poziomie liścia. Jest to szczególnie przydatne w przypadku zapytań, w których trzeba przefiltrować lub dołączyć do danej kolumny, ale jednocześnie chcesz zwrócić w wynikach niewielki zestaw innych kolumn. Dzieje się tak, ponieważ minimalizuje rozmiar indeksu, unikając jednocześnie operacji wyszukiwania indeksu klastrowego w celu pobrania innych kolumn.
+
+Listing 5.6 Utwórz indeks obejmujący
+
+```sql
+CREATE NONCLUSTERED INDEX [OrderDate-Including-DueDate-ActualDate] 
+    ON dbo.SalesOrderHeaders (SalesOrderDate)
+INCLUDE(SalesOrderDeliveryDueDate,SalesOrderDeliveryActualDate) ;
+```
+
+Niestety, jeśli użyjesz SELECT *, wówczas takie indeksy prawie na pewno nie zostaną użyte, ponieważ nie obejmują wszystkich zwracanych kolumn. Oczywiście możliwe byłoby uwzględnienie każdej kolumny w tabeli, ale utworzyłby to bardzo szeroki i nieefektywny indeks. Wtedy gdybyśmy dodali do tabeli kolejną kolumnę, indeks przestałby działać, chyba że przypomnielibyśmy sobie o zaktualizowaniu także definicji indeksu.
+
+To ładnie prowadzi nas do drugiego problemu związanego z podejściem SELECT *, którym jest utrzymanie kodu. Wyobraź sobie aplikację, która działa jako warstwa oprogramowania pośredniczącego. Pobiera daty zamówień z tabeli SalesOrderHeaders za pomocą zapytania takiego jak:
+
+```sql
+SELECT * 
+FROM dbo.SalesOrderHeaders 
+WHERE SalesOrderDate = '20230616' ;
+```
+
+Dane są następnie przekazywane do procedury składowanej w innej instancji, która przeprowadza analizę. Ponieważ przekazujemy wszystkie kolumny z tabeli, typ tabeli w instancji analitycznej tworzony jest w następujący sposób:
+
+```sql
+CREATE TYPE SalesOrdersForAnalysis AS TABLE 
+(
+    SalesOrderNumber                NCHAR(12)       NOT NULL, 
+    SalesOrderDate                  DATE            NOT NULL, 
+    SalesPersonID                   INT             NOT NULL, 
+    SalesAreaID                     INT             NOT NULL, 
+    CustomerID                      INT             NOT NULL, 
+    SalesOrderDeliveryDueDate       DATE            NOT NULL, 
+    SalesOrderDeliveryActualDate    DATE            NULL, 
+    CurrierUsedforDelivery          NVARCHAR(32)    NOT NULL
+) ;
+```
+
+Procedura składowana jest następnie deklarowana w następujący sposób:
+
+```sql
+CREATE PROCEDURE dbo.AsyncAnalysis 
+    @DatesForAnalysis SalesOrdersForAnalysis READONLY
+AS
+BEGIN
+    SELECT *
+    FROM @DatesForAnalysis ;
+ 
+    --Analysis logic here...
+END
+```
+
+W tym scenariuszu, jeśli dodamy kolumnę do tabeli SalesOrderHeaders, będziemy musieli wykonać następujące kroki:
+
+1. Usuń procedurę składowaną AsyncAnalytic, ponieważ zależy ona od typu SalesOrdersForAnalytic.
+2. Usuń typ SalesOrderForAnalytics.
+3. Utwórz ponownie typ SalesOrderForAnalytics.
+4. Utwórz ponownie procedurę składowaną AsyncAnalytic.
+Krótko mówiąc, aktualizacja kodu byłaby znacznie prostsza, gdybyśmy użyli tylko potrzebnych nam kolumn, a nie wszystkich kolumn w tabeli. W mojej karierze wielokrotnie napotykałem takie problemy, a wprowadzenie prostej zmiany wykładniczo wydłużało się.
+
+Ostatni powód, dla którego powinniśmy unikać podejścia SELECT *, dotyczy czytelności kodu. W rozdziale 2 omówiliśmy korzyści płynące z posiadania kodu samodokumentującego. Używanie SELECT * łamie model kodu samodokumentującego i sprawia, że Twój kod jest bardziej nieprzejrzysty i trudniejszy do utrzymania dla Ciebie i innych programistów w przyszłości, ponieważ mniej oczywiste jest, co próbujesz osiągnąć.
+
+Zalecam zawsze unikanie SELECT * w kodzie, który musisz wydać i utrzymać. Może to mieć negatywny wpływ na wydajność ze względu na zwiększenie obciążenia sieci i wymuszenie stosowania mniej wydajnych operacji indeksowania w celu pobrania danych. Utrudnia to utrzymanie kodu w przypadkach, gdy istnieją dalsze zależności. Utrudnia to także czytanie kodu i łamie model samodokumentacji.
+
+### 5.4 #17 Niepotrzebne sortowanie danych
+Zostaliśmy poproszeni o wykonanie raportów dotyczących kontaktów naszych klientów i zdecydowaliśmy, że dane będą bardziej przydatne, jeśli posortujemy je wg adresów e-mail. Zanim jednak to sprawdzimy, wygenerujmy trochę danych do tabeli CustomerContacts, korzystając ze skryptu z Listingu 5.7, który wygeneruje 3,2 miliona wierszy danych.
+
+Listing 5.7 Wygeneruj dane do tabeli CustomerContacts
+
+```swift
+DECLARE @FirstName TABLE (FirstName NVARCHAR(32)) ;
+ 
+DECLARE @LastName TABLE (LastName NVARCHAR(32)) ;
+ 
+DECLARE @domain TABLE (Domain NVARCHAR(250)) ;
+ 
+DECLARE @topleveldomain TABLE (TLD NVARCHAR(6)) ;
+ 
+DECLARE @email TABLE (Email NVARCHAR(256)) ;
+ 
+INSERT INTO @FirstName
+VALUES
+('Rachel'),
+('Seth'),
+('Tony'),
+('Angel'),
+('Isabell'),
+('Robert'),
+('Adelaide'),
+('Jessie'),
+('Paxton'),
+('London'),
+('Jadyn'),
+('Corey'),
+('Maximo'),
+('Johan'),
+('Mariah'),
+('Raven'),
+('Hamza'),
+('Cristofer'),
+('Molly'),
+('Malcolm') ;
+ 
+INSERT INTO @LastName
+VALUES
+ ('Hill'),
+ ('Acosta'),
+ ('Oconnell'),
+ ('Jefferson'),
+ ('Cross'),
+ ('Patel'),
+ ('House'),
+ ('Price'),
+ ('Morales'),
+ ('Reeves'),
+ ('Rice'),
+ ('Drake'),
+ ('Briggs'),
+ ('Henry'),
+ ('Aguilar'),
+ ('Holloway'),
+ ('Burnett'),
+ ('Aguilar'),
+ ('Simon'),
+ ('Barry') ;
+ 
+INSERT INTO @domain
+SELECT 
+    CONCAT(FirstName, LastName)
+FROM @FirstName
+CROSS JOIN @LastName ;
+ 
+ INSERT INTO @topleveldomain
+ VALUES
+ ('.net'),
+ ('.com'),
+ ('.co.uk'),
+ ('.eu'),
+ ('.ru'),
+ ('.edu'),
+ ('.gov'),
+ ('.ninja'),
+ ('.io'),
+ ('.co'),
+ ('.ai'),
+ ('.ca'),
+ ('.me'),
+ ('.de'),
+ ('.fr'),
+ ('.ac'),
+ ('.am'),
+ ('.ax'),
+ ('.ba'),
+ ('.ch') ;
+ 
+INSERT INTO @email
+SELECT
+    CONCAT(Domain, TLD)
+FROM @domain
+CROSS JOIN @topleveldomain ;
+    
+ 
+INSERT INTO dbo.CustomerContacts(CustomerContactFirstName, CustomerContactLastName, CustomerContactEmail)
+SELECT
+      FirstName
+    , LastName
+    , Email
+FROM @FirstName
+CROSS JOIN @LastName
+CROSS JOIN @email ;
+```
+
+Teraz, gdy mamy już trochę danych, przejdźmy do naszego briefu i napiszmy zapytanie, które zwróci kolumny `CustomerContactFirstName`, `CustomerContactLastName` i `CustomerContactEmail` z tabeli `CustomerContacts`. Przed uruchomieniem tego zapytania skrypt z Listingu 5.8 uruchamia polecenie SET STATISTICS TIME ON, które zwróci statystyki czasu wykonania w oknie komunikatów SSMS.
+
+Listing 5.8 Zwróć wymagane dane z tabeli CustomerContacts
+
+```sql
+SET STATISTICS TIME ON
+ 
+SELECT
+      CustomerContactFirstName
+    , CustomerContactLastName
+    , CustomerContactEmail
+FROM dbo.CustomerContacts ;
+```
+
+Na moim urządzeniu testowym wykonanie tego zapytania zajęło 20 679 ms. Spróbujmy więc teraz jeszcze raz, ale tym razem uporządkujemy dane według adresu CustomerContactEmailAddress, jak pokazano na aukcji 5.9.
+
+Listing 5.9 Zwróć wymagane dane z tabeli Customer Contacts zamówionej e-mailem
+
+```sql
+SET STATISTICS TIME ON
+ 
+SELECT
+      CustomerContactFirstName
+    , CustomerContactLastName
+    , CustomerContactEmail
+FROM dbo.CustomerContacts 
+ORDER BY CustomerContactEmail ;
+```
+
+> WSKAZÓWKA
+>
+> Jeśli śledzisz pomiary wydajności, ważne jest, aby pamiętać, że Twój przebieg może się różnić w zależności od wydajności sprzętu, a także innych uruchomionych procesów. Odradzam również przechwytywanie planów wykonania w tym samym czasie, co testowanie wydajności, ponieważ będzie to miało wpływ na wynik gromadzenia czasu.
+
+Na tym samym urządzeniu testowym wykonanie tego zapytania zajęło 27 415 ms. To 25% wolniej niż nieuporządkowana wersja zapytania. Dzieje się tak dlatego, że relacyjne bazy danych zbudowane są na gałęzi matematyki zwanej teorią mnogości, gdzie rozpatrujemy zbiór będący odrębną grupą obiektów oraz worek (lub multizbiór) będący zbiorem obiektów, które mogą zawierać duplikaty. W obu koncepcjach matematycznych kolejność wyników nie ma znaczenia. Dlatego porządkowanie danych nie jest operacją opartą na zestawie. Zamiast tego jest to wyłącznie operacja prezentacyjna. Dlatego dane należy sortować tylko wtedy, gdy naprawdę tego potrzebujesz.
+
+Widzimy to we względnym koszcie operacji sortowania, jeśli przyjrzymy się planowi wykonania, na który składają się kroki lub operatory, które optymalizator zapytań zdecydował się wykonać w celu zaspokojenia zapytania. Dostęp do planów wykonania można uzyskać na wiele sposobów, w tym poprzez Query Store, co omówimy w rozdziale 10, lub metadane, które omówimy również w rozdziale 10, lub po prostu naciskając przycisk „Dołącz rzeczywisty plan wykonania” na pasku narzędzi w SQL Server Management Studio przed wykonaniem zapytania.
+
+Plan wykonania wygenerowany dla zapytania z Listingu 5.9 przedstawiono na rysunku 5.2. Zauważysz, że operacja sortowania stanowi 91% szacowanego kosztu zapytania.
+
+
+
+##### Rysunek 5.2 Koszt sortowania planu wykonania
+
+![img](https://drek4537l1klr.cloudfront.net/carter/v-2/Figures/05__image003.png)
+
+> KOSZT PLANU WYKONANIA
+>
+> W kontekście planu wykonania należy pamiętać o kilku rzeczach. Po pierwsze, koszt jest szacowany podczas kompilacji zapytania, a SQL Server nie aktualizuje kosztów po wykonaniu. Dlatego nawet wyświetlając rzeczywisty plan wykonania (w przeciwieństwie do szacunkowego planu wykonania – który można obejrzeć przed wykonaniem zapytania) zobaczysz szacunkowe koszty. Koszty te mogą być nieprawidłowe ze względu na takie czynniki, jak niedokładne statystyki.
+>
+> Po drugie, koszt nie jest bezpośrednim miernikiem wydajności. Jest to wartość ważona obliczona na podstawie zastrzeżonego algorytmu, który szacuje względny koszt procesora i wejścia/wyjścia, a następnie sumuje te wartości w celu uzyskania całkowitego kosztu operatora, zwanego kosztem poddrzewa.
+
+Jeśli pojawi się sytuacja, w której po prostu musisz uporządkować dane ze względów prezentacyjnych, pomocne może być użycie indeksów. W przypadku tego zapytania idealny indeks obejmujący zapytanie powinien być zbudowany na bazie CustomerContactEmail jako klucza indeksu i zawierać kolumny CustomerContactFirstName i CustomerContactLastName na poziomie liścia. Indeks ten, który można utworzyć za pomocą polecenia z Listingu 5.10, jest uporządkowany według kolumny CustomerContactEmail, więc nie jest wymagana żadna operacja sortowania. Ponieważ inne wymagane kolumny są uwzględnione na poziomie liścia, nie ma nawet potrzeby wykonywania operacji wyszukiwania z powrotem do indeksu klastrowego.
+
+Listing 5.10 Utwórz indeks pokrywający, aby poprawić wydajność
+
+```sql
+CREATE NONCLUSTERED INDEX [NI-CustomerContactEmail-Include-FirstName-LastName] ON dbo.CustomerContacts(CustomerContactEmail) 
+    INCLUDE(CustomerContactFirstName, CustomerContactLastName) ;
+```
+
+Teraz mamy indeks obejmujący, uruchommy ponownie zapytanie z aukcji 5.9 i zobaczmy, jaki to będzie miało wpływ na plan wykonania, co pokazano na rysunku 5.3, a także czas wykonania. Widać, że tym razem optymalizator zdecydował się przeprowadzić skanowanie indeksu nieklastrowego, a na moim urządzeniu testowym wykonanie zapytania zajęło 20 904 ms, czyli mniej więcej tyle samo, co oryginalne, nieuporządkowane zapytanie.
+
+##### Rysunek 5.3 Plan wykonania przy użyciu skanowania indeksu nieklastrowego
+
+![img](https://drek4537l1klr.cloudfront.net/carter/v-2/Figures/05__image005.png)
+
+Chociaż utworzenie indeksu sprawdziło się w przypadku tego konkretnego zapytania, musimy pamiętać, że nic nie jest nigdy darmowe. Chociaż indeks ustalił wydajność zapytania, które uporządkowało dane według adresu e-mail, istnienie indeksu zmniejszy wydajność operacji INSERT, UPDATE i DELETE wykonywanych na tabeli, ponieważ SQL Server będzie musiał również zaktualizować indeks nieklastrowany.
+
+Dlatego zawsze lepiej jest unikać porządkowania danych, chyba że jest to absolutnie konieczne, ponieważ wydajność spadnie. Jeśli ze względów prezentacyjnych musisz uporządkować dane, rozważ strategię indeksowania, ale pamiętaj, że będzie to miało wpływ na wydajność operacji zapisu do tabeli.
+
+### 5.5 #18 Używanie DISTINCT bez dobrego powodu
+
+Zostaliśmy poproszeni o przesłanie listy unikalnych dostawców. Widziałem mniej doświadczonych programistów używających słowa kluczowego DISTINCT tylko po to, aby mieć pewność, że wyniki będą unikalne. Aby to sprawdzić, moglibyśmy osiągnąć te same wyniki, używając dowolnego z zapytań z Listingu 5.11. Ponieważ (chyba że mamy poważny problem z jakością danych) ten sam dostawca nie będzie wymieniony dwukrotnie w naszej tabeli, użycie słowa kluczowego DISTINCT jest zbędne.
+
+Listing 5.11 Zwraca listę dostawców ze słowem kluczowym DISTINCT i bez niego
+
+```sql
+SELECT SupplierName
+
+FROM dbo.Suppliers ;
+
+SELECT DISTINCT SupplierName
+FROM dbo.Suppliers ;
+```
+
+Zatem nawet jeśli nie potrzebujemy słowa kluczowego DISTINCT, czy ma to znaczenie, jeśli go użyjemy? Aby odpowiedzieć na to pytanie, przeanalizujmy plan wykonania na rysunku 5.4. Jeśli oba zapytania miały ten sam koszt, wówczas koszt każdego zapytania w stosunku do partii wynosiłby 50%. W tym przypadku jednak widać, że zapytanie ze słowem kluczowym DISTINCT ma względny koszt na poziomie 82%, co oznacza, że było znacznie mniej wydajne. Można to zobaczyć odzwierciedlone w operatorze sortowania odrębnego.
+
+##### Rysunek 5.4 Plany wykonania z i bez DISTINCT
+
+![img](https://drek4537l1klr.cloudfront.net/carter/v-2/Figures/05__image007.png)
+
+Może się zdarzyć, że będziemy musieli po prostu ujednolicić nasze wyniki. Wyobraźmy sobie na przykład, że zostaliśmy poproszeni o zwrócenie unikalnej listy dostawców, od których MagicChoc zakupił zębatki z dużą główką w czerwcu 2023 roku. Listę dostawców moglibyśmy zwrócić korzystając z zapytania z aukcji 5.12.
+
+Listing 5.12 Wyświetl listę dostawców kół łańcuchowych z dużą główką
+
+```sql
+SELECT DISTINCT s.SupplierName
+FROM dbo.Suppliers s
+INNER JOIN dbo.PurchaseOrderHeaders poh
+    ON poh.SupplierID = s.SupplierID
+INNER JOIN dbo.PurchaseOrderDetails pod
+    ON pod.PurchaseOrderNumber = poh.PurchaseOrderNumber
+WHERE MONTH(poh.PurchaseOrderDate) = 6 
+    AND YEAR(poh.PurchaseOrderDate) = 2023
+AND pod.ProductID = 4 ;
+```
+
+Problem polega na tym, że ponieważ w tym okresie dwukrotnie kupiliśmy przedmiot od Unknown Engineering, to zapytanie zwraca dla Dostawcy dwa wyniki. Moglibyśmy oczywiście użyć słowa kluczowego DISTINCT, ale wiemy, że pogorszy to wydajność. Czy są jakieś inne opcje?
+
+Wszystkie trzy zapytania z aukcji 5.13 są funkcjonalnie równoważne. Pierwsze zapytanie używa słowa kluczowego DISTINCT w celu ujednolicenia wyników, drugie używa klauzuli GROUP BY, a trzecie wykorzystuje funkcję okienkową ROW_NUMBER().
+
+Listing 5.13 Użycie słowa kluczowego DISTINCT
+
+```sql
+SELECT DISTINCT s.SupplierName
+FROM dbo.Suppliers s
+INNER JOIN dbo.PurchaseOrderHeaders poh
+    ON poh.SupplierID = s.SupplierID
+INNER JOIN dbo.PurchaseOrderDetails pod
+    ON pod.PurchaseOrderNumber = poh.PurchaseOrderNumber
+WHERE MONTH(poh.PurchaseOrderDate) = 6 
+    AND YEAR(poh.PurchaseOrderDate) = 2023
+AND pod.ProductID = 4 ;
+ 
+SELECT s.SupplierName
+FROM dbo.Suppliers s
+INNER JOIN dbo.PurchaseOrderHeaders poh
+    ON poh.SupplierID = s.SupplierID
+INNER JOIN dbo.PurchaseOrderDetails pod
+    ON pod.PurchaseOrderNumber = poh.PurchaseOrderNumber
+WHERE MONTH(poh.PurchaseOrderDate) = 6 
+    AND YEAR(poh.PurchaseOrderDate) = 2023
+AND pod.ProductID = 4 
+GROUP BY s.SupplierName ;
+ 
+SELECT SupplierName FROM (
+    SELECT s.SupplierName, ROW_NUMBER() OVER(ORDER BY s.SupplierName) AS rn
+    FROM dbo.Suppliers s
+    INNER JOIN dbo.PurchaseOrderHeaders poh
+        ON poh.SupplierID = s.SupplierID
+    INNER JOIN dbo.PurchaseOrderDetails pod
+        ON pod.PurchaseOrderNumber = poh.PurchaseOrderNumber
+    WHERE MONTH(poh.PurchaseOrderDate) = 6 
+        AND YEAR(poh.PurchaseOrderDate) = 2023
+    AND pod.ProductID = 4
+) a WHERE rn = 1 ;
+```
+
+W naszym konkretnym przypadku, ponieważ liczba wierszy, o których mowa, jest niewielka i ponieważ moje urządzenie testowe nie jest obciążone, nie było różnicy w wydajności między nimi, a wersje z DISTINCT i GROUP BY wygenerowały ten sam plan wykonania.
+
+Jednak w środowisku produkcyjnym, w którym występują złożone zapytania i duże ilości danych, może się okazać, że masz trzy zupełnie różne plany, z których niektóre są znacznie wydajniejsze od innych. Dlatego jeśli stwierdzisz, że masz problem z wydajnością, używając słowa kluczowego DISTINCT, warto wypróbować dwa pozostałe podejścia, aby sprawdzić, czy możesz poprawić wydajność.
+
+> WSKAZÓWKA
+>
+> Mógłbym sprawić, że zapytanie ROW_NUMBER() będzie działać lepiej niż zapytania DISTINCT i GROUP BY w powyższym przykładzie, po prostu ładując więcej danych do tabeli. Ten przykład pokazuje jednak, jak ważne jest testowanie wydajności w oparciu o realistyczne dane. Zbadamy to szerzej w rozdziale 7.
+>
+
+Nigdy nie powinniśmy używać DISTINCT ze względu na to. Jeśli jednak istnieje rzeczywiste wymaganie ujednolicenia wyników zapytania i jeśli podczas korzystania z DISTINCT wystąpią problemy z wydajnością, możesz zbadać inne podejścia do poprawy wydajności. Jeśli naprawdę wymagane jest polecenie DISTINCT i nie zaobserwowano żadnych problemów z wydajnością, zalecałbym trzymanie się tego podejścia, ponieważ jest ono najmniej nieprzejrzyste z trzech opcji. Od razu widać, co robisz, co pomaga w samodokumentowaniu kodu.
+
+### 5.6 #19 Niepotrzebne używanie UNION
+Podobnie jak niepotrzebne porządkowanie danych i niepotrzebne usuwanie duplikatów, programiści, którzy są nowicjuszami w SQL Server, również popełniają podobny błąd, używając klauzuli UNION. Suma to sposób poziomego łączenia dwóch zestawów wyników i istnieją dwa różne sposoby utworzenia tej unii. W szczególności możesz użyć klauzuli UNION lub UNION ALL.
+
+Różnica między UNION i UNION ALL polega na tym, że UNION ALL zwróci wszystkie wyniki z obu zapytań. UNION usunie jednak zduplikowane wyniki. Wyobraźmy sobie na przykład, że zostaliśmy poproszeni o sporządzenie listy kontaktów MagicChoc, zarówno z tabeli CustomerContacts, jak i tabeli SellerContacts. Pierwsze zapytanie na aukcji 5.14 używa UNION do utworzenia odrębnej listy kontaktów. Drugie zapytanie używa UNION ALL do utworzenia listy, która może zawierać duplikaty.
+
+> WSKAZÓWKA
+>
+> Istnieją dodatkowe operatory łączenia poziomego zwane INTERSECT i EXCEPT. INTERSECT zwróci wyniki z zapytania 1, które pojawią się również w wynikach zapytania 2. EXCEPT zwróci wyniki z zapytania 1, których nie ma w zapytaniu 2.
+
+```sql
+SELECT SupplierContactFirstName, SupplierContactLastName
+FROM dbo.SupplierContacts
+UNION
+SELECT CustomerContactFirstName, CustomerContactLastName
+FROM dbo.CustomerContacts ;
+ 
+SELECT SupplierContactFirstName, SupplierContactLastName
+FROM dbo.SupplierContacts
+UNION ALL
+SELECT CustomerContactFirstName, CustomerContactLastName
+FROM dbo.CustomerContacts ;
+```
+
+Z planów wykonania przedstawionych na rysunku 5.5 wynika, że koszt deduplikacji listy był znacznie wyższy. Warto więc sprawdzić wymagania. Czy naprawdę musimy deduplikować listę? Jeśli tego nie robimy, nie powinniśmy deduplikować tylko dla samego tego.
+
+##### Rysunek 5.5 Plany wykonania połączeń poziomych
+
+![img](https://drek4537l1klr.cloudfront.net/carter/v-2/Figures/05__image009.png)
+
+Będą chwile, w których będziemy musieli skorzystać z UNION , ale powinniśmy z niej korzystać tylko wtedy, gdy istnieje realny wymóg. Jeśli duplikaty są nieistotne lub nie mogą wystąpić ze względu na logikę biznesową, zamiast tego użyj UNION ALL.
+
+###   5.7 #20 Używanie kursorów
+Kierownik ds. zakupów w MagicChoc chce, abyśmy sporządzili raport pokazujący, ile produktów mamy w magazynie, pogrupowanych według każdej kategorii produktów. Zamiast jednak w formacie pionowym, musimy tworzyć raporty w formacie poziomym, gdzie nazwy kolumn oznaczają kategorie produktów, w jednym wierszu wyszczególniając ilość produktów w magazynie w odniesieniu do każdej kategorii.
+
+Błędem popełnianym w tym momencie przez wielu programistów jest użycie kursora. Kursor to mechanizm w języku T-SQL umożliwiający zapętlanie zestawu wierszy i przetwarzanie ich po jednym wierszu na raz. Kursorów można używać do wielu celów, w tym do obracania danych oraz generowania i wykonywania dynamicznych skryptów T-SQL, takich jak uruchamianie poleceń dla każdej tabeli. Można ich także używać do znajdowania wartości w dowolnej kolumnie tabeli lub do porządkowania danych.
+
+Problem polega na tym, że kursory są strasznie nieefektywnym sposobem przetwarzania danych relacyjnych. Każda iteracja kursora ma taki sam narzut, jak uruchomienie polecenia w sposób samodzielny. Na przykład, jeśli masz kursor, który iteruje przez milion wierszy, będzie to miało taki sam narzut, jak uruchomienie miliona instrukcji w tabeli. Co więcej, ulepszenia języka T-SQL w ciągu ostatnich 25 lat zniosły wszelkie wymagania dotyczące używania kursorów. Nie przychodzi mi do głowy ani jedna sytuacja, w której do osiągnięcia pożądanego rezultatu wymagany byłby kursor, a najprawdopodobniej (przynajmniej miejmy nadzieję) będziesz mieć standard kodowania, który i tak uniemożliwia używanie kursorów.
+
+
+
+> WSKAZÓWKA
+>
+> Nawet administratorzy baz danych, którzy wcześniej używali kursorów do iteracji po wielu obiektach w bazie danych, nie mają powodu tego robić. Omówimy to szerzej w rozdziale 9.
+
+Wracając do naszego scenariusza, gdybyśmy poszli dalej i użyli kursora do stworzenia naszego przestawnego raportu, moglibyśmy użyć skryptu takiego jak ten na aukcji 5.15. Skrypt najpierw tworzy tymczasową tabelę z ostateczną strukturą naszego raportu. Następnie wstawiamy wiersz zawierający zero dla każdej kolumny. To da nam bazę, którą będziemy mogli aktualizować. Deklarując naszą zmienną, deklarujemy również kursor, który będzie zawierał pełny zestaw wyników, który będziemy iterować. W naszym scenariuszu jest to lista kategorii produktów i ilości w pionowej formie tabelarycznej. Następnie otwieramy kursor i używamy instrukcji FETCH, aby pobrać pierwszy wiersz. Następnie pętla WHILE informuje nasz kursor o akcjach, które chcemy wykonać — w naszym przypadku aktualizując odpowiednią kolumnę w tabeli tymczasowej w oparciu o wartości wewnątrz kursora. Na końcu pętli WHILE przeciągamy kolejny wiersz do kursora. Pętla WHILE kończy się, gdy @@FETCH_STATUS = 0. Ta zmienna systemowa informuje nas, kiedy nie ma już wierszy do pobrania. Na koniec po prostu uruchamiamy instrukcję Select z tabeli tymczasowej przed wyczyszczeniem obiektów tymczasowych, aby nie zaśmiecały pamięci.
+
+```sql
+CREATE TABLE #Categories (
+    [Raw Ingridience]               INT,
+    [Machine Parts]                 INT,
+    [Misc]                          INT,
+    [Confectionary Products]        INT,
+    [Non-confectionary Products]    INT
+  ) ;
+ 
+INSERT INTO #Categories
+VALUES (0,0,0,0,0) ;
+ 
+DECLARE @Category as varchar(32) ;
+DECLARE @Stock as varchar(32) ;
+    
+DECLARE product_cursor CURSOR FOR 
+SELECT 
+      pc.ProductCategoryName
+    , SUM(ISNULL(p.ProductStockLevel,0)) Stock
+FROM dbo.ProductCategories pc
+INNER JOIN dbo.ProductSubcategories ps
+    ON pc.ProductCategoryID = ps.ProductCategoryID
+LEFT JOIN dbo.Products p
+    ON ps.ProductSubcategoryID = p.ProductSubcategoryID
+GROUP BY ProductCategoryName ;
+ 
+OPEN product_cursor  ;
+ 
+FETCH NEXT FROM product_cursor INTO @Category, @Stock  ;
+ 
+WHILE @@FETCH_STATUS = 0  
+BEGIN  
+    IF @Category = 'Raw Ingridience'
+        UPDATE #Categories
+        SET [Raw Ingridience] = [Raw Ingridience] + @Stock
+    ELSE IF @Category = 'Machine Parts'
+        UPDATE #Categories
+        SET [Machine Parts] = [Machine Parts] + @Stock
+    ELSE IF @Category = 'Misc'
+        UPDATE #Categories
+        SET [Misc] = [Misc] + @Stock
+    ELSE IF @Category = 'Confectionary Products'
+        UPDATE #Categories
+        SET [Confectionary Products] = [Confectionary Products] + @Stock
+    ELSE IF @Category = 'Non-confectionary Products'
+        UPDATE #Categories
+        SET [Non-confectionary Products] = [Non-confectionary Products] + @Stock ;
+ 
+    FETCH NEXT FROM product_cursor INTO @Category, @Stock  ;
+END
+ 
+SELECT 
+      [Raw Ingridience]
+    , [Machine Parts], [Misc]
+    , [Confectionary Products]
+    , [Non-confectionary Products]
+FROM #Categories ;
+ 
+CLOSE product_cursor ;
+ 
+DEALLOCATE product_cursor ;
+ 
+DROP TABLE #Categories ;
+```
+
+Zamiast używać kosztownego kursora, moglibyśmy użyć operatora PIVOT. Jest to operator, który wykona za nas całą ciężką pracę i wykona to jako operację na zbiorach, co będzie znacznie wydajniejsze niż kursor.
+
+PRZYKŁAD Z PRAWDZIWEGO ŚWIATA
+
+Około 10 lat temu współpracowałem z jedną z największych firm reklamowych na świecie, która pracowała z bardzo dużymi zbiorami danych zebranymi od wyszukiwarek i dostawców usług cookie. Poprosili mnie, abym przyjrzał się problemowi z wydajnością, jaki mieli w zadaniu ETL, które obracało duży zbiór danych.
+
+Ich oryginalna implementacja wykorzystywała kursor. Przepisałem proces tak, aby zamiast kursora używał instrukcji PIVOT. Dzięki temu czas wykonania skrócił się z ponad 3 godzin do 48 sekund!
+
+Pojedyncze zapytanie na aukcji 5.16 daje taki sam wynik jak kursor. Zapytanie zewnętrzne określa kolumny, które chcemy zwrócić z zapytania. Tutaj możemy użyć * lub możemy określić listę kolumn. Jeśli korzystamy z listy kolumnowej, nie ma obowiązku zaznaczania wszystkich kolumn przestawnych. Podzapytanie pobiera płaską listę kategorii i poziomów zapasów. Na koniec operator PIVOT definiuje ostateczny zestaw wyników, określając agregację, której chcemy użyć w odniesieniu do kolumny zapasów, oraz wartości w kolumnie ProductCategoryName, które mają być naszymi kolumnami przestawnymi.
+
+```sql
+SELECT 
+      [Raw Ingridience]
+    , [Machine Parts]
+    , [Misc]
+    , [Confectionary Products]
+    , [Non-confectionary Products] 
+FROM (
+    SELECT
+          pc.ProductCategoryName
+        , ISNULL(p.ProductStockLevel,0) Stock
+    FROM dbo.ProductCategories pc
+    INNER JOIN dbo.ProductSubcategories ps
+        ON pc.ProductCategoryID = ps.ProductCategoryID
+    LEFT JOIN dbo.Products p
+        ON ps.ProductSubcategoryID = p.ProductSubcategoryID
+) AS WorkingTable
+PIVOT
+(
+    SUM(Stock)
+    FOR ProductCategoryName IN ([Raw Ingridience], [Machine Parts], [Misc], [Confectionary Products], [Non-confectionary Products] )
+) AS PivotTable ;
+```
+
+Aby zademonstrować różnicę w koszcie zapytania, możemy skopiować zapytanie PIVOT do tego samego okna zapytania, w którym znajduje się operacja kursora. Jeśli następnie spojrzymy na plan wykonania tej instrukcji, zobaczymy, że jest to tylko 9% kosztu całej partii. Oznacza to, że łączny całkowity koszt instrukcji, które musieliśmy wykonać w przypadku podejścia opartego na kursorze, został oszacowany jako ponad 10 razy mniej efektywny niż przy użyciu operatora PIVOT. Odpowiedni fragment planu wykonania pokazano na rysunku 5.6.
+
+##### Rysunek 5.6 Względny koszt zapytania wykorzystującego PIVOT względem równoważnego kursora
+
+![img](https://drek4537l1klr.cloudfront.net/carter/v-2/Figures/05__image011.png)
+
+### 5.8 #21 Usuwanie wielu wierszy w pojedynczej transakcji
+Nierzadko zdarza się, że programiści SQL są proszeni o usunięcie starych danych z tabel. Po tym często następuje operacja zmniejszania bazy danych, która powoduje odzyskanie miejsca. Operacje zmniejszania bazy danych omówimy ponownie w rozdziałach 9 i 11.
+
+Jeśli chcesz usunąć dużą ilość danych z tabeli, najskuteczniejszym sposobem jest użycie polecenia TRUNCATE TABLE. To polecenie usuwa dane z tabeli, pozostawiając nienaruszoną strukturę tabeli, poprzez zwolnienie stron danych. Problem polega na tym, że nie ma klauzuli WHERE z operacją obcięcia. Wszystko albo nic, innymi słowy, musisz usunąć każdy pojedynczy wiersz.
+
+Nawet jeśli chcesz usunąć każdy wiersz z tabeli, istnieją inne ograniczenia związane z obcinaniem tabeli. Na przykład nie można wykonać tej operacji, jeśli do kolumny w tabeli odwołuje się ograniczenie klucza obcego lub ograniczenia krawędzi, które wymuszają semantykę i zapewniają integralność tabel brzegowych, które reprezentują relacje w grafowej bazie danych. Ponadto obcięcia nie można zastosować, jeśli tabela jest tabelą podstawową w widoku indeksu, uczestniczy w replikacji transakcyjnej lub scalającej lub jest tabelą czasową z wersją systemową, czyli tabelą używaną do śledzenia pełnej historii zmian danych w innej tabeli aby umożliwić analizę w określonym momencie.
+
+Te ograniczenia często powodują, że programiści muszą używać instrukcji DELETE do usuwania dużych ilości wierszy z tabel. Błąd, który tu wielokrotnie widziałem, polega na tym, że programiści często próbują usunąć wszystkie wiersze z tabeli w jednej transakcji. Rozważmy na przykład tabelę zawierającą wiele milionów (a nawet miliardów) wierszy.
+
+Skrypt z aukcji 5.17 tworzy tabelę i zapełnia ją bardzo dużą liczbą wierszy. Liczba tworzonych wierszy będzie się różnić w zależności od tabel i kolumn w bazie danych, ale na moim urządzeniu testowym wygeneruje nieco poniżej 3,5 miliarda wierszy.
+
+> UWAGA
+>
+> Uruchomienie tego skryptu zajmie dużo czasu.
+
+```sql
+CREATE TABLE dbo.VeryLargeTable (
+    ID         BIGINT            IDENTITY    PRIMARY KEY,
+    TextCol    NVARCHAR(4000) 
+) ;
+ 
+DECLARE @LoopCounter INT = 0 ;
+ 
+WHILE @LoopCounter < 2000
+BEGIN
+    INSERT INTO dbo.VeryLargeTable (TextCol)
+    SELECT 'Yet another row in a very, very, very large table. In fact, this table is going to take a very long time to craete, and you will not be able to delete all rows in one go!'
+    FROM sys.columns c1
+    CROSS APPLY sys.columns c2 ;
+ 
+    SET @LoopCounter = @LoopCounter + 1 ;
+END
+```
+
+Spróbujmy więc usunąć wszystkie wiersze z tej tabeli w jednej transakcji, korzystając z zapytania z aukcji 5.18. Pamiętaj, że jeśli nie rozpoczniemy jawnej transakcji, wówczas każda instrukcja zostanie uruchomiona w ramach transakcji automatycznie zatwierdzanej. Innymi słowy, transakcja o najniższym stopniu szczegółowości to pojedyncze zestawienie.
+
+Listing 5.18 Usuń wiersze w pojedynczej transakcji
+
+```sql
+DELETE FROM dbo.VeryLargeTable ;
+```
+
+To oświadczenie spowoduje bardzo dużą transakcję. Gdy transakcja jest otwarta, dziennik transakcji nie może zostać obcięty, aby zwolnić miejsce. Dzieje się tak nawet w modelu odzyskiwania SIMPLE (modele odzyskiwania omówimy w rozdziale 12). Transakcja stanie się tak duża, że w dzienniku transakcji zabraknie miejsca i zapytanie zostanie wycofane, co spowoduje wygenerowanie błędu 9002, jak pokazano na rysunku 5.7.
+
+##### Rysunek 5.7 Błąd 9002 zgłaszany po zapełnieniu dziennika transakcji
+
+![img](https://drek4537l1klr.cloudfront.net/carter/v-2/Figures/05__image013.png)
+
+Zamiast tego musimy podzielić operację DELETE na wiele instrukcji, a co za tym idzie, wiele transakcji. Zakładając, że baza danych jest w modelu odzyskiwania SIMPLE, zapobiegnie to zapełnieniu dziennika transakcji, ponieważ będzie on mógł się obcinać pomiędzy wykonaniami instrukcji. Jest to jeden z niewielu scenariuszy, w których rozważałbym użycie pętli WHILE w środowisku produkcyjnym, a dzieje się tak tylko dlatego, że jest to skrypt ad hoc. Zawsze unikałbym umieszczania pętli WHILE w kodzie, który zamierzam wdrożyć, z tych samych powodów, dla których unikam używania kursorów. Na aukcji 5.19 ustawiliśmy skrypt tak, aby usuwał wiersze w partiach po 250 000. Możesz dostosować tę liczbę, aby zoptymalizować wydajność w zależności od charakterystyki środowiska.
+
+```sql
+DECLARE @RowCounter BIGINT ;
+ 
+SET @RowCounter = 1 ;
+ 
+WHILE @RowCounter > 0
+BEGIN
+    DELETE TOP(2500000)
+    FROM dbo.VeryLargeTable ;
+  
+    SET @RowCounter = (SELECT COUNT(*) FROM VeryLargeTable) ;
+    PRINT @RowCounter ;
+END
+```
+
+Operacje modyfikujące dane, takie jak operacje DELETE, mogą spowodować zapełnienie dziennika transakcji, gdy są uruchamiane na dużych tabelach. Aby uniknąć tego problemu, podziel operację na wiele instrukcji i wykonaj iterację po nich.
+
+### 5.9 Podsumowanie
+• Pamiętaj, że NULL jest nieznaną wartością i dlatego nie jest równa innej wartości NULL.
+• Unikaj używania podpowiedzi do zapytania NOLOCK w celu optymalizacji wydajności, ponieważ może to prowadzić do nieoczekiwanych wyników, które zwracają dane, które nigdy nie istniały w bazie danych.
+• Unikaj SELECT * w zapytaniach innych niż ad hoc, ponieważ może to powodować problemy z wydajnością i konserwacją kodu, a także jest antywzorem dla kodu samodokumentującego.
+• Porządkowanie danych to funkcja prezentacji, a nie funkcja oparta na zestawie. Zamawiaj dane tylko wtedy, gdy jest to absolutnie konieczne.
+• Nie ujednolicaj wyników, jeśli naprawdę tego nie potrzebujesz. Jeśli DISTINCT powoduje problemy z wydajnością, rozważ inne techniki, takie jak GROUP BY lub ROW_NUMBER()
+• UNION jest droższy niż UNION ALL, ponieważ usuwa duplikaty. Dlatego jeśli duplikaty są albo nieistotne, albo niemożliwe, użyj UNION ALL zamiast UNION.
+• Należy unikać kursorów. Są bardzo drogie, a we współczesnych wersjach SQL Server nie ma operacji, których nie dałoby się wykonać innymi metodami.
+• Usunięcie wielu wierszy z tabeli w jednej transakcji może spowodować zapełnienie dziennika transakcji. Można tego uniknąć, dzieląc usunięcie na wiele partii.
