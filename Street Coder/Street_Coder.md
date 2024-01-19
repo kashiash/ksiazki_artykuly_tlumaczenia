@@ -4057,7 +4057,7 @@ public class LoginModel: PageModel {
 
 Ponieważ zapobieganie atakom CSRF jest już automatyczne w nowoczesnych frameworkach, takich jak ASP.NET Core, musisz znać jedynie podstawy, aby zrozumieć jego korzyści. Jednakże, w przypadku konieczności implementacji tego mechanizmu samodzielnie, ważne jest, abyś wiedział, jak działa i dlaczego.
 
-### 6.4 Wywołaj pierwszą powódź
+### 6.4 Wywołaj pierwszy zalew danych
 
 Denial of Service (DoS) to powszechna nazwa na sytuację, gdy usługa przestaje działać. Może to być po prostu coś, co powoduje, że serwer przestaje działać, zawiesza się lub się zawiesza, lub coś, co może zwiększyć użycie procesora lub nasycić dostępną przepustowość. Czasami ten drugi rodzaj ataków nazywa się powodzią sieci (`flooding`). Skupimy się szczególnie na powodziach i jak możemy im przeciwdziałać.
 
