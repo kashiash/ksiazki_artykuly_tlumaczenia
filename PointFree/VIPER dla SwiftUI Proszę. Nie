@@ -1,0 +1,201 @@
+# VIPER dla SwiftUI? Proszę. Nie.
+Albo dlaczego nie powinieneś głaskać tego konkretnego węża.
+
+Wszyscy uwielbiają pisać o tym, jak wykorzystują swoją ulubioną architekturę UIKit w SwiftUI. Jednym z bardziej znanych wzorców projektowych/architektur jest VIPER.
+
+View-Interactor-Presenter-Entity-Router.
+
+Nie zrozum mnie źle. VIPER to świetna architektura oprogramowania, zaprojektowana w celu rozwiązania wielu klasycznych i powszechnych problemów występujących podczas opracowywania i tworzenia aplikacji opartych na UIKit i UIViewController.
+
+Ale nie jest to najlepsza architektura dla SwiftUI. Ani drugą najlepszą. W rzeczywistości jest jedną z najgorszych i w tym artykule mam nadzieję pokazać dlaczego.
+
+Ale zanim to zrobię, najpierw musimy wiedzieć dwie rzeczy.
+
+1. Czym jest VIPER?
+2. Jakie problemy rozwiązuje?
+
+Zagłębmy się w temat.
+
+## Co to jest VIPER?
+Jak wspomniano powyżej, VIPER to akronim oznaczający View-Interactor-Presenter-Entity-Router.
+Jeśli jesteś tutaj i czytasz ten tekst, prawdopodobnie znasz już VIPER. Zamiast więc poświęcać czas na samodzielne wyjaśnianie każdego komponentu, pójdę na skróty i zapożyczę trochę z bardzo dobrze napisanego artykułu na ten temat autorstwa Mahdiego Chtioui.
+
+https://medium.com/@mahdichtioui/implementing-viper-archticture-pattern-for-ios-d24a6def8ba2
+
+Oto składniki modułu VIPER.
+
+**Widok**: Warstwa widoku, która jest w zasadzie UIViewController i dowolnym innym typem widoku. Warstwa ta zawiera logikę interfejsu użytkownika (wyświetlanie, aktualizacja, animacja...) i jest odpowiedzialna za przechwytywanie akcji użytkownika i wysyłanie ich do prezentera. Co najważniejsze, nie posiada logiki biznesowej.
+
+**Interaktor**: Możemy o nim myśleć jako o "menedżerze sieci": odpowiada za pobieranie danych z usług (sieć, baza danych, czujniki...) na żądanie prezentera. Interaktor jest odpowiedzialny za zarządzanie danymi z warstwy modelu (zauważ, że model nie jest częścią architektury VIPER, możesz go zaimplementować lub nie, ale na pewno sprawi, że nasza aplikacja będzie bardziej zwięzła).
+
+**Prezenter**: Lubię myśleć o nim jak o płycie głównej, która łączy wszystkie warstwy razem. Prezenter jest jedyną warstwą, która komunikuje się z widokiem (pozostałe warstwy komunikują się z prezenterem). Zasadniczo jest to warstwa odpowiedzialna za podejmowanie decyzji w oparciu o działania użytkownika wysyłane przez Widok.
+
+**Podmiot**: Podmioty to po prostu nasze modele, które są używane przez interaktora. Najlepiej jest umieścić je poza modułami VIPER, przynajmniej z mojego punktu widzenia, ponieważ te encje są zwykle współdzielone w całym systemie przez różne moduły.
+
+**Router**: Ktoś nazywa to "Wireframe". Ta warstwa jest odpowiedzialna za obsługę logiki nawigacji: Pushing, Popping, Presenting UIViewControllers.
+
+VIPER jest jedną z najpopularniejszych tzw. architektur CLEAN. Ale po co w ogóle jej używać?
+
+## Jaki problem rozwiązuje?
+VIPER jest jednym z wielu rozwiązań jednego z największych problemów w tradycyjnym tworzeniu oprogramowania UIKit MVC (Model-View-Controller).
+
+Problem jest tak powszechny, że skrót MVC szybko zyskał inną, równie znaną definicję.
+MVC: Massive-View-Controller.
+
+Znasz ten problem. Zbyt często w MVC umieszczaliśmy cały nasz kod dla danego ekranu w kontrolerze widoku tego ekranu. Etykiety, pola tekstowe i kontrolery widoku. Przycisk i obsługa akcji. Delegacja i obsługa zdarzeń. Logika biznesowa. Walidacja. Żądania sieciowe i obsługa błędów. Routing i kontrola nawigacji.
+
+To był bałagan.
+
+VIPER został stworzony, aby rozwiązać ten problem i zrobił to poprzez skupienie się na jednej podstawowej koncepcji, zasadzie pojedynczej odpowiedzialności.
+Cały kod zawarty wcześniej w kontrolerze widoku został rozbity, a jego fragmenty przeniesione do konkretnej, dobrze zdefiniowanej struktury. Każdy komponent ma określoną odpowiedzialność i rolę do odegrania w procesie.
+
+Widok rozmawia z prezenterem. Prezenter rozmawia z Interaktorem. Interactor zwraca Entities do Presentera, który dzieli wszystko na łatwo przyswajalne fragmenty, które mogą zostać skonsumowane przez View. Po zakończeniu Presenter rozmawia z Routerem i przechodzi do kolejnego modułu VIPER w łańcuchu.
+
+Przepłucz. Powtórz w razie potrzeby.
+
+Jak widać, VIPER tworzy wiele małych ruchomych części i niestety znaczny procent kodu napisanego w aplikacji VIPER jest napisany tylko po to, aby zarządzać VIPER i połączyć wszystkie te elementy z powrotem.
+W rzeczywistości jeden z artykułów, który przeczytałem na ten temat, sugerował, że VIPER tworzy i wykorzystuje tak wiele standardowego kodu, że należy polegać na generatorze kodu, aby stworzyć wszystko, co potrzebne.
+
+https://theswiftdev.com/the-ultimate-viper-architecture-tutorial/
+
+Ale... wszystko to zostało powiedziane... to działa.
+Działa... ale nie nadaje się do SwiftUI.
+Dlaczego? Cóż, na początek, został zaprojektowany na inny czas. I na inny język. I inne SDK.
+
+## Delegacja
+
+VIPER wywodzi się z tradycyjnego programowania opartego na Objective-C i wczesnym Swift UIKit i to widać.
+VIPER działa głównie poprzez delegowanie. Każdy komponent w systemie ma interfejs i aby komponent mógł rozmawiać z innym komponentem, potrzebuje odniesienia do tego komponentu.
+Utwórz i zaprezentuj nowy UIViewController i Presenter, a wszystko inne musi zostać utworzone, połączone i powiązane ze sobą w formalną, sztywną strukturę.
+Kontroler widoku musi wiedzieć o Presenterze, więc ma do niego silne odniesienie. Ale Presenter musi również wiedzieć o kontrolerze widoku, aby mógł sterować zmianami interfejsu użytkownika. W związku z tym Presenter potrzebuje słabego powiązania delegata z powrotem do kontrolera widoku (należy obserwować te cykle referencyjne).
+I tak jest z resztą komponentów w VIPER.
+Poproszony o stworzenie takiego systemu dzisiaj, zamiast przewodowej delegacji, można by skupić się bardziej na funkcjach z zamknięciami wywołania zwrotnego, a nawet użyć RxSwift lub Combine do komunikacji komponentów i routingu wiadomości.
+Narzędzia te nie były jednak dostępne ani powszechnie używane. Niewiele osób znało lub używało Rx, a składnia bloków w Objective-C była tak zła, że powstało wiele stron wyjaśniających, jak je definiować, tworzyć i używać.
+Tak więc delegacja została wybrana jako główny mechanizm komunikacji między warstwami. Okej. To trochę niezgrabne, ale w porządku. Powinniśmy być w stanie z tym żyć.
+
+## Widok nie istnieje
+Z wyjątkiem SwiftUI widok nie jest widokiem. W UIKit UIView lub UIViewController jest typem referencyjnym. Mogę do niego linkować i do niego delgować.
+W SwiftUI "widoki" są lekkimi strukturami, które istnieją w celu zdefiniowania naszej aplikacji. Nie są one typami referencyjnymi, są typami wartości i jako takie Presenter nie może przechowywać odniesienia do jednego z nich.
+W SwiftUI widoki nie są sterowane przez imperatywne wywołania z prezentera do widoku w celu aktualizacji interfejsu użytkownika. Są one sterowane przez system, w oparciu o zmiany w obserwowalnych danych.
+W VIPER routery ukrywały złożoność tworzenia i przesuwania widoków oraz nawigowania między nimi. Ale w SwiftUI nawigacja jest tak prosta, jak zawijanie widoku w NavigationLink lub dodawanie wartości do NavigationStack.
+I tak, gdy każde behawioralne domino upada, cała struktura i racjonalność, od której zależy VIPER, zaczyna się rozpadać. Dosłownie spełnia swoją nazwę i staje się gniazdem węży, a im głębiej w nie sięgasz, tym bardziej prawdopodobne jest, że zostaniesz ugryziony.
+Niedawno widziałem kilka przykładów z jednej bazy kodu, w której programista został zmuszony do dodania ViewModel do swojego kodu VIPER tylko po to, aby mieć miejsce na umieszczenie obserwowalnych wartości. VIPERVM?
+Ale na razie zignorujmy to wszystko, ponieważ VIPER ma większy problem.
+VIPER był w dużej mierze odpowiedzią... na niewłaściwe pytanie.
+
+## Jak naprawić kontrolery Massive-View?
+Zapytany w ten sposób, VIPER wydaje się logiczną odpowiedzią. Wyodrębnić cały kod, który możemy i przenieść go gdzie indziej.
+Aby być uczciwym, niektóre z tych kodów chcą być gdzie indziej, bez względu na to, co zrobimy. Na przykład kod sieciowy.
+Ale ta prosta odpowiedź omija prawdziwe pytanie.
+P: Dlaczego nasz kontroler widoku jest tak duży... w pierwszej kolejności?
+Chcesz poznać odpowiedź? Oto ona.
+A: Ponieważ UIKit sprawia, że kompozycja jest trudna.
+I to jest sedno sprawy.
+Rozbijanie UIView i UIViewControllers na mniejsze komponenty jest trudne. Tak trudne, że w zasadzie tego nie robimy. I tak często kończyliśmy z pojedynczym UIViewController, który sterował wszystkim, co mogliśmy zobaczyć na jednym ekranie.
+Potrzebujesz przykładów?
+
+### Komponenty UIKit
+Chcesz dodać oddzielny kontroler UIViewController do ekranu? Czy można po prostu dodać widok? Po prostu dodać kontroler widoku jako podwidok? Nie. Musisz zrobić coś takiego.
+
+```swift
+let controller = AccountDetailsViewController()
+controller.accounts = accounts
+addChild(controller)
+controller.view.translatesAutoresizingMaskIntoConstraints = false
+container.addSubview(controller.view)
+NSLayoutConstraint.activate([
+    controller.view.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 0),
+    controller.view.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: 0),
+    controller.view.topAnchor.constraint(equalTo: container.topAnchor, constant: 0),
+    controller.view.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: 0)
+])
+controller.didMove(toParent: self)
+```
+
+Chcesz użyć elementu interfejsu utworzonego w XIB? O rany. Najpierw musimy sprawić, by system stworzył go dla nas.
+
+```swift
+let cardView = NSBundle.mainBundle("CardView").loadNibNamed("", owner: nil, options: nil)[0] as! CardView
+```
+
+I to przy założeniu, że poprawnie zaimplementowałeś wymaganą metodę init?(coder aDecoder: NSCoder) w klasieCardView.
+
+UIKit zachęca do pisania kodu do tworzenia widoków, pisania XIB do tworzenia widoków, pisania Storyboardów do tworzenia widoków. Ale czy chcesz używać ich razem? Osadzić jeden w drugim? Tutaj zaczyna się ból.
+
+UIKit dodatkowo komplikuje sprawę, wymagając specjalnych widoków na specjalne okoliczności. Potrzebujesz nagłówka dla widoku tabeli? Cóż, to nie jest UIView, to jest UITableViewHeaderFooterView. Chcesz wyświetlić widok na liście? Oczywiście UITableViewCell. A może UIContainerViewCell, jeśli idziesz w tę stronę. Ale hej! Chcesz użyć tego widoku komórki, który właśnie napisałeś w innym widoku? Nie.
+UIKit aktywnie działa przeciwko kompozycji widoków.
+
+A kiedy system aktywnie działa przeciwko rozwiązaniu... czy jest niespodzianką, że robimy go mniej?
+Ale gdyby to nie było takie uciążliwe. Gdyby rozbijanie naszych widoków i kontrolerów widoku na mniejsze widoki i kontrolery widoku było łatwiejsze...
+
+Czy nasze masywne kontrolery widoków byłyby w ogóle tak masywne?
+
+Skład
+Pisałem o tym wielokrotnie.
+
+https://medium.com/swlh/structural-decomposition-in-swiftui-8892e512b18e
+
+https://medium.com/swlh/deep-inside-views-state-and-performance-in-swiftui-d23a3a44b79
+
+ Jedną z podstawowych zasad, na których opiera się SwiftUI, jest kompozycja.
+Chcesz osadzić CardView utworzony gdzie indziej w naszym widoku?
+
+```swift
+VStack {
+    ...
+    CardView(title: "Account", item: account)
+    ...
+}
+```
+
+Bum. To takie proste. Chcesz użyć tego na liście?
+
+```swift
+List {
+    ForEach(accounts) { account in
+        CardView(title: "Account", item: account)
+    }
+}
+```
+
+Zrobione
+
+
+
+Jak wskazałem w artykule Najlepsze praktyki w kompozycji SwiftUI, jeśli jedna rzecz była powtarzana w kółko podczas sesji SwiftUI na WWDC, to fakt, że widoki SwiftUI są niezwykle lekkie, a ich tworzenie wiąże się z niewielkim lub zerowym spadkiem wydajności.
+Chcesz podzielić część widoku na mniejszy widok podrzędny? To szybkie i łatwe. Heck, w Xcode możesz po prostu kliknąć polecenie na części kodu i wybrać opcję "Extract Subview".
+Być może teraz widzisz, dokąd to zmierza...
+
+### View-Interactor-Presenter-Entity-Router
+Jeśli tworzenie i używanie małych, dedykowanych widoków i komponentów specjalnego przeznaczenia jest łatwe w SwiftUI... to dlaczego miałbym chcieć korzystać z architektury, która mnie do tego zniechęca?
+
+Architektury, która wymaga ode mnie przeniesienia kodu widoku... i powiązanego kodu prezentera... i odpowiedniego kodu interaktora... i wszystkiego innego, co jest potrzebne.
+
+Zauważ, że wspomniana wcześniej próbka SwiftUI VIPERVM miała ponad 200 linii kodu szablonu VIPER... wszystko do obsługi jednego 20-liniowego widoku.
+
+Dwieście linii kodu.
+
+Więc jeśli każdy nowy widok wymaga również mnóstwa dodatkowych klas i komponentów utworzonych w celu jego obsługi... czy zamierzam tworzyć wiele prostych podwidoków w razie potrzeby? Czy też zamierzam uniknąć kłopotów i nadal konsolidować wszystko w coraz większe widoki SwiftUI?
+
+Czy zamierzam zastąpić Massive-View-Controllers przez Massive-View-Bodies?
+
+Mamy VIPER, ponieważ UIKit zniechęcał do kompozycji widoków.
+Ale jeśli VIPER działa również przeciwko nam...
+
+## SwiftUI
+Jak podsumowałem w SwiftUI: Wybór architektury aplikacji:
+
+https://betterprogramming.pub/swiftui-choosing-an-application-architecture-6ec9289f8e8f
+
+SwiftUI wprowadza proste deklaratywne podejście do pisania aplikacji. Co więcej, jest ono zwięzłe. Można wykonać wiele pracy przy użyciu bardzo małej ilości kodu.
+W związku z tym szkoda byłoby obciążać siebie i nasze aplikacje zbyt formalnymi architekturami, które po raz kolejny dramatycznie zwiększają ilość kodu, który musimy napisać.
+I z pewnością nie potrzebujemy architektur zaprojektowanych dla innego SDK, zbudowanych i zaprojektowanych do obejścia i przezwyciężenia ograniczeń innego języka i innego środowiska.
+Potrzebujemy architektury, która pozwoli SwiftUI... być SwiftUI.
+
+## Podsumowanie
+
+To by było na tyle. Moim zdaniem VIPER, choć pozostaje dobrym wyborem dla rozwoju UIKit, jest wyjątkowo kiepskim wyborem dla SwiftUI.
+Ale czego użyć zamiast tego? Cóż, możesz zobaczyć moje obecne przemyślenia w SwiftUI: Wybór architektury aplikacji.
+Mam jeszcze kilka przemyśleń na ten temat.
+Ale to już inny artykuł. Na inny dzień.
+Do tego czasu daj mi znać, co myślisz. Czy mam rację? Czy się mylę?

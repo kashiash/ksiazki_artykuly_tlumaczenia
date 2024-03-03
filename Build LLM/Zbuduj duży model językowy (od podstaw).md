@@ -34,7 +34,7 @@ Ponieważ LLM są w stanie generować tekst, LLM są również często określan
 
 Rysunek 1.1 Jak sugeruje to hierarchiczne przedstawienie relacji między różnymi dziedzinami, LLM reprezentują specyficzne zastosowanie technik głębokiego uczenia się, wykorzystując ich zdolność do przetwarzania i generowania tekstu podobnego do człowieka. Głębokie uczenie się to wyspecjalizowana gałąź uczenia maszynowego, która koncentruje się na wykorzystaniu wielowarstwowych sieci neuronowych. A uczenie maszynowe i głębokie uczenie się to dziedziny mające na celu implementację algorytmów, które umożliwiają komputerom uczenie się na podstawie danych i wykonywanie zadań, które zazwyczaj wymagają ludzkiej inteligencji. Dziedzina sztucznej inteligencji jest obecnie zdominowana przez uczenie maszynowe i głębokie uczenie się, ale obejmuje również inne podejścia, na przykład poprzez wykorzystanie systemów opartych na regułach, algorytmów genetycznych, systemów eksperckich, logiki rozmytej lub rozumowania symbolicznego.
 
-![img](/Users/uta/Desktop/Tlumaczenia%20ksiazek%20i%20artykulow/Build%20LLM/ch-01__image002.png)
+![img](ch-01__image002.png)
 
 Algorytmy stosowane do wdrażania sztucznej inteligencji są przedmiotem zainteresowania w dziedzinie uczenia maszynowego. W szczególności uczenie maszynowe obejmuje rozwój algorytmów, które mogą uczyć się i przewidywać lub podejmować decyzje na podstawie danych bez bezpośredniego programowania. Aby to zilustrować, wyobraźmy sobie filtr antyspamowy jako praktyczne zastosowanie uczenia maszynowego. Zamiast ręcznie pisać reguły identyfikujące wiadomości spamowe, algorytm uczenia maszynowego otrzymuje przykłady wiadomości e-mail oznaczonych jako spam i prawidłowych wiadomości e-mail. Minimalizując błędy w swoich przewidywaniach na zbiorze danych szkoleniowych, model uczy się rozpoznawać wzorce i cechy charakterystyczne wskazujące na spam, umożliwiając mu klasyfikowanie nowych wiadomości e-mail jako spam lub legalne.
 
@@ -49,7 +49,7 @@ Dzięki zaawansowanym możliwościom analizowania i rozumienia nieustrukturyzowa
 
 Rysunek 1.2 Interfejsy LLM umożliwiają komunikację w języku naturalnym pomiędzy użytkownikami a systemami AI. Ten zrzut ekranu pokazuje, jak ChatGPT pisze wiersz zgodny ze specyfikacjami użytkownika.
 
-![img](/Users/uta/Desktop/Tlumaczenia%20ksiazek%20i%20artykulow/Build%20LLM/ch-01__image004.png)
+![img](ch-01__image004.png)
 
 LLM mogą również obsługiwać zaawansowane chatboty i wirtualnych asystentów, takich jak ChatGPT firmy OpenAI lub Bard firmy Google, którzy mogą odpowiadać na zapytania użytkowników i rozszerzać tradycyjne wyszukiwarki, takie jak wyszukiwarka Google lub Microsoft Bing.
 

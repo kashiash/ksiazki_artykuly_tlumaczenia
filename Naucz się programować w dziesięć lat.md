@@ -11,6 +11,8 @@ http://norvig.com/21-days.html
 Wejdź do dowolnej księgarni, a zobaczysz jak nauczysz się Javy w 24 godziny obok nieskończonej liczby wariacji oferujących naukę C, SQL, Ruby, algorytmów itp. w kilka dni lub godzin. Przeszukanie zaawansowane w Amazonie pod hasłem [tytuł: naucz się, sam, godziny, od: 2000] dało wynik 512 książek. Spośród dziesięciu najlepszych, dziewięć to książki programistyczne (jedna dotyczy księgowości). Podobne wyniki uzyskano, zamieniając "naucz się" na "naucz się" lub "godziny" na "dni".
 Wnioskiem jest, że albo ludzie bardzo się spieszą, żeby nauczyć się programować, albo programowanie jest jakoś niezwykle łatwe do nauki w porównaniu z czymkolwiek innego. Felleisen et al. przytaczają ten trend w swojej książce "How to Design Programs", mówiąc: "Złe programowanie jest łatwe. Głupcy mogą się tego nauczyć w 21 dni, nawet jeśli są głupi". Komiks Abtruse Goose także ma swoje zdanie na ten temat.
 
+![img](https://qph.cf2.quoracdn.net/main-qimg-4d61232bef1f5ec7bcff8972cfed9844)
+
 ## Przeanalizujmy, co może oznaczać taki tytuł jak "Naucz się C++ w 24 godziny":
 
 Naucz się: W ciągu 24 godzin nie będziesz miał czasu napisać kilku istotnych programów i uczyć się na ich podstawie swoich sukcesów i porażek. Nie będziesz miał czasu pracować z doświadczonym programistą i zrozumieć, jak to jest żyć w środowisku C++. W skrócie, nie będziesz miał czasu na naukę zbyt wiele. Tak więc książka może mówić tylko o powierzchownej znajomości, a nie o głębokim zrozumieniu. Jak powiedział Alexander Pope, "nieco wiedzy jest rzeczą niebezpieczną".

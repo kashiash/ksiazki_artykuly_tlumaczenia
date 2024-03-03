@@ -11,11 +11,43 @@
             "id": "4ec56a6fc135bae0",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {}
+              "type": "markdown",
+              "state": {
+                "file": "Czy AI zaszkodzi programistom.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "9c255514aa10dd0a",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "SWIFT.canvas",
+                "viewState": {
+                  "x": 0,
+                  "y": 530.0999999999997,
+                  "zoom": 0
+                }
+              }
+            }
+          },
+          {
+            "id": "a73cf79f04e9d0fd",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "EnterprsePatternsAndMDA/Enterprise Patterns, Archetypy MDA.md",
+                "mode": "preview",
+                "source": false
+              }
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -81,6 +113,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "EnterprsePatternsAndMDA/Enterprise Patterns, Archetypy MDA.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -97,6 +130,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "EnterprsePatternsAndMDA/Enterprise Patterns, Archetypy MDA.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -118,7 +152,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {}
+              "state": {
+                "file": "EnterprsePatternsAndMDA/Enterprise Patterns, Archetypy MDA.md"
+              }
             }
           }
         ]
@@ -138,8 +174,25 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "4ec56a6fc135bae0",
+  "active": "a73cf79f04e9d0fd",
   "lastOpenFiles": [
+    "Build LLM/Zbuduj duży model językowy (od podstaw).md",
+    "EnterprsePatternsAndMDA/Enterprise Patterns, Archetypy MDA.md",
+    "Jak skończyć CS50 Harvarda  Pełna mapa drogowa z bezpłatnym certyfikatem.md",
+    "Odchudzanie jako proces.md",
+    "SWIFT.canvas",
+    "Bootcampy/Rodzaje Bootcampów.md",
+    "Swifti SwiftUI.md",
+    "There may be no such thing as dying from old age.md",
+    "Wstęp do EventStorming.md",
+    "Xaf Multitenancy.md",
+    "SwiftData & MVVM.md",
+    "Mózg Programisty.md",
+    "Oto jak działa Git dla tworzenia aplikacji iOS.md",
+    "XAF w kontenerach Docker.md",
+    "PointFree/Używanie zdalnego źródła danych do zasilania lokalnego magazynu danych.md",
+    "PointFree/SwiftUI przemyslnia architektoniczne.md",
+    "PointFree/Obserwacja Przeszłość.md",
     "Czy AI zaszkodzi programistom.md"
   ]
 }

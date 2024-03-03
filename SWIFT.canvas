@@ -1,0 +1,19 @@
+{
+	"nodes":[
+		{"id":"a49c68883b277b56","x":1136,"y":-283,"width":400,"height":400,"type":"file","file":"Architektura apliakcji SwiftUI/architecture-model-updated.jpeg"},
+		{"id":"9d57d4c9d0a55f75","x":1581,"y":-283,"width":400,"height":400,"type":"file","file":"Architektura apliakcji SwiftUI/F4eKZSGWMAADeTT.jpeg"},
+		{"id":"e84bd8a4d28fbf1c","x":2026,"y":-283,"width":400,"height":400,"type":"file","file":"Architektura apliakcji SwiftUI/format-date.jpeg"},
+		{"id":"77db2bff14c15e5c","x":2471,"y":-283,"width":400,"height":400,"type":"file","file":"Architektura apliakcji SwiftUI/format-distances.jpeg"},
+		{"id":"72a20409f28aa8cb","x":2916,"y":-283,"width":400,"height":400,"type":"file","file":"Architektura apliakcji SwiftUI/format-lists.jpeg"},
+		{"id":"ece92ce8b787018c","x":3361,"y":-283,"width":400,"height":400,"type":"file","file":"Architektura apliakcji SwiftUI/single-source.png"},
+		{"id":"8367b85dc9eb0a43","x":3806,"y":-283,"width":400,"height":400,"type":"file","file":"Architektura apliakcji SwiftUI/TworzenieAplikacjiSwiftUI.md"},
+		{"id":"411c4f0a955f615e","x":-247,"y":-363,"width":400,"height":400,"type":"file","file":"JWT w iOS/Przewodnik po uwierzytelnianiu za pomocą tokenów internetowych JSON (JWT) w systemie iOS.md"},
+		{"id":"64920cab3cb67e97","x":-199,"y":-283,"width":400,"height":225,"type":"file","file":"Architektura apliakcji SwiftUI/aggregate-model-updated.001.jpeg"},
+		{"id":"fbcc721e2e75a261","x":246,"y":-283,"width":400,"height":225,"type":"file","file":"Architektura apliakcji SwiftUI/aggregate-model-updated.002.jpeg"},
+		{"id":"9f534b5a6ef114cc","x":691,"y":-283,"width":400,"height":225,"type":"file","file":"Architektura apliakcji SwiftUI/aggregate-model-updated.003.jpeg"},
+		{"id":"c86e3d5d911dbf5e","x":-199,"y":162,"width":400,"height":227,"type":"file","file":"Architektura apliakcji SwiftUI/user-interface.png"},
+		{"id":"c53b0c91b5d0fda0","x":246,"y":162,"width":400,"height":231,"type":"file","file":"Architektura apliakcji SwiftUI/view-debugging.png"},
+		{"id":"30628f222df164ed","x":691,"y":162,"width":400,"height":215,"type":"file","file":"Architektura apliakcji SwiftUI/xcode-server.png"}
+	],
+	"edges":[]
+}

@@ -3669,3 +3669,24 @@ Operacje modyfikujące dane, takie jak operacje DELETE, mogą spowodować zapeł
 • UNION jest droższy niż UNION ALL, ponieważ usuwa duplikaty. Dlatego jeśli duplikaty są albo nieistotne, albo niemożliwe, użyj UNION ALL zamiast UNION.
 • Należy unikać kursorów. Są bardzo drogie, a we współczesnych wersjach SQL Server nie ma operacji, których nie dałoby się wykonać innymi metodami.
 • Usunięcie wielu wierszy z tabeli w jednej transakcji może spowodować zapełnienie dziennika transakcji. Można tego uniknąć, dzieląc usunięcie na wiele partii.
+
+
+
+## 6 Rozwój SSIS
+
+Ten rozdział obejmuje
+Wprowadzenie do SSIS i błędy programistyczne SSIS
+Utrata złych danych
+Brak optymalizacji ładowania danych
+Używanie SSIS jako narzędzia do orkiestracji T-SQL
+Zawsze wyodrębnianie wszystkich danych z tabeli źródłowej
+
+> UWAGA
+>
+> Przykłady w tym rozdziale będą wykorzystywać SQL Server Data Tools (SSDT), które można pobrać ze strony https://learn.microsoft.com/en-us/sql/ssdt/download-sql-server-data-tools-ssdt?view=sql-server-ver16#ssdt-for-visual-studio-2022. Rozszerzenie Integration Services również musi być zainstalowane i jest dostępne w Extensions | Manage Extensions, a następnie wyszukując SQL Server Integration Services Projects 2022 z market place.
+
+SQL Server Integration Services, powszechnie znane jako SSIS, to narzędzie dostarczane z wersjami SQL Server Enterprise i Standard, chociaż w wersji standardowej istnieją ograniczenia funkcji. Jest to narzędzie Extract, Transform and Load (ETL), które pozwala programistom budować potoki przepływu danych i transformacji w interfejsie GUI typu „przeciągnij i upuść”.
+
+Pakiet SSIS zawsze składa się z jednego przepływu sterowania, który aranżuje zadania, które pakiet będzie uruchamiał. W ramach przepływu sterowania możemy utworzyć zero lub więcej przepływów danych, które są używane do importowania, eksportowania i przekształcania danych w buforach pamięci.
+
+Zadania dotyczące przepływu sterowania są połączone ograniczeniami pierwszeństwa. To pozwala nam zaprojektować nasze pakiety tak, aby uruchamiały zadania szeregowo, zamiast wszystkich zadań działających równolegle. Zadania następujące po ograniczeniu pierwszeństwa są zawsze uruchamiane po zadaniach poprzedzających ograniczenie.
